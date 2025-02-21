@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1459</width>
-    <height>810</height>
+    <width>1416</width>
+    <height>907</height>
    </rect>
   </property>
   <property name="font">
@@ -222,6 +222,19 @@
         <property name="frameShadow">
          <enum>QFrame::Shadow::Plain</enum>
         </property>
+        <widget class="QLabel" name="label_8">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>60</y>
+           <width>121</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Graph over Distance</string>
+         </property>
+        </widget>
        </widget>
       </item>
      </layout>
@@ -256,6 +269,19 @@
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
           </property>
+          <widget class="QLabel" name="label_7">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>30</y>
+             <width>81</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>System Status</string>
+           </property>
+          </widget>
          </widget>
         </item>
         <item>
@@ -279,6 +305,12 @@
               <width>300</width>
               <height>300</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>Logo</string>
+            </property>
+            <property name="toolTipDuration">
+             <number>1</number>
             </property>
            </widget>
           </item>
@@ -328,6 +360,19 @@
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
           </property>
+          <widget class="QLabel" name="label_10">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>50</y>
+             <width>91</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Sensor Toggle</string>
+           </property>
+          </widget>
          </widget>
         </item>
         <item>
@@ -341,6 +386,19 @@
           <property name="frameShape">
            <enum>QFrame::Shape::Box</enum>
           </property>
+          <widget class="QLabel" name="label_9">
+           <property name="geometry">
+            <rect>
+             <x>70</x>
+             <y>50</y>
+             <width>101</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Graph over Time</string>
+           </property>
+          </widget>
          </widget>
         </item>
         <item>
@@ -851,7 +909,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1459</width>
+     <width>1416</width>
      <height>20</height>
     </rect>
    </property>
