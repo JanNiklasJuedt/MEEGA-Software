@@ -27,7 +27,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.WindowModality.NonModal)
-        MainWindow.resize(1459, 810)
+        MainWindow.resize(1416, 907)
         font = QFont()
         font.setFamilies([u"Arial"])
         font.setPointSize(9)
@@ -131,6 +131,9 @@ class Ui_MainWindow(object):
         self.distancePlotFrame.setMaximumSize(QSize(16777215, 16777215))
         self.distancePlotFrame.setFrameShape(QFrame.Shape.Box)
         self.distancePlotFrame.setFrameShadow(QFrame.Shadow.Plain)
+        self.label_8 = QLabel(self.distancePlotFrame)
+        self.label_8.setObjectName(u"label_8")
+        self.label_8.setGeometry(QRect(40, 60, 121, 16))
 
         self.verticalLayout.addWidget(self.distancePlotFrame)
 
@@ -153,6 +156,9 @@ class Ui_MainWindow(object):
         self.frame_5.setMinimumSize(QSize(100, 0))
         self.frame_5.setFrameShape(QFrame.Shape.Box)
         self.frame_5.setFrameShadow(QFrame.Shadow.Plain)
+        self.label_7 = QLabel(self.frame_5)
+        self.label_7.setObjectName(u"label_7")
+        self.label_7.setGeometry(QRect(30, 30, 81, 16))
 
         self.horizontalLayout_2.addWidget(self.frame_5)
 
@@ -168,6 +174,7 @@ class Ui_MainWindow(object):
         sizePolicy5.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
         self.graphicsView.setSizePolicy(sizePolicy5)
         self.graphicsView.setMinimumSize(QSize(300, 300))
+        self.graphicsView.setToolTipDuration(1)
 
         self.verticalLayout_3.addWidget(self.graphicsView)
 
@@ -198,6 +205,9 @@ class Ui_MainWindow(object):
         self.frame_2.setSizePolicy(sizePolicy6)
         self.frame_2.setFrameShape(QFrame.Shape.Box)
         self.frame_2.setFrameShadow(QFrame.Shadow.Plain)
+        self.label_10 = QLabel(self.frame_2)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setGeometry(QRect(30, 50, 91, 16))
 
         self.horizontalLayout_4.addWidget(self.frame_2)
 
@@ -209,6 +219,9 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
         self.frame.setSizePolicy(sizePolicy7)
         self.frame.setFrameShape(QFrame.Shape.Box)
+        self.label_9 = QLabel(self.frame)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setGeometry(QRect(70, 50, 101, 16))
 
         self.horizontalLayout_4.addWidget(self.frame)
 
@@ -430,7 +443,7 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QRect(0, 0, 1459, 20))
+        self.menubar.setGeometry(QRect(0, 0, 1416, 20))
         self.menuDatei = QMenu(self.menubar)
         self.menuDatei.setObjectName(u"menuDatei")
         self.menuOptionen = QMenu(self.menubar)
@@ -457,7 +470,14 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MEEGA - Ground Station", None))
         self.actionYou_Cant_Help_Me.setText(QCoreApplication.translate("MainWindow", u"You Cant Help Me", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Connection", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Graph over Distance", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", u"System Status", None))
+#if QT_CONFIG(tooltip)
+        self.graphicsView.setToolTip(QCoreApplication.translate("MainWindow", u"Logo", None))
+#endif // QT_CONFIG(tooltip)
         self.comboBox.setCurrentText("")
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Sensor Toggle", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Graph over Time", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Mean", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"All", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u"Last", None))
