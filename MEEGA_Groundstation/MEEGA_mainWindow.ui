@@ -124,7 +124,7 @@
             <number>10</number>
            </property>
            <item>
-            <widget class="QLabel" name="label_5">
+            <widget class="QLabel" name="label_Connection">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                <horstretch>1</horstretch>
@@ -246,7 +246,7 @@
             <number>10</number>
            </property>
            <item>
-            <widget class="QLabel" name="label_14">
+            <widget class="QLabel" name="label_time">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -292,7 +292,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="label_13">
+            <widget class="QLabel" name="main_Timer">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -358,7 +358,7 @@
         <property name="frameShadow">
          <enum>QFrame::Shadow::Plain</enum>
         </property>
-        <widget class="QLabel" name="label_8">
+        <widget class="QLabel" name="label_temp_1">
          <property name="geometry">
           <rect>
            <x>40</x>
@@ -411,7 +411,7 @@
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
           </property>
-          <widget class="QLabel" name="label_7">
+          <widget class="QLabel" name="label_temp_2">
            <property name="geometry">
             <rect>
              <x>30</x>
@@ -441,7 +441,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QGraphicsView" name="graphicsView">
+           <widget class="QGraphicsView" name="logo">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>1</horstretch>
@@ -482,7 +482,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label_12">
+           <widget class="QLabel" name="label_mode">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
               <horstretch>0</horstretch>
@@ -533,7 +533,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QListView" name="listView">
+            <widget class="QListView" name="listSensors">
              <property name="sizeAdjustPolicy">
               <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
              </property>
@@ -562,7 +562,7 @@
           <property name="frameShape">
            <enum>QFrame::Shape::Box</enum>
           </property>
-          <widget class="QLabel" name="label_9">
+          <widget class="QLabel" name="label_temp_3">
            <property name="geometry">
             <rect>
              <x>70</x>
@@ -646,7 +646,7 @@
               <number>10</number>
              </property>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="button_Mean">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>1</horstretch>
@@ -677,7 +677,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="button_All">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>1</horstretch>
@@ -772,7 +772,7 @@
               <number>10</number>
              </property>
              <item>
-              <widget class="QPushButton" name="pushButton_3">
+              <widget class="QPushButton" name="button_Last">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>1</horstretch>
@@ -797,7 +797,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_4">
+              <widget class="QPushButton" name="button_Total">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>1</horstretch>
@@ -845,7 +845,7 @@
        <number>10</number>
       </property>
       <item row="1" column="4">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label_SODS">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -889,7 +889,7 @@
        </spacer>
       </item>
       <item row="1" column="8">
-       <widget class="QLabel" name="label_6">
+       <widget class="QLabel" name="label_SD">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -914,7 +914,7 @@
        </widget>
       </item>
       <item row="0" column="4">
-       <widget class="QProgressBar" name="progressBar_3">
+       <widget class="QProgressBar" name="progressBar_SODS">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>1</horstretch>
@@ -956,7 +956,7 @@
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QProgressBar" name="progressBar_5">
+       <widget class="QProgressBar" name="progressBar_PF">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>1</horstretch>
@@ -995,7 +995,7 @@
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QProgressBar" name="progressBar_2">
+       <widget class="QProgressBar" name="progressBar_LO">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>1</horstretch>
@@ -1072,7 +1072,7 @@
        </spacer>
       </item>
       <item row="1" column="2">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_LO">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -1096,7 +1096,7 @@
          <number>20</number>
         </property>
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="label_SOE">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -1112,7 +1112,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label_4">
+         <widget class="QLabel" name="label_EOE">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -1133,7 +1133,7 @@
        </layout>
       </item>
       <item row="0" column="8">
-       <widget class="QProgressBar" name="progressBar_4">
+       <widget class="QProgressBar" name="progressBar_SD">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>1</horstretch>
@@ -1178,7 +1178,7 @@
        </widget>
       </item>
       <item row="0" column="6">
-       <widget class="QProgressBar" name="progressBar">
+       <widget class="QProgressBar" name="progressBar_SOE">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>10</horstretch>
@@ -1217,7 +1217,7 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_11">
+       <widget class="QLabel" name="label_PF">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -1300,28 +1300,28 @@
      <property name="title">
       <string>Export</string>
      </property>
-     <addaction name="actionHousholding"/>
-     <addaction name="actionMeasurements"/>
-     <addaction name="actionEverything"/>
+     <addaction name="actionExportHousholding"/>
+     <addaction name="actionExportMeasurements"/>
+     <addaction name="actionExportEverything"/>
     </widget>
     <widget class="QMenu" name="menuMode">
      <property name="title">
       <string>Mode</string>
      </property>
-     <addaction name="actionRecording_2"/>
-     <addaction name="actionReplying"/>
-     <addaction name="actionTesting_2"/>
+     <addaction name="actionModeRecording"/>
+     <addaction name="actionModeReplaying"/>
+     <addaction name="actionModeTesting"/>
     </widget>
-    <addaction name="actionNew"/>
-    <addaction name="actionLoad"/>
+    <addaction name="actionFileNew"/>
+    <addaction name="actionFileLoad"/>
     <addaction name="separator"/>
-    <addaction name="actionSave_as"/>
+    <addaction name="actionFileSave_as"/>
     <addaction name="separator"/>
     <addaction name="actionResults"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
     <addaction name="menuMode"/>
-    <addaction name="actionStart"/>
+    <addaction name="actionRestart"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -1334,19 +1334,19 @@
     <property name="title">
      <string>Connection</string>
     </property>
-    <widget class="QMenu" name="menuMode_2">
+    <widget class="QMenu" name="menuConnectionMode">
      <property name="title">
       <string>Mode</string>
      </property>
-     <addaction name="actionAutomatic_2"/>
-     <addaction name="actionManual_2"/>
+     <addaction name="actionConnectionAutomatic"/>
+     <addaction name="actionConnectionManual"/>
     </widget>
     <addaction name="actionConnect"/>
     <addaction name="separator"/>
     <addaction name="actionRetry"/>
     <addaction name="separator"/>
-    <addaction name="actionTroubleshoot"/>
-    <addaction name="menuMode_2"/>
+    <addaction name="actionLog"/>
+    <addaction name="menuConnectionMode"/>
     <addaction name="separator"/>
     <addaction name="actionDisconnect"/>
    </widget>
@@ -1354,63 +1354,25 @@
     <property name="title">
      <string>Language</string>
     </property>
-    <addaction name="actionEnglish_2"/>
-    <addaction name="actionDeutsch_2"/>
+    <addaction name="actionEnglish"/>
+    <addaction name="actionDeutsch"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConnection"/>
    <addaction name="menuLanguage"/>
    <addaction name="menuHelp"/>
   </widget>
-  <action name="actionYou_Cant_Help_Me">
-   <property name="text">
-    <string>You Cant Help Me</string>
-   </property>
-   <property name="shortcut">
-    <string>F1</string>
-   </property>
-  </action>
-  <action name="actionEnglish">
-   <property name="text">
-    <string>English</string>
-   </property>
-  </action>
-  <action name="actionDeutsch">
-   <property name="text">
-    <string>Deutsch</string>
-   </property>
-  </action>
-  <action name="actionTesting">
-   <property name="text">
-    <string>Testing</string>
-   </property>
-  </action>
-  <action name="actionRecording">
-   <property name="text">
-    <string>Recording</string>
-   </property>
-  </action>
-  <action name="actionReplaying">
-   <property name="text">
-    <string>Replaying</string>
-   </property>
-  </action>
-  <action name="actionLoad">
+  <action name="actionFileLoad">
    <property name="text">
     <string>Open</string>
    </property>
   </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save</string>
-   </property>
-  </action>
-  <action name="actionSave_as">
+  <action name="actionFileSave_as">
    <property name="text">
     <string>Save as</string>
    </property>
   </action>
-  <action name="actionNew">
+  <action name="actionFileNew">
    <property name="text">
     <string>New</string>
    </property>
@@ -1444,14 +1406,9 @@
     <string>Disconnect</string>
    </property>
   </action>
-  <action name="actionStart">
+  <action name="actionRestart">
    <property name="text">
     <string>Restart</string>
-   </property>
-  </action>
-  <action name="actionTroubleshoot">
-   <property name="text">
-    <string>Connection Log</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -1462,62 +1419,82 @@
     <string/>
    </property>
   </action>
-  <action name="actionAutomatic">
+  <action name="actionConnectionAutomatic">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Automatic</string>
    </property>
   </action>
-  <action name="actionManual">
+  <action name="actionConnectionManual">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Manual</string>
    </property>
   </action>
-  <action name="actionAutomatic_2">
-   <property name="text">
-    <string>Automatic</string>
+  <action name="actionEnglish">
+   <property name="checkable">
+    <bool>true</bool>
    </property>
-  </action>
-  <action name="actionManual_2">
-   <property name="text">
-    <string>Manual</string>
+   <property name="checked">
+    <bool>true</bool>
    </property>
-  </action>
-  <action name="actionEnglish_2">
    <property name="text">
     <string>English</string>
    </property>
   </action>
-  <action name="actionDeutsch_2">
+  <action name="actionDeutsch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Deutsch</string>
    </property>
   </action>
-  <action name="actionHousholding">
+  <action name="actionExportHousholding">
    <property name="text">
     <string>Housholding</string>
    </property>
   </action>
-  <action name="actionMeasurements">
+  <action name="actionExportMeasurements">
    <property name="text">
     <string>Measurements</string>
    </property>
   </action>
-  <action name="actionEverything">
+  <action name="actionExportEverything">
    <property name="text">
     <string>Full Dataset</string>
    </property>
   </action>
-  <action name="actionRecording_2">
+  <action name="actionModeRecording">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Recording</string>
    </property>
   </action>
-  <action name="actionReplying">
+  <action name="actionModeReplaying">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Replaying</string>
    </property>
   </action>
-  <action name="actionTesting_2">
+  <action name="actionModeTesting">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Testing</string>
    </property>
@@ -1528,6 +1505,11 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="actionLog">
+   <property name="text">
+    <string>Connection Log</string>
    </property>
   </action>
  </widget>
