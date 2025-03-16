@@ -1418,6 +1418,9 @@
    <property name="shortcut">
     <string/>
    </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::QuitRole</enum>
+   </property>
   </action>
   <action name="actionConnectionAutomatic">
    <property name="checkable">
