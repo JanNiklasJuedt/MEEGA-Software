@@ -20,34 +20,41 @@ from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog
     QLabel, QLineEdit, QSizePolicy, QSpacerItem,
     QToolButton, QWidget)
 
-class Ui_Dialog(object):
-    def setupUi(self, Dialog):
-        if not Dialog.objectName():
-            Dialog.setObjectName(u"Dialog")
-        Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        Dialog.setEnabled(True)
-        Dialog.resize(564, 205)
+class Ui_StartDialog(object):
+    def setupUi(self, StartDialog):
+        if not StartDialog.objectName():
+            StartDialog.setObjectName(u"StartDialog")
+        StartDialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+        StartDialog.setEnabled(True)
+        StartDialog.resize(564, 271)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
-        Dialog.setSizePolicy(sizePolicy)
+        sizePolicy.setHeightForWidth(StartDialog.sizePolicy().hasHeightForWidth())
+        StartDialog.setSizePolicy(sizePolicy)
         font = QFont()
         font.setPointSize(12)
-        Dialog.setFont(font)
-        self.gridLayout = QGridLayout(Dialog)
+        StartDialog.setFont(font)
+        StartDialog.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        StartDialog.setSizeGripEnabled(False)
+        StartDialog.setModal(True)
+        self.gridLayout = QGridLayout(StartDialog)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 2, 1, 1, 1)
-
         self.verticalSpacer_2 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.gridLayout.addItem(self.verticalSpacer_2, 4, 1, 1, 1)
 
+        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.verticalSpacer_3, 0, 1, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_2, 3, 0, 1, 1)
+
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.buttonBox = QDialogButtonBox(Dialog)
+        self.buttonBox = QDialogButtonBox(StartDialog)
         self.buttonBox.setObjectName(u"buttonBox")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -67,103 +74,115 @@ class Ui_Dialog(object):
 
         self.gridLayout.addLayout(self.horizontalLayout, 3, 1, 1, 1)
 
+        self.verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 2, 1, 1, 1)
+
         self.horizontalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.gridLayout.addItem(self.horizontalSpacer, 3, 2, 1, 1)
 
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName(u"formLayout")
-        self.label = QLabel(Dialog)
-        self.label.setObjectName(u"label")
+        self.modeLabel = QLabel(StartDialog)
+        self.modeLabel.setObjectName(u"modeLabel")
 
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label)
+        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.modeLabel)
 
-        self.comboBox = QComboBox(Dialog)
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.setObjectName(u"comboBox")
+        self.modeComboBox = QComboBox(StartDialog)
+        self.modeComboBox.addItem("")
+        self.modeComboBox.addItem("")
+        self.modeComboBox.addItem("")
+        self.modeComboBox.addItem("")
+        self.modeComboBox.setObjectName(u"modeComboBox")
 
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.comboBox)
+        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.modeComboBox)
 
-        self.label_2 = QLabel(Dialog)
-        self.label_2.setObjectName(u"label_2")
+        self.connectionLabel = QLabel(StartDialog)
+        self.connectionLabel.setObjectName(u"connectionLabel")
 
-        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
+        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.connectionLabel)
 
-        self.comboBox_2 = QComboBox(Dialog)
-        self.comboBox_2.addItem("")
-        self.comboBox_2.addItem("")
-        self.comboBox_2.addItem("")
-        self.comboBox_2.addItem("")
-        self.comboBox_2.setObjectName(u"comboBox_2")
-        self.comboBox_2.setEnabled(True)
-        self.comboBox_2.setEditable(False)
-        self.comboBox_2.setFrame(True)
-        self.comboBox_2.setModelColumn(0)
+        self.connectionComboBox = QComboBox(StartDialog)
+        self.connectionComboBox.addItem("")
+        self.connectionComboBox.addItem("")
+        self.connectionComboBox.addItem("")
+        self.connectionComboBox.addItem("")
+        self.connectionComboBox.setObjectName(u"connectionComboBox")
+        self.connectionComboBox.setEnabled(True)
+        self.connectionComboBox.setEditable(False)
+        self.connectionComboBox.setFrame(True)
+        self.connectionComboBox.setModelColumn(0)
 
-        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.comboBox_2)
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.connectionComboBox)
 
-        self.label_3 = QLabel(Dialog)
-        self.label_3.setObjectName(u"label_3")
+        self.saveFileLabel = QLabel(StartDialog)
+        self.saveFileLabel.setObjectName(u"saveFileLabel")
 
-        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_3)
+        self.formLayout.setWidget(3, QFormLayout.LabelRole, self.saveFileLabel)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.lineEdit = QLineEdit(Dialog)
-        self.lineEdit.setObjectName(u"lineEdit")
+        self.saveFileEdit = QLineEdit(StartDialog)
+        self.saveFileEdit.setObjectName(u"saveFileEdit")
 
-        self.horizontalLayout_3.addWidget(self.lineEdit)
+        self.horizontalLayout_3.addWidget(self.saveFileEdit)
 
-        self.toolButton = QToolButton(Dialog)
-        self.toolButton.setObjectName(u"toolButton")
-        self.toolButton.setArrowType(Qt.ArrowType.NoArrow)
+        self.saveFileButton = QToolButton(StartDialog)
+        self.saveFileButton.setObjectName(u"saveFileButton")
+        self.saveFileButton.setArrowType(Qt.ArrowType.NoArrow)
 
-        self.horizontalLayout_3.addWidget(self.toolButton)
+        self.horizontalLayout_3.addWidget(self.saveFileButton)
 
 
-        self.formLayout.setLayout(2, QFormLayout.FieldRole, self.horizontalLayout_3)
+        self.formLayout.setLayout(3, QFormLayout.FieldRole, self.horizontalLayout_3)
+
+        self.languageLabel = QLabel(StartDialog)
+        self.languageLabel.setObjectName(u"languageLabel")
+
+        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.languageLabel)
+
+        self.languageComboBox = QComboBox(StartDialog)
+        self.languageComboBox.addItem("")
+        self.languageComboBox.addItem("")
+        self.languageComboBox.setObjectName(u"languageComboBox")
+
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.languageComboBox)
 
 
         self.gridLayout.addLayout(self.formLayout, 1, 1, 1, 1)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout.addItem(self.verticalSpacer_3, 0, 1, 1, 1)
+        self.retranslateUi(StartDialog)
+        self.buttonBox.rejected.connect(StartDialog.reject)
+        self.buttonBox.accepted.connect(StartDialog.accept)
 
-        self.horizontalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer_2, 3, 0, 1, 1)
-
-
-        self.retranslateUi(Dialog)
-        self.buttonBox.rejected.connect(Dialog.reject)
-        self.buttonBox.accepted.connect(Dialog.accept)
-
-        self.comboBox_2.setCurrentIndex(3)
+        self.connectionComboBox.setCurrentIndex(3)
 
 
-        QMetaObject.connectSlotsByName(Dialog)
+        QMetaObject.connectSlotsByName(StartDialog)
     # setupUi
 
-    def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Groundstation Start", None))
-        self.label.setText(QCoreApplication.translate("Dialog", u"Mode", None))
-        self.comboBox.setItemText(0, QCoreApplication.translate("Dialog", u"Automatic", None))
-        self.comboBox.setItemText(1, QCoreApplication.translate("Dialog", u"Testing", None))
-        self.comboBox.setItemText(2, QCoreApplication.translate("Dialog", u"Recording", None))
-        self.comboBox.setItemText(3, QCoreApplication.translate("Dialog", u"Replaying", None))
+    def retranslateUi(self, StartDialog):
+        StartDialog.setWindowTitle(QCoreApplication.translate("StartDialog", u"Groundstation Start", None))
+        self.modeLabel.setText(QCoreApplication.translate("StartDialog", u"Mode", None))
+        self.modeComboBox.setItemText(0, QCoreApplication.translate("StartDialog", u"Automatic", None))
+        self.modeComboBox.setItemText(1, QCoreApplication.translate("StartDialog", u"Testing", None))
+        self.modeComboBox.setItemText(2, QCoreApplication.translate("StartDialog", u"Recording", None))
+        self.modeComboBox.setItemText(3, QCoreApplication.translate("StartDialog", u"Replaying", None))
 
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Connection", None))
-        self.comboBox_2.setItemText(0, QCoreApplication.translate("Dialog", u"Automatic", None))
-        self.comboBox_2.setItemText(1, QCoreApplication.translate("Dialog", u"Try Once", None))
-        self.comboBox_2.setItemText(2, QCoreApplication.translate("Dialog", u"Manual", None))
-        self.comboBox_2.setItemText(3, QCoreApplication.translate("Dialog", u"None", None))
+        self.connectionLabel.setText(QCoreApplication.translate("StartDialog", u"Connection", None))
+        self.connectionComboBox.setItemText(0, QCoreApplication.translate("StartDialog", u"Automatic", None))
+        self.connectionComboBox.setItemText(1, QCoreApplication.translate("StartDialog", u"Try Once", None))
+        self.connectionComboBox.setItemText(2, QCoreApplication.translate("StartDialog", u"Manual", None))
+        self.connectionComboBox.setItemText(3, QCoreApplication.translate("StartDialog", u"None", None))
 
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Save File", None))
-        self.lineEdit.setText(QCoreApplication.translate("Dialog", u"*\\default.meega", None))
-        self.toolButton.setText(QCoreApplication.translate("Dialog", u"...", None))
+        self.saveFileLabel.setText(QCoreApplication.translate("StartDialog", u"Save File", None))
+        self.saveFileEdit.setText(QCoreApplication.translate("StartDialog", u"*\\default.meega", None))
+        self.saveFileButton.setText(QCoreApplication.translate("StartDialog", u"...", None))
+        self.languageLabel.setText(QCoreApplication.translate("StartDialog", u"Language", None))
+        self.languageComboBox.setItemText(0, QCoreApplication.translate("StartDialog", u"English", None))
+        self.languageComboBox.setItemText(1, QCoreApplication.translate("StartDialog", u"Deutsch", None))
+
     # retranslateUi
 

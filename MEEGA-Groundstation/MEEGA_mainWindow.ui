@@ -1355,7 +1355,7 @@
      <string>Language</string>
     </property>
     <addaction name="actionEnglish"/>
-    <addaction name="actionDeutsch"/>
+    <addaction name="actionGerman"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConnection"/>
@@ -1449,15 +1449,33 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>English</string>
+    <string notr="true">English</string>
+   </property>
+   <property name="iconText">
+    <string notr="true">English</string>
+   </property>
+   <property name="toolTip">
+    <string notr="true">English</string>
+   </property>
+   <property name="lang" stdset="0">
+    <string notr="true">en</string>
    </property>
   </action>
-  <action name="actionDeutsch">
+  <action name="actionGerman">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Deutsch</string>
+    <string notr="true">Deutsch</string>
+   </property>
+   <property name="iconText">
+    <string notr="true">Deutsch</string>
+   </property>
+   <property name="toolTip">
+    <string notr="true">Deutsch</string>
+   </property>
+   <property name="lang" stdset="0">
+    <string notr="true">de</string>
    </property>
   </action>
   <action name="actionExportHousholding">
