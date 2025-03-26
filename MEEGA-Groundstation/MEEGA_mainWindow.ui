@@ -1432,6 +1432,9 @@
    <property name="text">
     <string>Automatic</string>
    </property>
+   <property name="data" stdset="0">
+    <number>10</number>
+   </property>
   </action>
   <action name="actionConnectionManual">
    <property name="checkable">
@@ -1439,6 +1442,9 @@
    </property>
    <property name="text">
     <string>Manual</string>
+   </property>
+   <property name="data" stdset="0">
+    <number>11</number>
    </property>
   </action>
   <action name="actionEnglish">
@@ -1457,7 +1463,7 @@
    <property name="toolTip">
     <string notr="true">English</string>
    </property>
-   <property name="lang" stdset="0">
+   <property name="data" stdset="0">
     <string notr="true">en</string>
    </property>
   </action>
@@ -1474,7 +1480,7 @@
    <property name="toolTip">
     <string notr="true">Deutsch</string>
    </property>
-   <property name="lang" stdset="0">
+   <property name="data" stdset="0">
     <string notr="true">de</string>
    </property>
   </action>
@@ -1503,6 +1509,9 @@
    <property name="text">
     <string>Recording</string>
    </property>
+   <property name="data" stdset="0">
+    <number>2</number>
+   </property>
   </action>
   <action name="actionModeReplaying">
    <property name="checkable">
@@ -1511,6 +1520,9 @@
    <property name="text">
     <string>Replaying</string>
    </property>
+   <property name="data" stdset="0">
+    <number>3</number>
+   </property>
   </action>
   <action name="actionModeTesting">
    <property name="checkable">
@@ -1518,6 +1530,9 @@
    </property>
    <property name="text">
     <string>Testing</string>
+   </property>
+   <property name="data" stdset="0">
+    <number>1</number>
    </property>
   </action>
   <action name="actionDocumentation">
