@@ -3,7 +3,7 @@ from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale)
 
-from MEEGA_mainWindow import Ui_MainWindow
+from MEEGA_mainWindow import QLabel, Ui_MainWindow
 from MEEGA_startup import Ui_StartDialog
 
 class Settings:
@@ -26,7 +26,6 @@ class Settings:
         self.mode = mode
         self.connectionMode = connectionMode
         self.filePath = filePath
-
     def change(self, changes):
         if changes is Settings:
             self.locale = QLocale(changes.locale)
@@ -52,6 +51,8 @@ class MainGS(QMainWindow):
         self.setLocale(settings.locale)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.logo = QPixmap("meega_logo_small.png")
+        self.ui.label_logo.setPixmap(self.logo)
         self.languageGroup = QActionGroup(self.ui.menuLanguage)
         self.languageGroup.setExclusive(True)
         for i in self.ui.menuLanguage.actions():
@@ -132,6 +133,7 @@ class StartGS(QDialog):
         filepath = self.ui.saveFileEdit.text()
         settings = Settings(language,mode,connection,filepath)
         self.transmitSettings.emit(settings)
+
 #Main
 if __name__ == "__main__":
     GS = QApplication()
