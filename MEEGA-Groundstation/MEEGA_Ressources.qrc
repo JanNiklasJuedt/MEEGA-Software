@@ -1,9 +1,0 @@
-<RCC>
-  <qresource prefix="Logo">
-    <file>meega_logo_small.ico</file>
-  </qresource>
-  <qresource prefix="Language">
-    <file>MEEGA_Language_de.ts</file>
-    <file>MEEGA_Language_de.qm</file>
-  </qresource>
-</RCC>

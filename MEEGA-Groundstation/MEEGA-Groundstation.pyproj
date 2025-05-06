@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{b21c62a3-5866-4bad-ad38-1691923dd45a}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>MEEGA_GSMain.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="MEEGA Groundstation.exe" />
+    <Content Include="Ressources\MEEGA_Ressources.qrc" />
+    <Content Include="Ressources\MEEGA_Language_de.qm" />
+    <Content Include="Ressources\MEEGA_Language_de.ts" />
+    <Content Include="Ressources\meega_logo_small.ico" />
+    <Content Include="Ressources\meega_logo_small.png" />
+    <Content Include="UI-Files\MEEGA_mainWindow.ui" />
+    <Content Include="UI-Files\MEEGA_results.ui" />
+    <Content Include="UI-Files\MEEGA_startup.ui" />
+    <Content Include="UI-Files\MEEGA_time.ui" />
+    <Content Include="requirements.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MEEGA_Connection.py" />
+    <Compile Include="MEEGA_GSMain.py" />
+    <Compile Include="MEEGA_mainWindow.py" />
+    <Compile Include="MEEGA_startup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Ressources\" />
+    <Folder Include="UI-Files\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>env</Id>
+      <Version>3.12</Version>
+      <Description>env (Python 3.12 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

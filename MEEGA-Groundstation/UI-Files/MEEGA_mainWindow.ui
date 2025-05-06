@@ -31,14 +31,20 @@
    <string>MEEGA - Ground Station</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="MEEGA_Ressources.qrc">
-    <normaloff>:/Logo/meega_logo_small.ico</normaloff>:/Logo/meega_logo_small.ico</iconset>
+   <iconset resource="../MEEGA_Ressources.qrc">
+    <normaloff>:/Logo/Ressources/meega_logo_small.ico</normaloff>:/Logo/Ressources/meega_logo_small.ico</iconset>
   </property>
   <property name="windowOpacity">
    <double>1.000000000000000</double>
   </property>
   <property name="locale">
    <locale language="English" country="Germany"/>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>50</width>
+    <height>50</height>
+   </size>
   </property>
   <property name="animated">
    <bool>false</bool>
@@ -674,7 +680,7 @@
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap resource="MEEGA_Ressources.qrc">:/Logo/meega_logo_small.ico</pixmap>
+             <pixmap resource="../MEEGA_Ressources.qrc">:/Logo/Ressources/meega_logo_small.png</pixmap>
             </property>
             <property name="scaledContents">
              <bool>true</bool>
@@ -1320,7 +1326,7 @@
        <widget class="QProgressBar" name="progressBar_SODS">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>1</horstretch>
+          <horstretch>5</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -1368,7 +1374,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
@@ -1407,7 +1413,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
@@ -1548,7 +1554,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>97</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
@@ -1590,7 +1596,7 @@
        <widget class="QProgressBar" name="progressBar_SOE">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>10</horstretch>
+          <horstretch>20</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -2031,7 +2037,7 @@
   </action>
  </widget>
  <resources>
-  <include location="MEEGA_Ressources.qrc"/>
+  <include location="../MEEGA_Ressources.qrc"/>
  </resources>
  <connections/>
 </ui>

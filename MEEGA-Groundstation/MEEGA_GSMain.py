@@ -3,7 +3,7 @@ from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale)
 
-from MEEGA_mainWindow import QLabel, Ui_MainWindow
+from MEEGA_mainWindow import Ui_MainWindow
 from MEEGA_startup import Ui_StartDialog
 from MEEGA_Connection import *
 
@@ -45,27 +45,26 @@ class Settings:
                 if i is str:
                     self.filePath = i
 
-class MainGS(QMainWindow):
+class GSMain(QMainWindow):
     def __init__(self, settings: Settings):
         super().__init__()
         self.settings = settings
         self.setLocale(settings.locale)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.logo = QPixmap("meega_logo_small.png")
+        self.logo = QPixmap("Ressources\\meega_logo_small.png")
         self.ui.label_logo.setPixmap(self.logo)
         self.languageGroup = QActionGroup(self.ui.menuLanguage)
         self.languageGroup.setExclusive(True)
         for i in self.ui.menuLanguage.actions():
             self.languageGroup.addAction(i)
-        self.modeGroup = QActionGroup(self.ui.menuMode)
+        self.modeGroup = QActionGroup(self.ui.menuStart)
         self.modeGroup.setExclusive(True)
-        for i in self.ui.menuMode.actions():
-            self.modeGroup.addAction(i)
-        self.connectionModeGroup = QActionGroup(self.ui.menuConnectionMode)
-        self.connectionModeGroup.setExclusive(True)
-        for i in self.ui.menuConnectionMode.actions():
-            self.connectionModeGroup.addAction(i)
+        self.modeGroup.addAction(self.ui.actionFlight_Mode)
+        self.modeGroup.addAction(self.ui.actionTest_Mode)
+        self.connectionModeGroup = QActionGroup(self.ui.menuConnection)
+        self.connectionModeGroup.addAction(self.ui.actionAutomatic)
+        self.connectionModeGroup.addAction(self.ui.actionManual)
         self.app = QApplication.instance()
         self.languageGroup.triggered.connect(self.languageChange)
     def retranslateUi(self):
@@ -107,9 +106,9 @@ class MainGS(QMainWindow):
         self.filePathChange(True)
 
 
-class StartGS(QDialog):
+class GSStart(QDialog):
     transmitSettings = Signal(Settings)
-    def __init__(self, mainWidget: MainGS):
+    def __init__(self, mainWidget: GSMain):
         super().__init__()
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
@@ -138,7 +137,7 @@ class StartGS(QDialog):
 #Main
 if __name__ == "__main__":
     GS = QApplication()
-    icon = QIcon("meega_logo_small.png")
+    icon = QIcon("Ressources\\meega_logo_small.ico")
     GS.setWindowIcon(icon)
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
@@ -147,8 +146,8 @@ if __name__ == "__main__":
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
-    mainWidget = MainGS(settings)
-    startWidget = StartGS(mainWidget)
+    mainWidget = GSMain(settings)
+    startWidget = GSStart(mainWidget)
     
     language = translator.language()
     activeMode = "Recording"
