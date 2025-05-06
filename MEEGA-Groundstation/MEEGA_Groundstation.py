@@ -5,6 +5,7 @@ from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale)
 
 from MEEGA_mainWindow import QLabel, Ui_MainWindow
 from MEEGA_startup import Ui_StartDialog
+from MEEGA_Connection import *
 
 class Settings:
     class Mode:
@@ -142,6 +143,7 @@ if __name__ == "__main__":
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
     settings = Settings()
+    connection = Connection()
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
@@ -159,3 +161,4 @@ if __name__ == "__main__":
     mainWidget.show()
     startWidget.show()
     sys.exit(GS.exec())
+    #Exit
