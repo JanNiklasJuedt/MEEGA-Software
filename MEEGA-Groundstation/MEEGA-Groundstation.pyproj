@@ -25,11 +25,15 @@
     <Content Include="Ressources\MEEGA_Language_de.ts" />
     <Content Include="Ressources\meega_logo_small.ico" />
     <Content Include="Ressources\meega_logo_small.png" />
+    <Content Include="UI-Files\MEEGA_connection.ui" />
+    <Content Include="UI-Files\MEEGA_documentation.ui" />
+    <Content Include="UI-Files\MEEGA_error.ui" />
     <Content Include="UI-Files\MEEGA_mainWindow.ui" />
     <Content Include="UI-Files\MEEGA_results.ui" />
     <Content Include="UI-Files\MEEGA_startup.ui" />
     <Content Include="UI-Files\MEEGA_time.ui" />
     <Content Include="requirements.txt" />
+    <Content Include="UI_Build.bat" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MEEGA_Connection.py" />

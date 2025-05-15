@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LaunchTimeDialog</class>
- <widget class="QDialog" name="LaunchTimeDialog">
+ <class>ErrorDialog</class>
+ <widget class="QDialog" name="ErrorDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>125</height>
+    <height>100</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,12 +17,9 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MEEGA - ELT</string>
+   <string>MEEGA - Error</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="spacing">
-    <number>10</number>
-   </property>
    <property name="leftMargin">
     <number>20</number>
    </property>
@@ -36,48 +33,14 @@
     <number>20</number>
    </property>
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="1">
-      <widget class="QTimeEdit" name="launchTimeEdit">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="displayFormat">
-        <string>HH:mm:ss</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="launchTimeLabel">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Estimated Launch Time</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
+    <widget class="QLabel" name="Error">
+     <property name="text">
+      <string>UH OH Something went wrong!</string>
      </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>10</height>
-      </size>
-     </property>
-    </spacer>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -85,7 +48,7 @@
       <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Ok</set>
      </property>
      <property name="centerButtons">
       <bool>true</bool>
@@ -99,7 +62,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>LaunchTimeDialog</receiver>
+   <receiver>ErrorDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -115,7 +78,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>LaunchTimeDialog</receiver>
+   <receiver>ErrorDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

@@ -142,7 +142,6 @@ if __name__ == "__main__":
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
     settings = Settings()
-    connection = Connection()
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
