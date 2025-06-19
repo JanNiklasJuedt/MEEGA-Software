@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b21c62a3-5866-4bad-ad38-1691923dd45a}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>MEEGA_GSMain.py</StartupFile>
+    <StartupFile>MEEGA_GroundStation.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -19,13 +19,13 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="MEEGA Groundstation.exe" />
     <Content Include="Ressources\MEEGA_Ressources.qrc" />
     <Content Include="Ressources\MEEGA_Language_de.qm" />
     <Content Include="Ressources\MEEGA_Language_de.ts" />
     <Content Include="Ressources\meega_logo_small.ico" />
     <Content Include="Ressources\meega_logo_small.png" />
     <Content Include="UI-Files\MEEGA_connection.ui" />
+    <Content Include="UI-Files\MEEGA_controlPanel.ui" />
     <Content Include="UI-Files\MEEGA_documentation.ui" />
     <Content Include="UI-Files\MEEGA_error.ui" />
     <Content Include="UI-Files\MEEGA_mainWindow.ui" />
@@ -36,10 +36,15 @@
     <Content Include="UI_Build.bat" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MEEGA_Connection.py" />
-    <Compile Include="MEEGA_GSMain.py" />
+    <Compile Include="MEEGA_connection.py" />
+    <Compile Include="MEEGA_controlPanel.py" />
+    <Compile Include="MEEGA_documentation.py" />
+    <Compile Include="MEEGA_error.py" />
+    <Compile Include="MEEGA_GroundStation.py" />
     <Compile Include="MEEGA_mainWindow.py" />
+    <Compile Include="MEEGA_results.py" />
     <Compile Include="MEEGA_startup.py" />
+    <Compile Include="MEEGA_time.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Ressources\" />

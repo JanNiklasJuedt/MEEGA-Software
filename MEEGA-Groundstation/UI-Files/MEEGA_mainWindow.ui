@@ -2239,9 +2239,9 @@
     <addaction name="separator"/>
     <addaction name="actionDisconnect"/>
    </widget>
-   <widget class="QMenu" name="menuOptions">
+   <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Options</string>
+     <string>Settings</string>
     </property>
     <widget class="QMenu" name="menuLanguage">
      <property name="title">
@@ -2261,6 +2261,8 @@
     <addaction name="actionTest_Mode"/>
     <addaction name="actionFlight_Mode"/>
     <addaction name="separator"/>
+    <addaction name="actionControl_Panel"/>
+    <addaction name="separator"/>
     <addaction name="actionEstimated_Launch_Time"/>
     <addaction name="separator"/>
     <addaction name="actionRestart"/>
@@ -2269,7 +2271,7 @@
    <addaction name="menuStart"/>
    <addaction name="menuFile"/>
    <addaction name="menuConnection"/>
-   <addaction name="menuOptions"/>
+   <addaction name="menuSettings"/>
   </widget>
   <action name="actionFileLoad">
    <property name="text">
@@ -2525,6 +2527,16 @@
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="actionControl_Panel">
+   <property name="text">
+    <string>Control Panel</string>
+   </property>
+  </action>
+  <action name="actionConnection">
+   <property name="text">
+    <string>Connection</string>
    </property>
   </action>
  </widget>
