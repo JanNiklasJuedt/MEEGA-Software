@@ -10,7 +10,7 @@ struct params {
 };
 
 int ExperimentRun(struct params parameter) {
-	//...
+	//...valve open... 
 	int EoE = 1;
 	return 0;
 }
