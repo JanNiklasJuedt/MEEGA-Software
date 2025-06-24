@@ -15,10 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DataHandling.c">
+    <ClCompile Include="MEEGA_DataHandling.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MEEGA_OnBoard.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MEEGA_ErrorDetection.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
