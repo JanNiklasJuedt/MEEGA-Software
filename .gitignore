@@ -172,3 +172,4 @@ cython_debug/
 
 # VisualStudio 
 /.vs
+/MEEGA-OnBoard/x64/Debug
