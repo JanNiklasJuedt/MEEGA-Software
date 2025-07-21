@@ -1,48 +1,53 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "MEEGA_ErrorDetection.c"
 
 #define NULL (void*)0
+#define EOL (char)255
+
+
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 struct DataFrame {
-	//Used to chronologically order DataFrames, Always > 0 (0 denotes an empty DataFrame)
-	int sync;
+	//Used to chronologically order DataFrames (0 denotes an empty DataFrame)
+	char sync[2];
 	//Used to mark DataFrames for faulty or missing data
-	int flag;
-	int sensors[8];
-	int householding[2];
+	char flag;
+	char data[40];
 } emptyDataFrame = {.sync = 0};
-//Stores the data contained in one packet of the transmission protocol (as "int" for simplicity, actual transmission uses bytes) 
+//Stores the data contained in one packet of the transmission protocol
 struct DataPacket {
 	//Used to stitch together DataFrames (= DataFrame.sync)
-	int sync;
-	//Used to denote the current program mode
-	int mode;
-	//Used to denote payload data
-	int id;
-	int payload[4];
-	int chksm;
-	int crc;
+	char sync[2];
+	//Used to denote the current program mode (2 Bits)
+	char mode;
+	//Used to identify payload data (3 Bits)
+	char id;
+	char payload[16];
+	//Checksum output
+	char chksm[2];
+	//Cyclic Redundancy Check Output
+	char crc[2];
 } emptyDataPacket = {.sync = 0};
-//This acts as an input/output buffer for transmissions (use only one!)
+//This acts as an input/output buffer for transmissions
 struct DataBuffer {
 	struct DataPacket incoming[50];
 	struct DataPacket outgoing[10];
-	//buffer in case multiple frames need to be processed simultanusly, direction depends on program
+	//Buffer in case multiple frames need to be processed simultanously, direction depends on program
 	struct DataFrame frameStack[10];
-};
-//Stores all data saved in the failsafe/backup document
+} emptyBuffer;
+//Stores all data saved in the failsafe (backup) document
 struct Failsafe {
-	char version[4];
+	char version;
 	int dateTime;
-	//path used to lookup the newest savefile
+	//path used to look up the newest savefile
 	char saveFilePath[100];
-	//if the experiment run of the newest savefile has been completed
+	//if the experiment run of the newest savefile has been completed (Bool)
 	char complete;
-	//if the program has exited nominally
+	//if the program has exited nominally (Bool)
 	char nominalExit;
-	//current operating mode of the program (test/flight)
+	//current operating mode of the program (test: "t"/flight: "f")
 	char mode;
 	//connection mode of the groundstation (unused for onboard)
 	char conn;
@@ -51,7 +56,7 @@ struct Failsafe {
 };
 //Stores the header and file-pointer of a savefile document
 struct SaveFile {
-	char version[4];
+	char version;
 	int dateTime;
 	//pointer towards the first "DataFrame", subsequent frames are pointed to by themselves
 	struct SaveFileFrame* firstFrame;
@@ -60,21 +65,33 @@ struct SaveFile {
 	int frameAmount;
 	//total amount of frames already written to the harddrive
 	int savedAmount;
-	FILE* file;
+	//path to the associated file
 	char saveFilePath[100];
 };
 //Stores one DataFrame of a savefile, as well as a pointer to the next one
 struct SaveFileFrame {
-	struct DataFrame payload;
+	struct DataFrame data;
 	struct SaveFileFrame* nextFrame;
-} emptySaveFileFrame = {.nextFrame = (void*)0};
+	struct SaveFileFrame* previousFrame;
+} emptySaveFileFrame = {.nextFrame = NULL};
+//Stores pointers to all top-level Data Storage components of the program
+struct StorageHub {
+	struct SaveFile* savefile;
+	struct Failsafe* failsafe;
+	struct DataBuffer* buffer;
+};
+
+//WIP
+int Update(struct StorageHub* storage);
+//Initializes Memory and loads Data from files if possible
+struct StorageHub Initialize(char path[]);
 
 //Returns a new empty DataFrame with the specified Sync-Bytes value
-struct DataFrame CreateFrame(int sync);
-//Writes data onto a DataFrame according to the identification-string
-int WriteFrame(struct DataFrame* frame, char id[], int value);
-//Returns stored data on a DataFrame according to the identification-string
-int ReadFrame(struct DataFrame* frame, char id[]);
+static struct DataFrame CreateFrame(int sync);
+//Writes data onto a DataFrame according to the ID (see FrameIdentification), returns the old value ({0} if empty)
+int WriteFrame(struct DataFrame* frame, int id, int value);
+//Returns stored data on a DataFrame according to the ID (see FrameIdentification)
+int ReadFrame(struct DataFrame* frame, int id);
 //Returns wether a DataFrame contains useful data
 int FrameIsEmpty(struct DataFrame* frame);
 
@@ -109,36 +126,124 @@ struct Failsafe* ReadFailsafe();
 //returns {0} if successful, {1} if it created a new file and {-1} if there was an error
 int UpdateFailsafe(struct Failsafe data);
 
-//Writes the frames added since the last save onto the harddrive,
-//returns the number of Bytes written or {-1} if unsuccessful
+//Writes the frames added since the last save onto the harddrive, returns the number of Bytes written or {-1} if unsuccessful
 int WriteSave(struct SaveFile* savefile);
 //Creates a new SaveFile structure and file
 struct SaveFile* CreateSave(char path[]);
 //Creates a new SaveFile structure, explicitely without a corresponding file
 struct SaveFile* VirtualSave();
-//Reloads all frames from the harddrive into the structure, appending excess from the structure, returns the amount of frames checked
+//Reloads all frames from the harddrive into the structure, appending excess from the structure, returns the amount of frames loaded
 int CheckSave(struct SaveFile* savefile);
-//Reads a SaveFile-file into a structure
+//Reads a SaveFile-file into a Savefile-structure, creates a new one if none was found
 struct SaveFile* ReadSave(char path[]);
 //Returns the Frame of the SaveFile at the corresponding index, defaults to the last one
 struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index);
-//Adds a new frame to the end of the SaveFile
+//Adds a new frame to the end of the SaveFile, returns the amount of stored frames after the operation
 int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data);
+//Shortcut to CreateFrame() and AddSaveFrame(), returns the amount of stored frames after the operation
+int CreateSaveFrame(struct SaveFile* savefile, int sync);
 
-char VERSION[] = "0.1";
-char FAILSAFENAME[] = "\meega.failsafe";
+//INTERNAL, Looks up values to be used by the ReadFrame() and WriteFrame() operations
+static void _GetPosition_(int id, int* index, char* bit, char* length);
+
+char VERSION = 1;
+char FAILSAFENAME[] = "*\\failsafe.txt";
 int PACKETLENGTH = 23;
 int PACKETIDNUMBER = 5;
 
-struct DataFrame CreateFrame(int sync) {
+enum FrameIdentifier {
+	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
+};
+
+struct StorageHub Initialize(char path[])
+{
+	struct StorageHub new = {NULL, NULL, NULL};
+	struct FailSafe* failsafe = ReadFailsafe();
+	if (failsafe == NULL) failsafe = CreateFailsafe();
+	new.failsafe = failsafe;
+	struct SaveFile* savefile;
+	int readExisting = !new.failsafe->nominalExit && new.failsafe->saveFilePath[0] != "";
+	if (readExisting) savefile = ReadSave(new.failsafe->saveFilePath);
+	else savefile = CreateSave(path);
+	if (savefile == NULL) {
+		savefile = VirtualSave();
+		strcpy(new.failsafe->saveFilePath, "");
+	}
+	else if (!readExisting) strcpy(new.failsafe->saveFilePath, path);
+	new.savefile = savefile;
+	struct DataBuffer* buffer = (struct DataBuffer*)malloc(sizeof(struct DataBuffer));
+	*buffer = emptyBuffer;
+	new.buffer = buffer;
+	return new;
+}
+
+static struct DataFrame CreateFrame(char sync[2]) {
 	if (sync <= 0) return emptyDataFrame;
 	struct DataFrame temp = emptyDataFrame;
-	temp.sync = sync;
+	temp.sync[0] = sync[0];
+	temp.sync[1] = sync[1];
 	return temp;
 }
+
+static void _GetPosition_(int id, int* index, char* bit, char* length)
+{
+	switch (id) {
+	case AmbientPressure: *index = 0, *length = 2;
+	case HHAmbientPressure: *index = 32, *bit = 8, *length = 1;
+	case CompareTemperature: *index = 2, *length = 3;
+	case HHCompareTemperature: *index = 32, *bit = 7, *length = 1;
+	}
+	return;
+}
+
+int WriteFrame(struct DataFrame* frame, int id, int value)
+{
+	char former[4] = {0,0,0,0};
+	char value32[4] = value;
+	int index = 0;
+	char bit = 0;
+	char length = 0;
+	_GetPosition_(id, &index, &bit, &length);
+	if (bit == 0) {
+		for (int i = 0; i < length; i++) {
+			former[i] = frame->data[index + i];
+			frame->data[index + i] = value32[i];
+		}
+	}
+	else {
+		former[0] = frame->data[index];
+		former[0] >>= bit - length;
+		former[0] %= 1 << length;
+		frame->data[index] -= former[0] << bit - length;
+		frame->data[index] += value << bit - length;
+	}
+	return (int)former;
+}
+
+int ReadFrame(struct DataFrame* frame, int id)
+{
+	int value = 0;
+	int index = 0;
+	char bit = 0;
+	char length = 0;
+	_GetPosition_(id, &index, &bit, &length);
+	if (bit == 0) {
+		for (int i = 1; i <= length; i++) {
+			value += (frame->data[index + length - i]) << (i * sizeof(char));
+		}
+	}
+	else {
+		value = frame->data[index];
+		value >>= bit - length;
+		value %= 1 << length;
+	}
+	return value;
+}
+
 int FrameIsEmpty(struct DataFrame* frame) {
 	return frame->sync == 0;
 }
+
 struct DataPacket GetOutPacket(struct DataBuffer* buffer)
 {
 	struct DataPacket temp = emptyDataPacket;
@@ -150,6 +255,7 @@ struct DataPacket GetOutPacket(struct DataBuffer* buffer)
 	}
 	return temp;
 }
+
 struct DataPacket GetInPacket(struct DataBuffer* buffer)
 {
 	struct DataPacket temp = emptyDataPacket;
@@ -161,6 +267,7 @@ struct DataPacket GetInPacket(struct DataBuffer* buffer)
 	}
 	return temp;
 }
+
 struct DataFrame GetBufferFrame(struct DataBuffer* buffer)
 {
 	struct DataFrame temp = emptyDataFrame;
@@ -172,6 +279,7 @@ struct DataFrame GetBufferFrame(struct DataBuffer* buffer)
 	}
 	return temp;
 }
+
 int AddBufferFrame(struct DataBuffer* buffer, struct DataFrame frame)
 {
 	int number = 0;
@@ -183,6 +291,7 @@ int AddBufferFrame(struct DataBuffer* buffer, struct DataFrame frame)
 	}
 	return number + 1;
 }
+
 int AddInPacket(struct DataBuffer* buffer, struct DataPacket data)
 {
 	int number = 0;
@@ -194,6 +303,7 @@ int AddInPacket(struct DataBuffer* buffer, struct DataPacket data)
 	}
 	return number + 1;
 }
+
 int AddOutPacket(struct DataBuffer* buffer, struct DataPacket data)
 {
 	int number = 0;
@@ -205,32 +315,52 @@ int AddOutPacket(struct DataBuffer* buffer, struct DataPacket data)
 	}
 	return number + 1;
 }
-struct Failsafe* CreateFailsafe() {
+
+struct Failsafe* CreateFailsafe() 
+{
 	struct Failsafe* new = (struct Failsafe*) malloc(sizeof(struct Failsafe));
 	new->complete = 0;
 	new->conn = "a";
 	new->lang = "e";
-	new->dateTime = 0;
+	new->dateTime = time(NULL);
 	new->nominalExit = 0;
-	strcpy(new->saveFilePath[0], FAILSAFENAME);
-	new->version[0] = "";
+	new->saveFilePath[0] = "";
+	strcpy(new->version, VERSION);
 	new->mode = "f";
+	new->conn = "";
+	new->lang = "";
+	FILE* file = fopen(FAILSAFENAME, "w");
+	if (file != NULL) {
+		fprintf(file, "Version: %i;\n", VERSION);
+		fprintf(file, "Datetime: %i;\n\n", new->dateTime);
+		fprintf(file, "Savefile: %s;\n", new->saveFilePath);
+		fprintf(file, "Complete: %c;\n\n", (new->complete) ? 'y' : 'n');
+		fprintf(file, "Regular Exit: No;\n\n");
+		fprintf(file, "Mode: %c;\n", new->mode);
+		fprintf(file, "Connection: %c;\n", new->conn);
+		fprintf(file, "Language: %c;", new->lang);
+		fclose(file);
+	}
+	else {
+		free(new);
+		return NULL;
+	}
 	return new;
 }
 
 struct SaveFile* VirtualSave()
 {
 	struct SaveFile* new = (struct Failsafe*)malloc(sizeof(struct SaveFile));
-	new->dateTime = 0;
-	new->file = NULL;
+	new->dateTime = time(NULL);
 	new->firstFrame = NULL;
 	new->lastFrame = NULL;
 	new->frameAmount = 0;
 	new->savedAmount = -1;
 	new->saveFilePath[0] = "";
-	strcpy(new->version[0], VERSION);
+	new->version = VERSION;
 	return new;
 }
+
 struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index)
 {
 	if (index >= savefile->frameAmount)	return NULL;
@@ -243,10 +373,11 @@ struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index)
 	}
 	return frame;
 }
+
 int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data)
 {
 	struct SaveFileFrame* newframe = (struct SaveFileFrame*)malloc(sizeof(struct SaveFileFrame));
-	newframe->payload = *data;
+	newframe->data = *data;
 	newframe->nextFrame = NULL;
 	if (savefile->firstFrame == NULL) {
 		savefile->firstFrame = newframe;
@@ -259,15 +390,33 @@ int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data)
 	savefile->frameAmount++;
 	return savefile->frameAmount;
 }
-struct SaveFile* CreateSave(char path[]) {
+
+int CreateSaveFrame(struct SaveFile* savefile, int sync)
+{
+	struct DataFrame data = CreateFrame(sync);
+	return AddSaveFrame(savefile, &data);
+}
+
+struct SaveFile* CreateSave(char path[]) 
+{
 	struct SaveFile* new = (struct Failsafe*)malloc(sizeof(struct SaveFile));
-	new->dateTime = 0;
-	new->file = fopen(path, "w");
+	int tempDateTime = time(NULL);
+	FILE* file = fopen(path, "wb");
+	if (file != NULL) {
+		fprintf(file, VERSION);
+		fwrite(&tempDateTime, 4, 1, file);
+		fprintf(file, EOL);
+		fclose(file);
+	}
+	else {
+		free(new);
+		return NULL;
+	}
 	new->firstFrame = NULL;
 	new->lastFrame = NULL;
 	new->frameAmount = 0;
 	new->savedAmount = 0;
 	strcpy(new->saveFilePath, path);
-	strcpy(new->version[0], VERSION);
+	new->version = VERSION;
 	return new;
 }
