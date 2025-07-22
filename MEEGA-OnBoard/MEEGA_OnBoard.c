@@ -13,8 +13,6 @@
 
 #define RPi_SOE 41	//pin
 #define RPi_LO 47	//pin
-#define CS_PSB 37	//pin
-#define CS_TSB 39	//pin
 
 int main() {
 	wiringPiSetupGpio();
@@ -22,17 +20,15 @@ int main() {
 	pinMode(Nozzle_Servo, output);
 	pinMode(LEDs, output);
 
-	pinMode(CS_PSB, input);				//input should be in wiringPi library as define input 1
-	pinMode(CS_TSB, input);
-	pinMode(RPi_SOE, input);
+	pinMode(RPi_SOE, input);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, input);
 	
 	struct params config;
 	
 	while (1) {															//raspberryPi, keine angabe. datahandling, declaration and input.
-		int flightmode = digitalRead(CS_PSB);	//Flight Mode Switch
-		int testmode = digitalRead(CS_TSB);		//Test Mode Switch
-		int LOSignal = rBit(RPi_LO);						
+		int flightmode = 1;		//Flight Mode Switch ?	Get command from groundstation serial?
+		int testmode = 0;		//Test Mode Switch ?
+		int LOSignal = digitalRead(RPi_LO);						
 
 		if (flightmode && !testmode) {		//Flight Mode
 			config = flightstandard;
@@ -59,16 +55,12 @@ int main() {
 	return 0;
 }
 
-int rBit(int gpiopin) {
-	return digitalRead(gpiopin);	//returns the value of the pin, 0 or 1
-}
-
 int SoESignal() {
 	while (1) {
-		if (rBit(RPi_SOE) == 1) {
+		if (digitalRead(RPi_SOE) == 1) {
 			return 1;
 		}
-		else if (rBit(RPi_SOE) == 0) {
+		else if (digitalRead(RPi_SOE) == 0) {
 			continue;
 		}
 	}
@@ -134,6 +126,8 @@ int ExperimentRun(struct params parameter) {
 		delay(parameter.EoEDelay);
 		digitalWrite(LEDs, 0);
 		delay(parameter.FDA2);				//Basic Data Acquisition 2 seconds
+		Log();
+		writeSave(&buffer, "MEEGA_Test.txt");
 		delay(parameter.PoweroffDelay);
 		return 0;
 	}
@@ -143,9 +137,12 @@ int ExperimentRun(struct params parameter) {
 		delay(parameter.EoEDelay);
 		digitalWrite(LEDs,0);				//LED off
 		delay(parameter.FDA20);				//Full Dáta Acquisition 20 seconds
+		int t;
+		for (t = 0; t < parameter.FDA20; ++t) Log();
+		WriteSave(&buffer, "MEEGA_Experiment.txt");
 		EoE = 1;
 	}
-	if (EoE == 1) printf("End of Experiment\n"); delay(parameter.PoweroffDelay); return 0;	//End of Experiment
+	if (EoE == 1) delay(parameter.PoweroffDelay); return 0;	//End of Experiment
 }
 
 #define id_Ambient_Pressure "AmbientPressure"
@@ -166,7 +163,7 @@ int ExperimentRun(struct params parameter) {
 #define id_System_Time "SystemTime"
 #define id_Experiment_Status "ExperimentStatus"
 
-void DataAquisition(struct DataFrame* frame) {
+void DataAcquisition(struct DataFrame* frame) {
 	int AmbientPressure = analogRead(0);																//alle sensor daten etc lesen und in Data Handling int speichern. 2mode full & basic data acquisition. Hausholdong data speichern. 
 	int CompareTemperature = analogRead(1);
 	int TankPressure = analogRead(2);
@@ -203,4 +200,12 @@ void DataAquisition(struct DataFrame* frame) {
 	WriteFrame(frame, id_System_Time, SystemTime);
 	WriteFrame(frame, id_Experiment_Status, ExperimentStatus);
 	return;
+}
+
+struct DataBuffer buffer;	//Initialize the DataBuffer
+int sync = 0;	//Initialize the sync variable
+void Log() {
+	struct DataFrame frame = CreateFrame(sync++);
+	DataAquisition(&frame);	//DataAquisition function to fill the frame with data
+	AddBufferFrame(&buffer, frame);	//Add the frame to the buffer
 }
