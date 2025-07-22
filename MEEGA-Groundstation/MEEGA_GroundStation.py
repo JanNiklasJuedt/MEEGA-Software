@@ -162,10 +162,17 @@ class GSStart(QDialog):
         self.settings.launchTime = self.ui.launchTimeTimeEdit.time()
 
 class GSLaunchTime(QDialog):
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
+        self.settings = settings
         self.ui = Ui_LaunchTimeDialog()
         self.ui.setupUi(self)
+
+        self.accepted.connect(self.fetchSettings)
+    
+    @Slot()
+    def fetchSettings(self):
+        self.settings.launchTime = self.ui.launchTimeEdit.time()
 
 class GSResults(QWidget):
     def __init__(self):
@@ -214,7 +221,7 @@ if __name__ == "__main__":
     mainWindow = GSMain(settings)
     start = GSStart(settings)
     control = GSControl()
-    time = GSLaunchTime()
+    time = GSLaunchTime(settings)
     document = GSDocumentation()
     error = GSError()
     results = GSResults()
@@ -230,6 +237,7 @@ if __name__ == "__main__":
     mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(time.show)
     start.accepted.connect(mainWindow.applySettings)
     start.accepted.connect(mainWindow.show)
+    time.accepted.connect(mainWindow.applySettings)
     
     #showing the startup screen
     start.show()
