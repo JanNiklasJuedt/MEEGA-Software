@@ -6,7 +6,7 @@
 #define NULL (void*)0
 #define EOL (char)255
 
-
+//Structs:
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 struct DataFrame {
@@ -16,6 +16,7 @@ struct DataFrame {
 	char flag;
 	char data[40];
 } emptyDataFrame = {.sync = 0};
+
 //Stores the data contained in one packet of the transmission protocol
 struct DataPacket {
 	//Used to stitch together DataFrames (= DataFrame.sync)
@@ -30,6 +31,7 @@ struct DataPacket {
 	//Cyclic Redundancy Check Output
 	char crc[2];
 } emptyDataPacket = {.sync = 0};
+
 //This acts as an input/output buffer for transmissions
 struct DataBuffer {
 	struct DataPacket incoming[10];
@@ -40,6 +42,7 @@ struct DataBuffer {
 	//Buffer for TeleCommand frames, direction is inverse to frameStack
 	struct DataFrame TCStack[5];
 } emptyBuffer;
+
 //Stores all persistent data needed for a (spontanious) program reboot
 struct Failsafe {
 	char version;
@@ -57,6 +60,7 @@ struct Failsafe {
 	//language of the groundstation (unused for onboard)
 	char lang;
 };
+
 //Stores all data collected/received during the mission
 struct SaveFile {
 	char version;
@@ -73,12 +77,14 @@ struct SaveFile {
 	//path to the associated file
 	char saveFilePath[100];
 };
+
 //Stores one DataFrame of a savefile, as well as a pointer to the next one
 struct SaveFileFrame {
 	struct DataFrame data;
 	struct SaveFileFrame* nextFrame;
 	struct SaveFileFrame* previousFrame;
 } emptySaveFileFrame = {.nextFrame = NULL};
+
 //Stores pointers to all top-level Data Storage components of the program
 struct StorageHub {
 	struct SaveFile* savefile;
@@ -86,10 +92,14 @@ struct StorageHub {
 	struct DataBuffer* buffer;
 };
 
+//Declarations:
+
 //WIP
 int Update(struct StorageHub* storage);
 //Initializes Memory and loads Data from files if possible
 struct StorageHub Initialize(char path[]);
+
+
 
 //Returns a new empty DataFrame with the specified Sync-Bytes value
 static struct DataFrame CreateFrame(char sync[2]);
@@ -115,58 +125,93 @@ int FrameIsEmpty(struct DataFrame* frame);
 //Returns wether a DataFrame is a TeleCommand-DataFrame
 int FrameIsTC(struct DataFrame* frame);
 
+
+
 //Converts a DataPacket into a Byte-Array of size {PACKETLENGTH} to be sent via transmission
 char* WritePacket(struct DataPacket outgoingData);
+
 //Converts a transmission-input Byte-Array into a DataPacket struct
 struct DataPacket ReadPacket(char* incomingData);
 
+
+
 //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
 int FormPackets(struct DataBuffer* buffer);
+
 //Converts all buffered incoming DataPackets into buffered DataFrames (with {0} values if parts are missing), returns the amount converted
 int FormFrames(struct DataBuffer* buffer);
 
+
+
 //Returns the latest outgoing DataPacket and removes it from the buffer
 struct DataPacket GetOutPacket(struct DataBuffer* buffer);
+
 //Returns the latest incoming DataPacket and removes it from the buffer
 struct DataPacket GetInPacket(struct DataBuffer* buffer);
+
 //Adds a DataPacket to the incoming Buffer, returns the number of packets in the buffer
 int AddInPacket(struct DataBuffer* buffer, struct DataPacket data);
+
 //Adds a DataPacket to the outgoing Buffer, returns the number of packets in the buffer
 int AddOutPacket(struct DataBuffer* buffer, struct DataPacket data);
+
 //Returns the latest buffered DataFrame and removes it from the buffer
 struct DataFrame GetBufferFrame(struct DataBuffer* buffer);
+
 //Adds a DataFrame to the Buffer, returns the number of frames in the buffer
 int AddBufferFrame(struct DataBuffer* buffer, struct DataFrame frame);
 
+//Returns the latest buffered TeleCommand-DataFrame and removes it from the buffer
+struct DataFrame GetBufferTC(struct DataBuffer* buffer);
+
+//Adds a TeleCommand-DataFrame to the Buffer, returns the number of frames in the buffer
+int AddBufferTC(struct DataBuffer* buffer, struct DataFrame frame);
+
+
+
 //Creates a new Failsafe structure from default values
 struct Failsafe* CreateFailsafe();
+
 //Reads the current Failsafe-file into a structure
 struct Failsafe* ReadFailsafe();
+
 //Updates the current Failsafe-file to match the structure or creates a new one if none was found,
 //returns {0} if successful, {1} if it created a new file and {-1} if there was an error
 int UpdateFailsafe(struct Failsafe data);
 
+
+
 //Writes the frames added since the last save onto the harddrive, returns the number of Bytes written or {-1} if unsuccessful
 int WriteSave(struct SaveFile* savefile);
+
 //Creates a new SaveFile structure and file
 struct SaveFile* CreateSave(char path[]);
+
 //Creates a new SaveFile structure, explicitely without a corresponding file
 struct SaveFile* VirtualSave();
+
 //Reloads all frames from the harddrive into the structure, appending excess from the structure, returns the amount of frames loaded
 int CheckSave(struct SaveFile* savefile);
+
 //Reads a SaveFile-file into a Savefile-structure, creates a new one if none was found
 struct SaveFile* ReadSave(char path[]);
+
 //Returns the Frame of the SaveFile at the corresponding index, defaults to the last one
 struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index);
+
 //Updates {currentTC} to represent all saved TeleCommand-DataFrames, returns the updated {currentTC}
 struct DataFrame* UpdateTC(struct SaveFile* savefile);
-//Adds a new frame to the end of the SaveFile, returns the amount of stored frames after the operation
-int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data);
-//Shortcut to CreateFrame() and AddSaveFrame(), returns the amount of stored frames after the operation
-int CreateSaveFrame(struct SaveFile* savefile, int sync);
+
+//Adds a new frame to the end of the SaveFile, returns a pointer to the newly created Frame
+struct SaveFileFrame* AddSaveFrame(struct SaveFile* savefile, struct DataFrame data);
+
+//Shortcut to CreateFrame() and AddSaveFrame(), returns a pointer to the newly created Frame
+struct SaveFileFrame* CreateSaveFrame(struct SaveFile* savefile, int sync);
 
 //INTERNAL, Looks up values to be used by the ReadFrame() and WriteFrame() operations
 static void _GetPosition_(int id, int* index, char* bit, char* length);
+
+//Constants:
 
 char VERSION = 1;
 char FAILSAFENAME[] = "*\\failsafe.txt";
@@ -176,6 +221,10 @@ int PACKETIDNUMBER = 5;
 enum FrameIdentifier {
 	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
 };
+
+enum TCIdentifier {};
+
+//Implementations:
 
 struct StorageHub Initialize(char path[])
 {
@@ -396,10 +445,10 @@ struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index)
 	return frame;
 }
 
-int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data)
+struct SaveFileFrame* AddSaveFrame(struct SaveFile* savefile, struct DataFrame data)
 {
 	struct SaveFileFrame* newframe = (struct SaveFileFrame*)malloc(sizeof(struct SaveFileFrame));
-	newframe->data = *data;
+	newframe->data = data;
 	newframe->nextFrame = NULL;
 	if (savefile->firstFrame == NULL) {
 		savefile->firstFrame = newframe;
@@ -410,13 +459,13 @@ int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data)
 	savefile->lastFrame->nextFrame = newframe;
 	savefile->lastFrame = newframe;
 	savefile->frameAmount++;
-	return savefile->frameAmount;
+	return savefile->lastFrame;
 }
 
-int CreateSaveFrame(struct SaveFile* savefile, int sync)
+struct SaveFileFrame* CreateSaveFrame(struct SaveFile* savefile, int sync)
 {
 	struct DataFrame data = CreateFrame(sync);
-	return AddSaveFrame(savefile, &data);
+	return AddSaveFrame(savefile, data);
 }
 
 struct SaveFile* CreateSave(char path[]) 
