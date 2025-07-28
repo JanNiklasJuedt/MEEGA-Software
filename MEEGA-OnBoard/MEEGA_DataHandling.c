@@ -32,12 +32,15 @@ struct DataPacket {
 } emptyDataPacket = {.sync = 0};
 //This acts as an input/output buffer for transmissions
 struct DataBuffer {
-	struct DataPacket incoming[50];
+	struct DataPacket incoming[10];
 	struct DataPacket outgoing[10];
 	//Buffer in case multiple frames need to be processed simultanously, direction depends on program
 	struct DataFrame frameStack[10];
+
+	//Buffer for TeleCommand frames, direction is inverse to frameStack
+	struct DataFrame TCStack[5];
 } emptyBuffer;
-//Stores all data saved in the failsafe (backup) document
+//Stores all persistent data needed for a (spontanious) program reboot
 struct Failsafe {
 	char version;
 	int dateTime;
@@ -54,7 +57,7 @@ struct Failsafe {
 	//language of the groundstation (unused for onboard)
 	char lang;
 };
-//Stores the header and file-pointer of a savefile document
+//Stores all data collected/received during the mission
 struct SaveFile {
 	char version;
 	int dateTime;
@@ -65,6 +68,8 @@ struct SaveFile {
 	int frameAmount;
 	//total amount of frames already written to the harddrive
 	int savedAmount;
+	//pointer towards a collection of all newest TeleCommands
+	struct DataFrame* currentTC;
 	//path to the associated file
 	char saveFilePath[100];
 };
@@ -87,17 +92,32 @@ int Update(struct StorageHub* storage);
 struct StorageHub Initialize(char path[]);
 
 //Returns a new empty DataFrame with the specified Sync-Bytes value
-static struct DataFrame CreateFrame(int sync);
+static struct DataFrame CreateFrame(char sync[2]);
+
+//Returns a new empty TeleCommand-DataFrame with the specified Sync-Bytes value
+static struct DataFrame CreateTC(char sync[2]);
+
 //Writes data onto a DataFrame according to the ID (see FrameIdentification), returns the old value ({0} if empty)
 int WriteFrame(struct DataFrame* frame, int id, int value);
+
+//Writes data onto a TeleCommand-DataFrame according to the ID (see TCIdentification), returns the old value ({0} if empty)
+int WriteTC(struct DataFrame* tc, int id, int value);
+
 //Returns stored data on a DataFrame according to the ID (see FrameIdentification)
 int ReadFrame(struct DataFrame* frame, int id);
+
+//Returns stored data on a TeleCommand-DataFrame according to the ID (see TCIdentification)
+int ReadTC(struct DataFrame* tc, int id);
+
 //Returns wether a DataFrame contains useful data
 int FrameIsEmpty(struct DataFrame* frame);
 
-//Converts a DataPacket into a Byte-Array to be sent via transmission
+//Returns wether a DataFrame is a TeleCommand-DataFrame
+int FrameIsTC(struct DataFrame* frame);
+
+//Converts a DataPacket into a Byte-Array of size {PACKETLENGTH} to be sent via transmission
 char* WritePacket(struct DataPacket outgoingData);
-//Converts a transmission-input Byte-Array into a DataPacket
+//Converts a transmission-input Byte-Array into a DataPacket struct
 struct DataPacket ReadPacket(char* incomingData);
 
 //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
@@ -138,6 +158,8 @@ int CheckSave(struct SaveFile* savefile);
 struct SaveFile* ReadSave(char path[]);
 //Returns the Frame of the SaveFile at the corresponding index, defaults to the last one
 struct SaveFileFrame* GetSaveFrame(struct SaveFile* savefile, int index);
+//Updates {currentTC} to represent all saved TeleCommand-DataFrames, returns the updated {currentTC}
+struct DataFrame* UpdateTC(struct SaveFile* savefile);
 //Adds a new frame to the end of the SaveFile, returns the amount of stored frames after the operation
 int AddSaveFrame(struct SaveFile* savefile, struct DataFrame* data);
 //Shortcut to CreateFrame() and AddSaveFrame(), returns the amount of stored frames after the operation
