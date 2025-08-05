@@ -10,46 +10,57 @@
 #define Nozzle_Servo 34	//pin
 #define ServoSwitch_1 50	// Deckel ganz zu Feedback
 #define ServoSwitch_2 48	// Deckel ganz auf Feedback
+#define Camera xx
 
 #define RPi_SOE 41	//pin
 #define RPi_LO 47	//pin
 
 int main() {
 	wiringPiSetupGpio();
-	pinMode(Reservoir_Valve, output);	//output should be in wiringPi library as define output 1
-	pinMode(Nozzle_Servo, output);
-	pinMode(LEDs, output);
+	pinMode(Reservoir_Valve, OUTPUT);	//output should be in wiringPi library as define output 1
+	pinMode(Nozzle_Servo, OUTPUT);
+	pinMode(LEDs, OUTPUT);
+	pinMode(Camera, OUTPUT);
 
-	pinMode(RPi_SOE, input);			//input should be in wiringPi library as define input 1
-	pinMode(RPi_LO, input);
+	pinMode(ServoSwitch_1, INPUT);
+	pinMode(ServoSwitch_2, INPUT);
+	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
+	pinMode(RPi_LO, INPUT);
 	
 	struct params config;
 	
 	while (1) {															//raspberryPi, keine angabe. datahandling, declaration and input.
-		int flightmode = 1;		//Flight Mode Switch ?	Get command from groundstation serial?
-		int testmode = 0;		//Test Mode Switch ?
+		//int flightmode = 1;	//Flight Mode Switch ?	Get telecommand first row 2mode bits! command from groundstation serial? MODE is from getinpacket from datahandling
+		//int testmode = 0;		//Test Mode Switch ?
 		int LOSignal = digitalRead(RPi_LO);						
 
-		if (flightmode && !testmode) {		//Flight Mode
+		struct DataPacket mode = GetInPacket(&buffer);	//get packet from buffer
+		int modeBit = mode.mode;	//get mode bit from packet
+		// Test Mode = 0, Flight Mode = 1
+		if (modeBit == 1) {		//Flight Mode
 			config = flightstandard;
-			//Flight Mode												//1.bit = lo; 2.bit = soe; 3.bit = eoe		alle mit binären signalen FIX!!!
-			if (LOSignal == 1) {
-				delay(config.SoEDelay);
-				digitalWrite(LEDs, 1);							//LED on
+			//Flight Mode
+			if (LOSignal == HIGH) {
 				if (SoESignal()) {
 					ExperimentRun(config);
+					int stat = ExperimentRun(config);
+					if (stat == 43) break;	//End of Experiment
 				}
 			}
-			else if (LOSignal == 0) {
+			else if (LOSignal == LOW) {
 				continue;
 			}
 		}
-		else if (testmode && !flightmode) {	//Test Mode							//Manuel abbrechen
+		else if (modeBit == 0) {	//Test Mode							//Manuel abbrechen
 			config = teststandard;
 			//Test Mode
 			if (SoESignal()) {
 				ExperimentRun(config);
 			}
+			else {
+				ExperimentControl();
+			}
+			continue;
 		}
 	}
 	return 0;
@@ -57,10 +68,10 @@ int main() {
 
 int SoESignal() {
 	while (1) {
-		if (digitalRead(RPi_SOE) == 1) {
+		if (digitalRead(RPi_SOE) == HIGH) {
 			return 1;
 		}
-		else if (digitalRead(RPi_SOE) == 0) {
+		else if (digitalRead(RPi_SOE) == LOW) {
 			continue;
 		}
 	}
@@ -68,21 +79,21 @@ int SoESignal() {
 
 struct params {
 	char Mode[10];
-	int ValveDelay, ServoDelay, SoEDelay, EoEDelay, PoweroffDelay, FDA20, FDA2, OnCDelay, ServoOnCDelay; 
+	int ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, FDA20, FDA2, OnCDelay, ServoOnCDelay; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
 };
-struct params flightstandard = { .Mode = "Flight", .SoEDelay = 550, .ValveDelay = 30, .ServoDelay = 60, .EoEDelay = 350, .PoweroffDelay = 10, .OnCDelay = 5, .ServoOnCDelay = 10, .FDA20 = 200 };
-struct params teststandard = { .Mode = "Test", .ValveDelay = 30, .ServoDelay = 60, .FDA2 = 20};
+struct params flightstandard = { .Mode = "Flight", .ValveDelay = 5000, .ServoDelay = 2000, .EoEDelay = 30000, .PoweroffDelay = 1000, .OnCDelay = 200, .ServoOnCDelay = 500, .FDA20 = 400 }; 
+struct params teststandard = { .Mode = "Test", .ValveDelay = 5000, .ServoDelay = 2000, .FDA2 = 8};
 
 int testAbort = 0;
 
-int delay(int second) {	//10tel Sekunden
-	int time = second * 100;
+int delay(int millisecond) {	//1000x Second
 	clock_t start_time = clock();
-	while (clock() < start_time + time) if(testAbort) return 1;
+	clock_t wait_time = (millisecond * CLOCKS_PER_SEC) / 1000;
+	while (clock() < start_time + wait_time) if(testAbort) return 1;
 	return 0;
 }
 
-int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0,  ServoOpen = 1, ServoClose = 0, ServoStuck = 3, servoStatus = 0, ServoPos = 0, EoE = 0, SoE = 0, LO = 0;
+int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0,  ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0;
 
 int ExperimentRun(struct params parameter) {
 	digitalWrite(Reservoir_Valve,ValveOpen);	//command open valve
@@ -95,7 +106,7 @@ int ExperimentRun(struct params parameter) {
 	}
 	else if (ValvePos == ValveClose) {//Valve error: in close position
 		valveStatus = ValveStuck;
-		if (parameter.Mode, "Test") return 1;//abort test
+		if (parameter.Mode == "Test") return 1;//abort test
 	}
 	digitalWrite(Reservoir_Valve, ValveClose);	//command close valve
 	delay(parameter.OnCDelay);					//delay for opening and closing valve 0,5s
@@ -108,43 +119,101 @@ int ExperimentRun(struct params parameter) {
 	else if (ValvePos == ValveOpen) {
 		//Valve error: in open position
 		valveStatus = ValveStuck;
-		if (parameter.Mode, "Test") return 2;//abort test	
+		if (parameter.Mode == "Test") return 2;//abort test	
 	}
 	if (parameter.Mode == "Flight") {
-		digitalWrite(Nozzle_Servo, ServoOpen);	//command open nozzle
-		delay(parameter.ServoOnCDelay);			//delay for opening and closing Servo 1s
-		ServoPos = digitalRead(ServoSwitch_2);		//Feedback signal
-		if (parameter.Mode == "Flight") {
-			ServoPos = digitalRead(ServoSwitch_1);	//Feedback signal
-			//Nozzle Cover Problem: in close position
+		digitalWrite(LEDs, 1);					//LED on
+		digitalWrite(Nozzle_Servo, ServoRun);	//command rotate the serve
+		servoStatus = ServoRun;
+		if (servoStatus == ServoRun) {
+			delay(parameter.ServoOnCDelay);			//delay for opening and closing Servo 0.5s for 90°
+			digitalWrite(Nozzle_Servo, ServoStop);	//command stop the servo
+			servoStatus = ServoStop;
+			delay(parameter.ServoOnCDelay);
+			if (NozzlePos == digitalRead(ServoSwitch_1)) {
+				//Feedback signal
+				//Nozzle Cover Problem: in close position
+				nozzleStatus = NozzleStuck;
+				if (parameter.Mode == "Test") return 4;//abort test
+			}
+			else if (NozzlePos == digitalRead(ServoSwitch_2)) {
+				//Feedback signal: Nozzle Cover is open
+				nozzleStatus = NozzleOpen;
+				delay(parameter.EoEDelay);
+				digitalWrite(LEDs, 0);			//LED off
+				ResetSync();
+				for (int t = 0; t < parameter.FDA20; ++t) {
+					LogFull();
+					delay(50);	//Log data, delay 50ms for 20Hz
+				}
+				WriteSave(&buffer, "MEEGA_Experiment.bin");
+				EoE = 1;
+			}
+		}
+		else if (servoStatus == ServoStop) {
+			//Servo error: not running
 			servoStatus = ServoStuck;
-			if (parameter.Mode, "Test") return 3;//abort test
+			if (parameter.Mode == "Test") return 3;//abort test
 		}
 	}
 	else if (parameter.Mode == "Test") {
-		printf("Simulating Nozzle Cover Open\n");					//simulate nozzle cover open
+		digitalWrite(LEDs, 1);					//LED on
+		nozzleStatus = NozzleOpen;				//simulate nozzle cover open
 		delay(parameter.EoEDelay);
 		digitalWrite(LEDs, 0);
-		delay(parameter.FDA2);				//Basic Data Acquisition 2 seconds
-		Log();
-		writeSave(&buffer, "MEEGA_Test.txt");
+		nozzleStatus = 0;						//Reset simulation of nozzle cover open
+		ResetSync();
+		for (int t = 0; t < parameter.FDA2; ++t) {
+			LogBasic();
+			delay(500);		//Log data, delay 500ms for 2Hz
+		}
+		WriteSave(&buffer, "MEEGA_Test.bin");
 		delay(parameter.PoweroffDelay);
-		return 0;
 	}
-	if (ServoPos == ServoOpen) {
-		//Nozzle Cover is open
-		servoStatus = ServoOpen;
-		delay(parameter.EoEDelay);
-		digitalWrite(LEDs,0);				//LED off
-		delay(parameter.FDA20);				//Full Dáta Acquisition 20 seconds
-		int t;
-		for (t = 0; t < parameter.FDA20; ++t) Log();
-		WriteSave(&buffer, "MEEGA_Experiment.txt");
-		EoE = 1;
-	}
-	if (EoE == 1) delay(parameter.PoweroffDelay); return 0;	//End of Experiment
+	if (EoE == 1) delay(parameter.PoweroffDelay); return 43;	//End of Experiment
+	return 0;
 }
 
+//BETA Control Panel Functions not yet implemented from DataHandling
+int ExperimentControl() {
+	while (1) {
+		//Valve Control
+		if (telecommand(&Valvecmd, sizeof(Valvecmd))) {
+			if (Valvecmd == 1) {
+				digitalWrite(Reservoir_Valve, ValveOpen);	//command open valve
+			}
+			else {
+				digitalWrite(Reservoir_Valve, ValveClose);	//command close valve
+			}
+		}
+		//Servo Control
+			//manual control, command from control panel. Not yet implemented
+		//LED Control
+		if (telecommand(&LEDscmd, sizeof(LEDscmd))) {
+			if (LEDscmd == 1) {
+				digitalWrite(LEDs, 1);	//command turn on LEDs
+			}
+			else {
+				digitalWrite(LEDs, 0);	//command turn off LEDs
+			}
+		}
+		if (telecommand(&Cameracmd, sizeof(Cameracmd))) {
+			if (Cameracmd == 1) {
+				digitalWrite(Camera, 1);	//command turn on Camera
+			}
+			else {
+				digitalWrite(Camera, 0);	//command turn off Camera
+			}
+		}
+		if (telecommand(&cmd, sizeof(cmd))) {
+			if (cmd == 0) break;
+		}
+	}
+
+	return 0;
+}
+
+//Householding Data Acquisition
 #define id_Ambient_Pressure "AmbientPressure"
 #define id_Compare_Temperature "CompareTemperature"
 #define id_Tank_Pressure "TankPressure"
@@ -163,7 +232,8 @@ int ExperimentRun(struct params parameter) {
 #define id_System_Time "SystemTime"
 #define id_Experiment_Status "ExperimentStatus"
 
-void DataAcquisition(struct DataFrame* frame) {
+void FullDataAcquisition(struct DataFrame* frame) {
+	int SystemTime = clock();	//System Time
 	int AmbientPressure = analogRead(0);																//alle sensor daten etc lesen und in Data Handling int speichern. 2mode full & basic data acquisition. Hausholdong data speichern. 
 	int CompareTemperature = analogRead(1);
 	int TankPressure = analogRead(2);
@@ -172,16 +242,17 @@ void DataAcquisition(struct DataFrame* frame) {
 	int ChamberTemperature = analogRead(5);
 	int NozzlePressure = analogRead(6);
 	int NozzleTemperature = analogRead(7);
-	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback
+	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback: fully open
 	int NozzleServo = digitalRead(Nozzle_Servo);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Reservoir_Valve);	//Reservoir Valve
-	int Camera = 0;				//Camera is not implemented yet ?
+	int Camerastat = digitalRead(Camera);
 	int LEDsStat = digitalRead(LEDs);
 	int Sensorboard = 0;		//Sensorboard is not implemented yet ?
 	int Mainboard = 0;			//Mainboard is not implemented yet ?
-	int SystemTime = clock();	//System Time
 	int ExperimentStatus = 0;	//Experiment Status, 0 = not started, 1 = running, 2 = finished, 3 = error ?
 
+	//Local
+	WriteFrame(frame, id_System_Time, SystemTime);
 	WriteFrame(frame, id_Ambient_Pressure, AmbientPressure);
 	WriteFrame(frame, id_Compare_Temperature, CompareTemperature);
 	WriteFrame(frame, id_Tank_Pressure, TankPressure);
@@ -193,19 +264,47 @@ void DataAcquisition(struct DataFrame* frame) {
 	WriteFrame(frame, id_Nozzle_Cover, NozzleCover);
 	WriteFrame(frame, id_Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, id_Reservoir_Valve, ReservoirValve);
-	WriteFrame(frame, id_Camera, Camera);
+	WriteFrame(frame, id_Camera, Camerastat);
 	WriteFrame(frame, id_LEDs, LEDsStat);
 	WriteFrame(frame, id_Sensorboard, Sensorboard);
 	WriteFrame(frame, id_Mainboard, Mainboard);
-	WriteFrame(frame, id_System_Time, SystemTime);
 	WriteFrame(frame, id_Experiment_Status, ExperimentStatus);
-	return;
+
+	//Transmit ?
+
+}
+
+void BasicDataAcquisition(struct DataFrame* frame) {
+	int SystemTime = clock();	//System Time
+	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback
+	int NozzleServo = digitalRead(Nozzle_Servo);	//Nozzle Servo Switch
+	int ReservoirValve = digitalRead(Reservoir_Valve);	//Reservoir Valve
+	int Camerastat = 0;				//Camera is not implemented yet ?
+	int LEDsStat = digitalRead(LEDs);
+	int ExperimentStatus = 0;	//Experiment Status, 0 = not started, 1 = running, 2 = finished, 3 = error ?
+
+	//Local
+	WriteFrame(frame, id_System_Time, SystemTime);
+	WriteFrame(frame, id_Nozzle_Cover, NozzleCover);
+	WriteFrame(frame, id_Nozzle_Servo, NozzleServo);
+	WriteFrame(frame, id_Reservoir_Valve, ReservoirValve);
+	WriteFrame(frame, id_Camera, Camerastat);
+	WriteFrame(frame, id_LEDs, LEDsStat);
+	WriteFrame(frame, id_Experiment_Status, ExperimentStatus);
 }
 
 struct DataBuffer buffer;	//Initialize the DataBuffer
-int sync = 0;	//Initialize the sync variable
-void Log() {
+int sync = 0;				//Sync value for the DataFrame
+void LogFull() {
 	struct DataFrame frame = CreateFrame(sync++);
-	DataAquisition(&frame);	//DataAquisition function to fill the frame with data
+	FullDataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
 	AddBufferFrame(&buffer, frame);	//Add the frame to the buffer
+}
+void LogBasic() {
+	struct DataFrame frame = CreateFrame(sync++);
+	BasicDataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
+	AddBufferFrame(&buffer, frame);	//Add the frame to the buffer
+}
+void ResetSync() {
+	sync = 0;
 }
