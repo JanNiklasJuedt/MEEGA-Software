@@ -43,8 +43,9 @@ int main() {
 			if (LOSignal == HIGH) {
 				if (SoESignal()) {
 					ExperimentRun(config);
+					WriteSave(&buffer, "MEEGA_Experiment.bin");
 					int stat = ExperimentRun(config);
-					if (stat == 43) break;	//End of Experiment
+					if (stat == 43 || stat == 404) break;	//End of Experiment
 				}
 			}
 			else if (LOSignal == LOW) {
@@ -56,6 +57,7 @@ int main() {
 			//Test Mode
 			if (SoESignal()) {
 				ExperimentRun(config);
+				WriteSave(&buffer, "MEEGA_Test.bin");
 			}
 			else {
 				ExperimentControl();
@@ -67,22 +69,15 @@ int main() {
 }
 
 int SoESignal() {
-	while (1) {
-		if (digitalRead(RPi_SOE) == HIGH) {
-			return 1;
-		}
-		else if (digitalRead(RPi_SOE) == LOW) {
-			continue;
-		}
-	}
+	return (digitalRead(RPi_SOE) == HIGH);	//Check if SoE signal is HIGH, if so, start experiment
 }
 
 struct params {
 	char Mode[10];
 	int ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, FDA20, FDA2, OnCDelay, ServoOnCDelay; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
 };
-struct params flightstandard = { .Mode = "Flight", .ValveDelay = 5000, .ServoDelay = 2000, .EoEDelay = 30000, .PoweroffDelay = 1000, .OnCDelay = 200, .ServoOnCDelay = 500, .FDA20 = 400 }; 
-struct params teststandard = { .Mode = "Test", .ValveDelay = 5000, .ServoDelay = 2000, .FDA2 = 8};
+struct params flightstandard = { .Mode = "Flight", .ValveDelay = 5000, .ServoDelay = 2000, .EoEDelay = 30000, .PoweroffDelay = 1000, .OnCDelay = 200, .ServoOnCDelay = 500, .FDA20 = 500 }; 
+struct params teststandard = { .Mode = "Test", .ValveDelay = 5000, .ServoDelay = 2000, .FDA2 = 5000};
 
 int testAbort = 0;
 
@@ -116,8 +111,8 @@ int ExperimentRun(struct params parameter) {
 		valveStatus = ValveClose;
 		delay(parameter.ServoDelay);
 	}
-	else if (ValvePos == ValveOpen) {
-		//Valve error: in open position
+	else {
+		//Valve error: in open position / cont. error
 		valveStatus = ValveStuck;
 		if (parameter.Mode == "Test") return 2;//abort test	
 	}
@@ -134,6 +129,10 @@ int ExperimentRun(struct params parameter) {
 				//Feedback signal
 				//Nozzle Cover Problem: in close position
 				nozzleStatus = NozzleStuck;
+				delay(parameter.EoEDelay);
+				digitalWrite(LEDs, 0);			//LED off
+				EoE = 2; //Unsuccessful End of Experiment NozzleStuck
+
 				if (parameter.Mode == "Test") return 4;//abort test
 			}
 			else if (NozzlePos == digitalRead(ServoSwitch_2)) {
@@ -141,13 +140,7 @@ int ExperimentRun(struct params parameter) {
 				nozzleStatus = NozzleOpen;
 				delay(parameter.EoEDelay);
 				digitalWrite(LEDs, 0);			//LED off
-				ResetSync();
-				for (int t = 0; t < parameter.FDA20; ++t) {
-					LogFull();
-					delay(50);	//Log data, delay 50ms for 20Hz
-				}
-				WriteSave(&buffer, "MEEGA_Experiment.bin");
-				EoE = 1;
+				EoE = 1; //Successful End of Experiment
 			}
 		}
 		else if (servoStatus == ServoStop) {
@@ -162,15 +155,16 @@ int ExperimentRun(struct params parameter) {
 		delay(parameter.EoEDelay);
 		digitalWrite(LEDs, 0);
 		nozzleStatus = 0;						//Reset simulation of nozzle cover open
-		ResetSync();
-		for (int t = 0; t < parameter.FDA2; ++t) {
-			LogBasic();
-			delay(500);		//Log data, delay 500ms for 2Hz
-		}
-		WriteSave(&buffer, "MEEGA_Test.bin");
 		delay(parameter.PoweroffDelay);
 	}
-	if (EoE == 1) delay(parameter.PoweroffDelay); return 43;	//End of Experiment
+	if (EoE == 1) {
+		delay(parameter.PoweroffDelay);
+		return 43;	//End of Experiment
+	}
+	else {
+		delay(parameter.PoweroffDelay);
+		return 404;	//Error in Experiment
+	}
 	return 0;
 }
 
@@ -232,7 +226,7 @@ int ExperimentControl() {
 #define id_System_Time "SystemTime"
 #define id_Experiment_Status "ExperimentStatus"
 
-void FullDataAcquisition(struct DataFrame* frame) {
+void DataAcquisition(struct DataFrame* frame) {
 	int SystemTime = clock();	//System Time
 	int AmbientPressure = analogRead(0);																//alle sensor daten etc lesen und in Data Handling int speichern. 2mode full & basic data acquisition. Hausholdong data speichern. 
 	int CompareTemperature = analogRead(1);
@@ -270,41 +264,50 @@ void FullDataAcquisition(struct DataFrame* frame) {
 	WriteFrame(frame, id_Mainboard, Mainboard);
 	WriteFrame(frame, id_Experiment_Status, ExperimentStatus);
 
-	//Transmit ?
-
+	//Transmit
+	WriteTC(frame, id_System_Time, SystemTime);
+	WriteTC(frame, id_Ambient_Pressure, AmbientPressure);
+	WriteTC(frame, id_Compare_Temperature, CompareTemperature);
+	WriteTC(frame, id_Tank_Pressure, TankPressure);
+	WriteTC(frame, id_Tank_Temperature, TankTemperature);
+	WriteTC(frame, id_Chamber_Pressure, ChamberPressure);
+	WriteTC(frame, id_Chamber_Temperature, ChamberTemperature);
+	WriteTC(frame, id_Nozzle_Pressure, NozzlePressure);
+	WriteTC(frame, id_Nozzle_Temperature, NozzleTemperature);
+	WriteTC(frame, id_Nozzle_Cover, NozzleCover);
+	WriteTC(frame, id_Nozzle_Servo, NozzleServo);
+	WriteTC(frame, id_Reservoir_Valve, ReservoirValve);
+	WriteTC(frame, id_Camera, Camerastat);
+	WriteTC(frame, id_LEDs, LEDsStat);
+	WriteTC(frame, id_Sensorboard, Sensorboard);
+	WriteTC(frame, id_Mainboard, Mainboard);
+	WriteTC(frame, id_Experiment_Status, ExperimentStatus);
 }
 
-void BasicDataAcquisition(struct DataFrame* frame) {
-	int SystemTime = clock();	//System Time
-	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback
-	int NozzleServo = digitalRead(Nozzle_Servo);	//Nozzle Servo Switch
-	int ReservoirValve = digitalRead(Reservoir_Valve);	//Reservoir Valve
-	int Camerastat = 0;				//Camera is not implemented yet ?
-	int LEDsStat = digitalRead(LEDs);
-	int ExperimentStatus = 0;	//Experiment Status, 0 = not started, 1 = running, 2 = finished, 3 = error ?
+void Log(struct StorageHub* storage) {
+	struct params freq;
+	struct DataBuffer buffer;	//Initialize the DataBuffer
+	int sync = 0;				//Sync value for the DataFrame
+	int syncLimit = 0;			//Sync limit for the DataFrame, every 10 Frames a new Sync value is set
 
-	//Local
-	WriteFrame(frame, id_System_Time, SystemTime);
-	WriteFrame(frame, id_Nozzle_Cover, NozzleCover);
-	WriteFrame(frame, id_Nozzle_Servo, NozzleServo);
-	WriteFrame(frame, id_Reservoir_Valve, ReservoirValve);
-	WriteFrame(frame, id_Camera, Camerastat);
-	WriteFrame(frame, id_LEDs, LEDsStat);
-	WriteFrame(frame, id_Experiment_Status, ExperimentStatus);
-}
+	while (1) {
+		struct DataFrame frame = CreateFrame(sync++);
+		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
+		AddSaveFrame(storage->savefile, frame);	//Add the frame to the save file
+		AddBufferFrame(storage->buffer, frame);	//Add the frame to the buffer
+		syncLimit++;
+		if (syncLimit >= 10) {
+			struct DataFrame upTC = CreateTC(sync++);	//Create a new TeleCommand DataFrame with the current sync value
+			AddBufferTC(storage->buffer, upTC);			//Add the TeleCommand DataFrame to the buffer
+			FormPackets(storage->buffer);				//Form the packets from the buffer
+			syncLimit = 0;								//Reset the sync limit
+		}
 
-struct DataBuffer buffer;	//Initialize the DataBuffer
-int sync = 0;				//Sync value for the DataFrame
-void LogFull() {
-	struct DataFrame frame = CreateFrame(sync++);
-	FullDataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
-	AddBufferFrame(&buffer, frame);	//Add the frame to the buffer
-}
-void LogBasic() {
-	struct DataFrame frame = CreateFrame(sync++);
-	BasicDataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
-	AddBufferFrame(&buffer, frame);	//Add the frame to the buffer
-}
-void ResetSync() {
-	sync = 0;
+		if (SoESignal()) {
+			delay(freq.FDA20);		//Full Data Acquisition 20Hz every 10 Frames
+		}
+		else {
+			delay(freq.FDA2);		//Basic Data Acquisition 2Hz every 10 Frames
+		}
+	}
 }
