@@ -28,6 +28,8 @@ int main() {
 	pinMode(RPi_LO, INPUT);
 	
 	struct params config;
+
+	ExperimentStatus = 0;
 	
 	while (1) {															//raspberryPi, keine angabe. datahandling, declaration and input.
 		//int flightmode = 1;	//Flight Mode Switch ?	Get telecommand first row 2mode bits! command from groundstation serial? MODE is from getinpacket from datahandling
@@ -43,12 +45,13 @@ int main() {
 			if (LOSignal == HIGH) {
 				if (SoESignal()) {
 					ExperimentRun(config);
+					//int stat = ExperimentRun(config);
 					WriteSave(&buffer, "MEEGA_Experiment.bin");
-					int stat = ExperimentRun(config);
-					if (stat == 43 || stat == 404) break;	//End of Experiment
+					if (ExperimentRun(config) == 43 || ExperimentRun(config) == 404) break;	//End of Experiment
 				}
 			}
 			else if (LOSignal == LOW) {
+				ExperimentStatus = 0;
 				continue;
 			}
 		}
@@ -58,6 +61,7 @@ int main() {
 			if (SoESignal()) {
 				ExperimentRun(config);
 				WriteSave(&buffer, "MEEGA_Test.bin");
+				ExperimentStatus = 0;
 			}
 			else {
 				ExperimentControl();
@@ -88,9 +92,10 @@ int delay(int millisecond) {	//1000x Second
 	return 0;
 }
 
-int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0,  ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0;
+int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0, ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0, ExperimentStatus;
 
 int ExperimentRun(struct params parameter) {
+	ExperimentStatus = 1;	//Experiment started
 	digitalWrite(Reservoir_Valve,ValveOpen);	//command open valve
 	delay(parameter.OnCDelay);					//delay for opening and closing valve 0,5s
 	ValvePos = ValveOpen;	//ValvePos = digitalRead(Valve)		//Feedback signal
@@ -101,7 +106,10 @@ int ExperimentRun(struct params parameter) {
 	}
 	else if (ValvePos == ValveClose) {//Valve error: in close position
 		valveStatus = ValveStuck;
-		if (parameter.Mode == "Test") return 1;//abort test
+		if (parameter.Mode == "Test") {
+			ExperimentStatus = 3;
+			return 1;//abort test
+		}
 	}
 	digitalWrite(Reservoir_Valve, ValveClose);	//command close valve
 	delay(parameter.OnCDelay);					//delay for opening and closing valve 0,5s
@@ -114,7 +122,10 @@ int ExperimentRun(struct params parameter) {
 	else {
 		//Valve error: in open position / cont. error
 		valveStatus = ValveStuck;
-		if (parameter.Mode == "Test") return 2;//abort test	
+		if (parameter.Mode == "Test") {
+			ExperimentStatus = 3;
+			return 2;//abort test
+		}
 	}
 	if (parameter.Mode == "Flight") {
 		digitalWrite(LEDs, 1);					//LED on
@@ -131,9 +142,13 @@ int ExperimentRun(struct params parameter) {
 				nozzleStatus = NozzleStuck;
 				delay(parameter.EoEDelay);
 				digitalWrite(LEDs, 0);			//LED off
+				ExperimentStatus = 3;
 				EoE = 2; //Unsuccessful End of Experiment NozzleStuck
 
-				if (parameter.Mode == "Test") return 4;//abort test
+				if (parameter.Mode == "Test") {
+					ExperimentStatus = 3;
+					return 4;//abort test
+				}
 			}
 			else if (NozzlePos == digitalRead(ServoSwitch_2)) {
 				//Feedback signal: Nozzle Cover is open
@@ -146,7 +161,11 @@ int ExperimentRun(struct params parameter) {
 		else if (servoStatus == ServoStop) {
 			//Servo error: not running
 			servoStatus = ServoStuck;
-			if (parameter.Mode == "Test") return 3;//abort test
+			ExperimentStatus = 3;
+			if (parameter.Mode == "Test") {
+				ExperimentStatus = 3;
+				return 3;//abort test
+			}
 		}
 	}
 	else if (parameter.Mode == "Test") {
@@ -155,13 +174,16 @@ int ExperimentRun(struct params parameter) {
 		delay(parameter.EoEDelay);
 		digitalWrite(LEDs, 0);
 		nozzleStatus = 0;						//Reset simulation of nozzle cover open
+		ExperimentStatus = 2;
 		delay(parameter.PoweroffDelay);
 	}
 	if (EoE == 1) {
+		ExperimentStatus = 2;
 		delay(parameter.PoweroffDelay);
 		return 43;	//End of Experiment
 	}
 	else {
+		ExperimentStatus = 3;
 		delay(parameter.PoweroffDelay);
 		return 404;	//Error in Experiment
 	}
@@ -170,6 +192,7 @@ int ExperimentRun(struct params parameter) {
 
 //BETA Control Panel Functions not yet implemented from DataHandling
 int ExperimentControl() {
+	ExperimentStatus = 1;
 	while (1) {
 		//Valve Control
 		if (telecommand(&Valvecmd, sizeof(Valvecmd))) {
@@ -243,7 +266,7 @@ void DataAcquisition(struct DataFrame* frame) {
 	int LEDsStat = digitalRead(LEDs);
 	int Sensorboard = 0;		//Sensorboard is not implemented yet ?
 	int Mainboard = 0;			//Mainboard is not implemented yet ?
-	int ExperimentStatus = 0;	//Experiment Status, 0 = not started, 1 = running, 2 = finished, 3 = error ?
+	//Experiment Status CHECK!
 
 	//Local
 	WriteFrame(frame, id_System_Time, SystemTime);
