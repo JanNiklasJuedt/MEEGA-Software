@@ -3,14 +3,14 @@
 #include <time.h>
 #include <string.h>
 #include <wiringPi.h>
-#include "MEEGA_DataHandling.c"
+#include "DataHandlingLibrary.h"
 
 #define LEDs 54	//pin
 #define Reservoir_Valve 29	//pin
 #define Nozzle_Servo 34	//pin
 #define ServoSwitch_1 50	// Deckel ganz zu Feedback
 #define ServoSwitch_2 48	// Deckel ganz auf Feedback
-#define Camera xx
+#define Camera x
 
 #define RPi_SOE 41	//pin
 #define RPi_LO 47	//pin
@@ -309,14 +309,14 @@ void DataAcquisition(struct DataFrame* frame) {
 
 void Log(struct StorageHub* storage) {
 	struct params freq;
-	struct DataBuffer buffer;	//Initialize the DataBuffer
+	DataBuffer buffer;	//Initialize the DataBuffer
 	int sync = 0;				//Sync value for the DataFrame
 	int syncLimit = 0;			//Sync limit for the DataFrame, every 10 Frames a new Sync value is set
 
 	while (1) {
 		struct DataFrame frame = CreateFrame(sync++);
 		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
-		AddSaveFrame(storage->savefile, frame);	//Add the frame to the save file
+		AddSaveFrame(storage->saveFile, frame);	//Add the frame to the save file
 		AddBufferFrame(storage->buffer, frame);	//Add the frame to the buffer
 		syncLimit++;
 		if (syncLimit >= 10) {

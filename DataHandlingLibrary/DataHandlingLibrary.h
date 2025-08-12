@@ -7,8 +7,8 @@
 #ifdef DATAHANDLINGLIBRARY_EXPORTS
 #define DATAHANDLINGLIBRARY_API __declspec(dllexport)
 #else
-#define DATAHANDLINGLIBRARY_API __delcspec(dllimport)
-#endif
+#define DATAHANDLINGLIBRARY_API __declspec(dllimport)
+#endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #ifndef NULL
 #define NULL (void*)0
@@ -33,7 +33,7 @@ DATAHANDLINGLIBRARY_API const int ChksmLength = CHKSMLENGTH;
 DATAHANDLINGLIBRARY_API const int VERSION = 1;
 DATAHANDLINGLIBRARY_API const char FAILSAFENAME[] = "*\\failsafe.txt";
 
-enum DATAHANDLINGLIBRARY_API FrameIdentifier {
+enum DATAHANDLINGLIBRARY_API FrameIdentifier{
 	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
 }; 
 
