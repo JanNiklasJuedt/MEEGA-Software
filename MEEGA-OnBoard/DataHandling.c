@@ -1,5 +1,0 @@
-struct DataFrame;
-
-struct DataFrame {
-
-};
