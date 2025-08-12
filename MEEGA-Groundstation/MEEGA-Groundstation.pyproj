@@ -5,8 +5,9 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b21c62a3-5866-4bad-ad38-1691923dd45a}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>MEEGA_GroundStation.py</StartupFile>
-    <SearchPath />
+    <StartupFile>MEEGA_PyDataHandling.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
@@ -42,6 +43,7 @@
     <Compile Include="MEEGA_error.py" />
     <Compile Include="MEEGA_GroundStation.py" />
     <Compile Include="MEEGA_mainWindow.py" />
+    <Compile Include="MEEGA_PyDataHandling.py" />
     <Compile Include="MEEGA_results.py" />
     <Compile Include="MEEGA_startup.py" />
     <Compile Include="MEEGA_time.py" />

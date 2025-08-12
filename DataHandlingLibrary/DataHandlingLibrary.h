@@ -15,18 +15,23 @@
 #endif
 
 #define EOL (char)255
+#define IDBITS 3
+#define MODEBITS 3
+#define PACKETLENGTH PAYLOADLENGTH + CHKSMLENGTH * 2 + 3
 #define PATHLENGTH 100
 #define BUFFERLENGTH 10
 #define DATALENGTH 40
 #define PAYLOADLENGTH 16
-#define IDBITS 3
-#define MODEBITS 3
 #define CHKSMLENGTH 2
-#define PACKETLENGTH PAYLOADLENGTH + CHKSMLENGTH * 2 + 3
 
+DATAHANDLINGLIBRARY_API const int PathLength = PATHLENGTH;
+DATAHANDLINGLIBRARY_API const int BufferLength = BUFFERLENGTH;
+DATAHANDLINGLIBRARY_API const int DataLength = DATALENGTH;
+DATAHANDLINGLIBRARY_API const int PayloadLength = PAYLOADLENGTH;
+DATAHANDLINGLIBRARY_API const int ChksmLength = CHKSMLENGTH;
 
-unsigned char VERSION = 1;
-char FAILSAFENAME[] = "*\\failsafe.txt";
+DATAHANDLINGLIBRARY_API const int VERSION = 1;
+DATAHANDLINGLIBRARY_API const char FAILSAFENAME[] = "*\\failsafe.txt";
 
 enum DATAHANDLINGLIBRARY_API FrameIdentifier {
 	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
@@ -118,8 +123,8 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 
 //Stores pointers to all top-level Data Storage components of the program
 typedef struct DATAHANDLINGLIBRARY_API StorageHub {
-	struct SaveFile* savefile;
-	struct FailSafe* failsafe;
+	struct SaveFile* saveFile;
+	struct FailSafe* failSafe;
 	struct DataBuffer* buffer;
 } StorageHub;
 
@@ -204,7 +209,7 @@ DATAHANDLINGLIBRARY_API FailSafe* ReadFailSafe();
 
 //Updates the current Failsafe-file to match the structure or creates a new one if none was found,
 //returns {0} if successful, {1} if it created a new file and {-1} if there was an error
-DATAHANDLINGLIBRARY_API int UpdateFailSafe(FailSafe failsafe);
+DATAHANDLINGLIBRARY_API int UpdateFailSafe(FailSafe* failsafe);
 
 //Writes the frames added since the last save onto the harddrive, returns the number of Bytes written or {-1} if unsuccessful
 DATAHANDLINGLIBRARY_API int WriteSave(SaveFile* savefile);

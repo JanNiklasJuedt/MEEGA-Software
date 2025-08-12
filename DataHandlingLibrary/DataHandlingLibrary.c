@@ -34,17 +34,17 @@ StorageHub Initialize(const char path[])
 	StorageHub new = {NULL, NULL, NULL};
 	FailSafe* failsafe = ReadFailSafe();
 	if (failsafe == NULL) failsafe = CreateFailSafe();
-	new.failsafe = failsafe;
+	new.failSafe = failsafe;
 	SaveFile* savefile;
-	int readExisting = new.failsafe->nominalExit != 1 && new.failsafe->saveFilePath[0] != '\0';
-	if (readExisting) savefile = ReadSave(new.failsafe->saveFilePath);
+	int readExisting = new.failSafe->nominalExit != 1 && new.failSafe->saveFilePath[0] != '\0';
+	if (readExisting) savefile = ReadSave(new.failSafe->saveFilePath);
 	else savefile = CreateSave(path);
 	if (savefile == NULL) {
 		savefile = VirtualSave();
-		strcpy_s(new.failsafe->saveFilePath, PATHLENGTH, "");
+		strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, "");
 	}
-	else if (!readExisting) strcpy_s(new.failsafe->saveFilePath, PATHLENGTH, path);
-	new.savefile = savefile;
+	else if (!readExisting) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, path);
+	new.saveFile = savefile;
 	new.buffer = CreateBuffer();
 	return new;
 }
@@ -318,7 +318,7 @@ FailSafe* ReadFailSafe()
 	return NULL;
 }
 
-int UpdateFailSafe(FailSafe data)
+int UpdateFailSafe(FailSafe* failsafe)
 {
 	//WIP
 	return 0;
