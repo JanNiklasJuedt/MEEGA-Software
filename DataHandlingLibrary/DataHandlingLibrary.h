@@ -1,5 +1,6 @@
 //Header File of DataHandlingLibrary
 #include <stdint.h>
+#include <time.h>
 
 #ifndef DATAHANDLINGLIBRARY_H
 #define DATAHANDLINGLIBRARY_H
@@ -24,14 +25,14 @@
 #define PAYLOADLENGTH 16
 #define CHKSMLENGTH 2
 
-DATAHANDLINGLIBRARY_API const int PathLength = PATHLENGTH;
-DATAHANDLINGLIBRARY_API const int BufferLength = BUFFERLENGTH;
-DATAHANDLINGLIBRARY_API const int DataLength = DATALENGTH;
-DATAHANDLINGLIBRARY_API const int PayloadLength = PAYLOADLENGTH;
-DATAHANDLINGLIBRARY_API const int ChksmLength = CHKSMLENGTH;
+__declspec(dllexport) const int PathLength = PATHLENGTH;
+__declspec(dllexport) const int BufferLength = BUFFERLENGTH;
+__declspec(dllexport) const int DataLength = DATALENGTH;
+__declspec(dllexport) const int PayloadLength = PAYLOADLENGTH;
+__declspec(dllexport) const int ChksmLength = CHKSMLENGTH;
 
-DATAHANDLINGLIBRARY_API const int VERSION = 1;
-DATAHANDLINGLIBRARY_API const char FAILSAFENAME[] = "*\\failsafe.txt";
+__declspec(dllexport) const int VERSION = 1;
+__declspec(dllexport) const char FAILSAFENAME[] = "*\\failsafe.txt";
 
 enum DATAHANDLINGLIBRARY_API FrameIdentifier{
 	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
