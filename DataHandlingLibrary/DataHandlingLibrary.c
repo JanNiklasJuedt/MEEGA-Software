@@ -36,14 +36,16 @@ StorageHub Initialize(const char path[])
 	if (failsafe == NULL) failsafe = CreateFailSafe();
 	new.failSafe = failsafe;
 	SaveFile* savefile;
-	int readExisting = new.failSafe->nominalExit != 1 && new.failSafe->saveFilePath[0] != '\0';
+	int readExisting;
+	if (failsafe == NULL) readExisting = 0;
+	else readExisting = !(new.failSafe->nominalExit) && new.failSafe->saveFilePath[0] != '\0';
 	if (readExisting) savefile = ReadSave(new.failSafe->saveFilePath);
 	else savefile = CreateSave(path);
 	if (savefile == NULL) {
 		savefile = VirtualSave();
-		strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, "");
+		if (failsafe != NULL) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, "");
 	}
-	else if (!readExisting) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, path);
+	else if (!readExisting & (failsafe != NULL)) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, path);
 	new.saveFile = savefile;
 	new.buffer = CreateBuffer();
 	return new;
@@ -293,7 +295,8 @@ FailSafe* CreateFailSafe()
 	new->mode = 'f';
 	new->conn = '\0';
 	new->lang = '\0';
-	FILE* file = fopen(FAILSAFENAME, "w");
+	FILE* file;
+	fopen_s(&file, FAILSAFENAME, "w");
 	if (file != NULL) {
 		fprintf(file, "Version: %i;\n", VERSION);
 		fprintf(file, "Datetime: %lli;\n\n", new->dateTime);
@@ -304,10 +307,6 @@ FailSafe* CreateFailSafe()
 		fprintf(file, "Connection: %c;\n", new->conn);
 		fprintf(file, "Language: %c;", new->lang);
 		fclose(file);
-	}
-	else {
-		free(new);
-		return NULL;
 	}
 	return new;
 }
@@ -335,6 +334,10 @@ SaveFile* VirtualSave()
 	new->savedAmount = -1;
 	new->saveFilePath[0] = '\0';
 	new->version = VERSION;
+	DataFrame* tc = (DataFrame*)malloc(sizeof(DataFrame));
+	if (tc == NULL) return NULL;
+	new->currentTC = tc;
+	*tc = CreateTC(0);
 	return new;
 }
 
@@ -402,13 +405,19 @@ int WriteSave(SaveFile* savefile)
 
 SaveFile* CreateSave(const char path[])
 {
-	SaveFile* new = (SaveFile*) malloc(sizeof(SaveFile));
-	if (new == NULL) return NULL;
-	time_t tempDateTime = time(NULL);
-	FILE* file = fopen(path, "wb");
+	SaveFile* new = VirtualSave();
+	new->savedAmount = 0;
+	FILE* file;
+	if (path != NULL) {
+		fopen_s(&file, path, "wb");
+		strcpy_s(new->saveFilePath, PATHLENGTH, path);
+	}
+	else {
+		file = NULL;
+	}
 	if (file != NULL) {
-		fprintf(file, &VERSION);
-		fwrite(&tempDateTime, sizeof(time_t), 1, file);
+		fprintf(file, "%c", VERSION);
+		fwrite(&(new->dateTime), sizeof(time_t), 1, file);
 		fprintf(file, "%c", EOL);
 		fclose(file);
 	}
@@ -416,11 +425,5 @@ SaveFile* CreateSave(const char path[])
 		free(new);
 		return NULL;
 	}
-	new->firstFrame = NULL;
-	new->lastFrame = NULL;
-	new->frameAmount = 0;
-	new->savedAmount = 0;
-	strcpy_s(new->saveFilePath, PATHLENGTH, path);
-	new->version = VERSION;
 	return new;
 }
