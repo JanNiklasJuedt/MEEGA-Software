@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
 #include "DataHandlingLibrary.h"
 
 //INTERNAL, Looks up values to be used by the ReadFrame() and WriteFrame() operations
@@ -36,26 +34,28 @@ StorageHub Initialize(const char path[])
 	if (failsafe == NULL) failsafe = CreateFailSafe();
 	new.failSafe = failsafe;
 	SaveFile* savefile;
-	int readExisting = new.failSafe->nominalExit != 1 && new.failSafe->saveFilePath[0] != '\0';
+	int readExisting;
+	if (failsafe == NULL) readExisting = 0;
+	else readExisting = !(new.failSafe->nominalExit) && new.failSafe->saveFilePath[0] != '\0';
 	if (readExisting) savefile = ReadSave(new.failSafe->saveFilePath);
 	else savefile = CreateSave(path);
 	if (savefile == NULL) {
 		savefile = VirtualSave();
-		strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, "");
+		if (failsafe != NULL) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, "");
 	}
-	else if (!readExisting) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, path);
+	else if (!readExisting & (failsafe != NULL)) strcpy_s(new.failSafe->saveFilePath, PATHLENGTH, path);
 	new.saveFile = savefile;
 	new.buffer = CreateBuffer();
 	return new;
 }
 
-DataFrame CreateFrame(int16_t sync)
+DataFrame CreateFrame(uint16_t sync)
 {
 	DataFrame temp = { .sync = sync };
 	return temp;
 }
 
-DataFrame CreateTC(int16_t sync)
+DataFrame CreateTC(uint16_t sync)
 {
 	DataFrame temp = { .sync = sync, .flag = TeleCommand + Source};
 	return temp;
@@ -65,10 +65,11 @@ static void _GetPosition_(int id, int* index, unsigned char* bit, unsigned char*
 {
 	//TBC
 	switch (id) {
-	case AmbientPressure: *index = 0, *length = 2;
-	case HHAmbientPressure: *index = 32, *bit = 8, *length = 1;
-	case CompareTemperature: *index = 2, *length = 3;
-	case HHCompareTemperature: *index = 32, *bit = 7, *length = 1;
+	case Ambient_Pressure: *index = 1, * length = 3; break;
+	case Ambient_Pressure_Health: *index = 32, * bit = 8, * length = 1; break;
+	case Compare_Temperature: *index = 2, * length = 3; break;
+	case Compare_Temperature_Health: *index = 32, * bit = 7, * length = 1; break;
+	default: *index = 0, * length = 0, * bit = 0; break;
 	}
 	return;
 }
@@ -293,7 +294,8 @@ FailSafe* CreateFailSafe()
 	new->mode = 'f';
 	new->conn = '\0';
 	new->lang = '\0';
-	FILE* file = fopen(FAILSAFENAME, "w");
+	FILE* file;
+	fopen_s(&file, FAILSAFENAME, "w");
 	if (file != NULL) {
 		fprintf(file, "Version: %i;\n", VERSION);
 		fprintf(file, "Datetime: %lli;\n\n", new->dateTime);
@@ -304,10 +306,6 @@ FailSafe* CreateFailSafe()
 		fprintf(file, "Connection: %c;\n", new->conn);
 		fprintf(file, "Language: %c;", new->lang);
 		fclose(file);
-	}
-	else {
-		free(new);
-		return NULL;
 	}
 	return new;
 }
@@ -335,6 +333,10 @@ SaveFile* VirtualSave()
 	new->savedAmount = -1;
 	new->saveFilePath[0] = '\0';
 	new->version = VERSION;
+	DataFrame* tc = (DataFrame*)malloc(sizeof(DataFrame));
+	if (tc == NULL) return NULL;
+	new->currentTC = tc;
+	*tc = CreateTC(0);
 	return new;
 }
 
@@ -388,7 +390,7 @@ SaveFileFrame* AddSaveFrame(SaveFile* savefile, DataFrame data)
 	return savefile->lastFrame;
 }
 
-SaveFileFrame* CreateSaveFrame(SaveFile* savefile, int16_t sync)
+SaveFileFrame* CreateSaveFrame(SaveFile* savefile, uint16_t sync)
 {
 	DataFrame data = CreateFrame(sync);
 	return AddSaveFrame(savefile, data);
@@ -402,13 +404,19 @@ int WriteSave(SaveFile* savefile)
 
 SaveFile* CreateSave(const char path[])
 {
-	SaveFile* new = (SaveFile*) malloc(sizeof(SaveFile));
-	if (new == NULL) return NULL;
-	time_t tempDateTime = time(NULL);
-	FILE* file = fopen(path, "wb");
+	SaveFile* new = VirtualSave();
+	new->savedAmount = 0;
+	FILE* file;
+	if (path != NULL) {
+		fopen_s(&file, path, "wb");
+		strcpy_s(new->saveFilePath, PATHLENGTH, path);
+	}
+	else {
+		file = NULL;
+	}
 	if (file != NULL) {
-		fprintf(file, &VERSION);
-		fwrite(&tempDateTime, sizeof(time_t), 1, file);
+		fprintf(file, "%c", VERSION);
+		fwrite(&(new->dateTime), sizeof(time_t), 1, file);
 		fprintf(file, "%c", EOL);
 		fclose(file);
 	}
@@ -416,11 +424,5 @@ SaveFile* CreateSave(const char path[])
 		free(new);
 		return NULL;
 	}
-	new->firstFrame = NULL;
-	new->lastFrame = NULL;
-	new->frameAmount = 0;
-	new->savedAmount = 0;
-	strcpy_s(new->saveFilePath, PATHLENGTH, path);
-	new->version = VERSION;
 	return new;
 }

@@ -1,5 +1,6 @@
 //Header File of DataHandlingLibrary
 #include <stdint.h>
+#include <time.h>
 
 #ifndef DATAHANDLINGLIBRARY_H
 #define DATAHANDLINGLIBRARY_H
@@ -10,9 +11,11 @@
 #define DATAHANDLINGLIBRARY_API __declspec(dllimport)
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
+#define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
+
 #ifndef NULL
 #define NULL (void*)0
-#endif
+#endif //NULL
 
 #define EOL (char)255
 #define IDBITS 3
@@ -24,22 +27,26 @@
 #define PAYLOADLENGTH 16
 #define CHKSMLENGTH 2
 
-DATAHANDLINGLIBRARY_API const int PathLength = PATHLENGTH;
-DATAHANDLINGLIBRARY_API const int BufferLength = BUFFERLENGTH;
-DATAHANDLINGLIBRARY_API const int DataLength = DATALENGTH;
-DATAHANDLINGLIBRARY_API const int PayloadLength = PAYLOADLENGTH;
-DATAHANDLINGLIBRARY_API const int ChksmLength = CHKSMLENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATHLENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFERLENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATALENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int PayloadLength = PAYLOADLENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int ChksmLength = CHKSMLENGTH;
 
-DATAHANDLINGLIBRARY_API const int VERSION = 1;
-DATAHANDLINGLIBRARY_API const char FAILSAFENAME[] = "*\\failsafe.txt";
+DATAHANDLINGLIBRARY_CONSTANT const int VERSION = 1;
+DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFENAME[] = "*\\failsafe.txt";
 
 enum DATAHANDLINGLIBRARY_API FrameIdentifier{
-	AmbientPressure, CompareTemperature, HHAmbientPressure, HHCompareTemperature
-}; 
+	Ambient_Pressure, Compare_Temperature, Tank_Pressure, Tank_Temperature, Chamber_Pressure, Chamber_Temperature,
+	Nozzle_Pressure_1, Nozzle_Temperature_1, Nozzle_Pressure_2, Nozzle_Temperature_2, Nozzle_Pressure_3, Nozzle_Temperature_3,
+	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_Health,
+	Nozzle_Pressure_1_Health, Nozzle_Temperature_1_Health, Nozzle_Pressure_2_Health, Nozzle_Temperature_2_Health, Nozzle_Pressure_3_Health, Nozzle_Temperature_3_Health,
+	Nozzle_Cover, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_1, Sensorboard_2, Mainboard, System_Time, Experiment_Status
+}; //Camera = deprecated
 
 enum DATAHANDLINGLIBRARY_API TCIdentifier {
-	Mode
-};
+	Mode, Valve_Delay, Servo_Delay, EoE_Delay, Power_Off_Delay, Nozzle_On_Delay, Dry_Run, LED_Control, Servo_Control, Valve_Control, Camera_Control, Test_Abort, Test_Run
+}; //Camera_Control = deprecated
 
 enum DATAHANDLINGLIBRARY_API Flags {
 	Source = 0, OK = 1, Partial = 2, Biterror = 3, Overwrite = 4, TeleCommand = 10, Idle = 20, Experiment = 30, Full = 100, Sensor = 200
@@ -48,7 +55,7 @@ enum DATAHANDLINGLIBRARY_API Flags {
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	//Used to chronologically order DataFrames (0 denotes an empty DataFrame)
-	int16_t sync;
+	uint16_t sync;
 	//Used to mark DataFrames for faulty or missing data
 	unsigned char flag;
 	unsigned char data[DATALENGTH];
@@ -57,7 +64,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 //Stores the data contained in one packet of the transmission protocol
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	//Used to stitch together DataFrames (= DataFrame.sync)
-	int16_t sync;
+	uint16_t sync;
 	//Used to denote the current program mode (3 Bits)
 	unsigned char mode;
 	//Used to identify payload data (3 Bits)
@@ -139,10 +146,10 @@ DATAHANDLINGLIBRARY_API int Update(StorageHub* storage);
 DATAHANDLINGLIBRARY_API StorageHub Initialize(const char path[]);
 
 //Returns a new empty DataFrame with the specified Sync-Bytes value
-DATAHANDLINGLIBRARY_API DataFrame CreateFrame(int16_t sync);
+DATAHANDLINGLIBRARY_API DataFrame CreateFrame(uint16_t sync);
 
 //Returns a new empty TeleCommand-DataFrame with the specified Sync-Bytes value
-DATAHANDLINGLIBRARY_API DataFrame CreateTC(int16_t sync);
+DATAHANDLINGLIBRARY_API DataFrame CreateTC(uint16_t sync);
 
 //Writes data onto a DataFrame according to the ID (enum FrameIdentifier), returns the old value ({0} if empty)
 DATAHANDLINGLIBRARY_API int WriteFrame(DataFrame* frame, int id, int value);
@@ -236,6 +243,6 @@ DATAHANDLINGLIBRARY_API DataFrame* UpdateTC(SaveFile* savefile);
 DATAHANDLINGLIBRARY_API SaveFileFrame* AddSaveFrame(SaveFile* savefile, DataFrame data);
 
 //Shortcut to CreateFrame() and AddSaveFrame(), returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame(SaveFile* savefile, int16_t sync);
+DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame(SaveFile* savefile, uint16_t sync);
 
-#endif
+#endif //DATAHANDLINGLIBRARY_H
