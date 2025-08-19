@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
 #include "DataHandlingLibrary.h"
 
 //INTERNAL, Looks up values to be used by the ReadFrame() and WriteFrame() operations
@@ -51,13 +49,13 @@ StorageHub Initialize(const char path[])
 	return new;
 }
 
-DataFrame CreateFrame(int16_t sync)
+DataFrame CreateFrame(uint16_t sync)
 {
 	DataFrame temp = { .sync = sync };
 	return temp;
 }
 
-DataFrame CreateTC(int16_t sync)
+DataFrame CreateTC(uint16_t sync)
 {
 	DataFrame temp = { .sync = sync, .flag = TeleCommand + Source};
 	return temp;
@@ -67,10 +65,11 @@ static void _GetPosition_(int id, int* index, unsigned char* bit, unsigned char*
 {
 	//TBC
 	switch (id) {
-	case AmbientPressure: *index = 0, *length = 2;
-	case HHAmbientPressure: *index = 32, *bit = 8, *length = 1;
-	case CompareTemperature: *index = 2, *length = 3;
-	case HHCompareTemperature: *index = 32, *bit = 7, *length = 1;
+	case Ambient_Pressure: *index = 1, * length = 3; break;
+	case Ambient_Pressure_Health: *index = 32, * bit = 8, * length = 1; break;
+	case Compare_Temperature: *index = 2, * length = 3; break;
+	case Compare_Temperature_Health: *index = 32, * bit = 7, * length = 1; break;
+	default: *index = 0, * length = 0, * bit = 0; break;
 	}
 	return;
 }
@@ -391,7 +390,7 @@ SaveFileFrame* AddSaveFrame(SaveFile* savefile, DataFrame data)
 	return savefile->lastFrame;
 }
 
-SaveFileFrame* CreateSaveFrame(SaveFile* savefile, int16_t sync)
+SaveFileFrame* CreateSaveFrame(SaveFile* savefile, uint16_t sync)
 {
 	DataFrame data = CreateFrame(sync);
 	return AddSaveFrame(savefile, data);
