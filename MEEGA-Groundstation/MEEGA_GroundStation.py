@@ -274,11 +274,143 @@ class GSError(QDialog):
         self.ui = Ui_ErrorDialog()
         self.ui.setupUi(self)
 
+ ###Baustelle:
+        
+        #Hook, wenn sich ein knopf ändert
+         ****
+        # Knöpfe per enable ausschalten
+
 class GSControl(QWidget):
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
+        self.settings = settings
         self.ui = Ui_controlPanel()
         self.ui.setupUi(self)
+
+        # Initialize control states
+        self.valve_state = "Closed"  # Default state !!soll false!!
+        self.led_state = "Off"      # Default state  !!soll false!!
+        self.camera_state = "Off"   # Default state  !!soll false!!
+        self.servo_angle = 0        # Default angle  !!boole Wert !!
+        self.test_run_active = False # Default state
+        self.dry_run_active = False # Default state
+        
+        # Initialize duration values
+        self.preparation_duration = QTime(0, 0, 0)
+        self.experiment_duration = QTime(0, 0, 0)
+        self.shutdown_duration = QTime(0, 0, 0)
+        
+        # Connect signals to slots
+        self._connect_signals()
+        
+    def _connect_signals(self):
+        # Valve controls
+        self.ui.pushButton.clicked.connect(self._on_valve_open)
+        self.ui.pushButton_2.clicked.connect(self._on_valve_close)
+        
+        # Servo controls
+        self.ui.pushButton_3.clicked.connect(self._on_servo_set)
+        
+        # LED controls
+        self.ui.pushButton_6.clicked.connect(self._on_led_on)
+        self.ui.pushButton_7.clicked.connect(self._on_led_off)
+        
+        # Camera controls
+        self.ui.pushButton_8.clicked.connect(self._on_camera_on)
+        self.ui.pushButton_9.clicked.connect(self._on_camera_off)
+        
+        # Test run controls
+        self.ui.pushButton_4.clicked.connect(self._on_test_start)
+        self.ui.pushButton_5.clicked.connect(self._on_test_stop)
+        
+        # Dry run control
+        self.ui.pushButton_13.clicked.connect(self._on_dry_run)
+        
+        # Duration time edits
+        self.ui.timeEdit_2.timeChanged.connect(self._on_preparation_duration_changed)
+        self.ui.timeEdit.timeChanged.connect(self._on_experiment_duration_changed)
+        self.ui.timeEdit_3.timeChanged.connect(self._on_shutdown_duration_changed)
+        
+        # Reset buttons
+        self.ui.pushButton_10.clicked.connect(self._on_reset_preparation)
+        self.ui.pushButton_11.clicked.connect(self._on_reset_experiment)
+        self.ui.pushButton_12.clicked.connect(self._on_reset_shutdown)
+    
+    # Valve control slots
+    def _on_valve_open(self):
+        self.valve_state = "Open"
+        
+    def _on_valve_close(self):
+        self.valve_state = "Closed"
+    
+    # Servo control slot
+    def _on_servo_set(self):
+        self.servo_angle = self.ui.doubleSpinBox.value()
+    
+    # LED control slots
+    def _on_led_on(self):
+        self.led_state = "On"
+        
+    def _on_led_off(self):
+        self.led_state = "Off"
+    
+    # Camera control slots
+    def _on_camera_on(self):
+        self.camera_state = "On"
+        
+    def _on_camera_off(self):
+        self.camera_state = "Off"
+    
+    # Test run control slots
+    def _on_test_start(self):
+        self.test_run_active = True
+        
+    def _on_test_stop(self):
+        self.test_run_active = False
+    
+    # Dry run control slot
+    def _on_dry_run(self):
+        self.dry_run_active = True
+    
+    # Duration change slots
+    def _on_preparation_duration_changed(self, time):
+        self.preparation_duration = time
+        
+    def _on_experiment_duration_changed(self, time):
+        self.experiment_duration = time
+        
+    def _on_shutdown_duration_changed(self, time):
+        self.shutdown_duration = time
+    
+    # Reset duration slots
+    def _on_reset_preparation(self):
+        self.ui.timeEdit_2.setTime(QTime(0, 0, 0))
+        self.preparation_duration = QTime(0, 0, 0)
+        
+    def _on_reset_experiment(self):
+        self.ui.timeEdit.setTime(QTime(0, 0, 0))
+        self.experiment_duration = QTime(0, 0, 0)
+        
+    def _on_reset_shutdown(self):
+        self.ui.timeEdit_3.setTime(QTime(0, 0, 0))
+        self.shutdown_duration = QTime(0, 0, 0)
+
+    @Slot()
+    def fetchSettings(self):
+        # This method can be used to retrieve all current settings if needed
+        return {
+            'valve_state': self.valve_state,
+            'led_state': self.led_state,
+            'camera_state': self.camera_state,                  #!!Umbennen und für telecommand benutzen!!
+            'servo_angle': self.servo_angle,                   #!!return funktioniert nicht gut mit Signal&Slots!!
+            'test_run_active': self.test_run_active,
+            'dry_run_active': self.dry_run_active,
+            'preparation_duration': self.preparation_duration,
+            'experiment_duration': self.experiment_duration,
+            'shutdown_duration': self.shutdown_duration
+        }
+
+   
 
 class GSConnection(QDialog):
     def __init__(self):
@@ -398,6 +530,9 @@ if __name__ == "__main__":
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
     settings = Settings()
+
+    #Hier Datahandling (Data Storage Variable)
+
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
