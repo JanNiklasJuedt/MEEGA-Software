@@ -41,7 +41,7 @@ enum DATAHANDLINGLIBRARY_API FrameIdentifier{
 	Nozzle_Pressure_1, Nozzle_Temperature_1, Nozzle_Pressure_2, Nozzle_Temperature_2, Nozzle_Pressure_3, Nozzle_Temperature_3,
 	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_Health,
 	Nozzle_Pressure_1_Health, Nozzle_Temperature_1_Health, Nozzle_Pressure_2_Health, Nozzle_Temperature_2_Health, Nozzle_Pressure_3_Health, Nozzle_Temperature_3_Health,
-	Nozzle_Cover, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_1, Sensorboard_2, Mainboard, System_Time, Experiment_Status
+	Nozzle_Cover, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_1, Sensorboard_2, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode
 }; //Camera = deprecated
 
 enum DATAHANDLINGLIBRARY_API TCIdentifier {
