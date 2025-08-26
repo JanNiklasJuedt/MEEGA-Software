@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b21c62a3-5866-4bad-ad38-1691923dd45a}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>MEEGA_PyDataHandling.py</StartupFile>
+    <StartupFile>MEEGA_GroundStation.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,6 +25,7 @@
     <Content Include="Ressources\MEEGA_Language_de.ts" />
     <Content Include="Ressources\meega_logo_small.ico" />
     <Content Include="Ressources\meega_logo_small.png" />
+    <Content Include="UI-Files\MEEGA_calibration.ui" />
     <Content Include="UI-Files\MEEGA_connection.ui" />
     <Content Include="UI-Files\MEEGA_controlPanel.ui" />
     <Content Include="UI-Files\MEEGA_documentation.ui" />
