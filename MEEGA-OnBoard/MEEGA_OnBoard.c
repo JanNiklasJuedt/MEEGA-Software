@@ -143,7 +143,7 @@ void ServoRotation(int degree) {
 //################################################################## EXPERIMENT PROGRAM ##################################################################//
 //########################################################################################################################################################//
 
-int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0, ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0, ExperimentStatus;
+int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0, ValveComplete = 0, ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0, ExperimentStatus;
 
 int ExperimentRun(struct params parameter) {
 	digitalWrite(LEDs, 1);	//LED on
@@ -193,6 +193,7 @@ int ExperimentRun(struct params parameter) {
 		printf("Valve Status: Valve is close\n");
 #else
 		valveStatus = ValveClose;
+		ValveComplete = 1; //Valve operation complete
 #endif
 		delay(parameter.ServoDelay);
 	}
@@ -354,7 +355,6 @@ int ExperimentRun(struct params parameter) {
 #define id_Nozzle_Cover 48	//ServoSwitch_2
 #define id_Nozzle_Servo 34	//Nozzle_Servo
 #define id_Reservoir_Valve 010
-#define id_Camera 011
 #define id_LEDs 012
 #define id_Sensorboard_1 013
 #define id_Sensorboard_2 113
@@ -380,7 +380,6 @@ void DataAcquisition(struct DataFrame* frame) {
 	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback: fully open
 	int NozzleServo = digitalRead(Nozzle_Servo);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Reservoir_Valve);	//Reservoir Valve
-	int Camerastat = digitalRead(Camera);
 	int LEDsStat = digitalRead(LEDs);
 	int Sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
 	int Sensorboard_2 = 0;
@@ -403,7 +402,6 @@ void DataAcquisition(struct DataFrame* frame) {
 	WriteFrame(frame, id_Nozzle_Cover, NozzleCover);
 	WriteFrame(frame, id_Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, id_Reservoir_Valve, ReservoirValve);
-	WriteFrame(frame, id_Camera, Camerastat);
 	WriteFrame(frame, id_LEDs, LEDsStat);
 	WriteFrame(frame, id_Sensorboard_1, Sensorboard_1);
 	WriteFrame(frame, id_Sensorboard_2, Sensorboard_2);
@@ -427,11 +425,15 @@ void Log(struct StorageHub* storage) {
 			syncLimit = 0;								//Reset the sync limit
 		}
 		Update(storage);	//Update the storage hub, this will write the packets to the harddrive if necessary
+		clock_t start = clock();
 		if (SoESignal()) {
-			delay(freq.FDA20);		//Full Data Acquisition 20Hz every 10 Frames
+			clock_t end = clock();
+			long duration = ((end - start)*1000)/CLOCKS_PER_SEC;
+			int wait = freq.FDA20 - (int)duration;
+			if (wait > 0) delay(wait); //Full Data Acquisition 20Hz
 		}
 		else {
-			delay(freq.FDA2);		//Basic Data Acquisition 2Hz every 10 Frames
+			delay(freq.FDA2);		//Basic Data Acquisition 2Hz
 		}
 	}
 }
@@ -470,6 +472,36 @@ int ExperimentControl() {
 return 0;
 }
 
+
+//######################################################################################################################################################//
+//################################################################## FAILSAFE PROGRAM ##################################################################//
+//######################################################################################################################################################//
+
+typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, EXPERIMENT_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
+ExperimentState currentState = WAIT_LO;
+int ValveOpened = 0;
+int NozzleOpened = 0;
+int experimentRunning = 0;
+
+#ifndef DEBUG
+void FailSafeRecovery(StorageHub* storage) {
+	DataFrame lastFrame;
+	if (ReadFrame(storage->saveFile, System_Time)) {
+		currentState = lastFrame.currentState;
+		ValveOpened = lastFrame.ValveOpened;
+		NozzleOpened = lastFrame.NozzleOpened;
+		experimentRunning = lastFrame.experimentRunning;
+	}
+	else {
+		currentState = WAIT_LO;
+		ValveOpened = 0;
+		NozzleOpened = 0;
+		experimentRunning = 0;
+	}
+}
+#endif
+
+
 //###########################################################################################################################################################//
 //################################################################## START OF MAIN PROGRAM ##################################################################//
 //###########################################################################################################################################################//
@@ -489,8 +521,22 @@ int main() {
 
 #else
 	wiringPiSetupGpio();
+	pinMode(Reservoir_Valve, OUTPUT);	//output should be in wiringPi library as define output 1
+	pinMode(Nozzle_Servo, OUTPUT);
+	pinMode(LEDs, OUTPUT);
 
-	struct StorageHub storage;
+	pinMode(ServoSwitch_1, INPUT);
+	pinMode(ServoSwitch_2, INPUT);
+	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
+	pinMode(RPi_LO, INPUT);
+
+	softPwmCreate(Nozzle_Servo, 0, 360); 	//Create a soft PWM on the Nozzle Servo pin with a range of 0-360 degrees
+
+	pullUpDonControl(RPi_LO, PUD_DOWN);
+	pullUpDonControl(RPi_SOE, PUD_DOWN);
+
+	struct StorageHub storage = Initialize(NULL);
+	FailSafeRecovery(&storage);
 #endif
 	//Idle: 0; LO: 1; Running SoE: 2; Success: 3; Failure: 4; EoE: 5; Experiment Contol Panel: 6 
 	ExperimentStatus = 0;
@@ -507,8 +553,9 @@ int main() {
 		return 1;
 	}
 #endif
+	int EoECompleted = 0;
 
-	while (1) {	
+	while (!EoECompleted) {	
 		//int flightmode = 1;
 		//int testmode = 0;
 		int LOSignal = digitalRead(RPi_LO);
@@ -527,36 +574,72 @@ int main() {
 #ifdef DEBUG
 			printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LOSignal);
 #endif
-			//Flight Mode
-			if (LOSignal == 1) {	//change to HIGH if connected to RaspberryPi
+			if (LOSignal == 0) continue;
+
+			currentState = WAIT_LO;
+			ValveOpened = 0;
+			NozzleOpened = 0;
+			experimentRunning = 0;
+			while(currentState != END_OF_EXPERIMENT) {
+				switch (currentState) {
+				case WAIT_LO:
+					if (LOSignal == 1) {	//change to HIGH if connected to RaspberryPi
+						currentState = AFTER_LO;
+					}
+					break;
+
+				case AFTER_LO:
 #ifdef DEBUG
-				delay(DEBUGstandard.AfterLO);
+					delay(DEBUGstandard.AfterLO);
 #else
-				ExperimentStatus = 1; //LO Signal received
-				delay(config.AfterLO);	//Wait for 55s after liftoff
+					ExperimentStatus = 1; //LO Signal received
+					delay(config.AfterLO);	//Wait for 55s after liftoff
 #endif
-				digitalWrite(LEDs, 1);	//LED on
+					currentState = NOSECONE_SEPARATION;
+					break;
+
+				case NOSECONE_SEPARATION:
+					digitalWrite(LEDs, 1);	//LED on
 #ifdef DEBUG
-				printf("Nose Cone Separation\n");
+					printf("Nose Cone Separation\n");
 #endif
-				delay(config.NoseConeSeparation);			//Wait for Nozzle Cone Separation
-				digitalWrite(LEDs, 0);	//LED off
-				while (!SoESignal()) {
-					delay(100);
+					delay(config.NoseConeSeparation);			//Wait for Nozzle Cone Separation
+					digitalWrite(LEDs, 0);	//LED off
+					currentState = WAIT_SOE;
+					break;
+
+				case WAIT_SOE:
+					while (!SoESignal()) {
+						delay(100);
+					}
+					currentState = VALVE_OPENED;
+					break;
+
+				case VALVE_OPENED:
+					currentState = EXPERIMENT_RUNNING;
+					break;
+
+				case EXPERIMENT_RUNNING:
+					if (!NozzleOpened) {
+						int ExperimentRunStatus = ExperimentRun(config);
+						experimentRunning = 1;
+
+						if (ExperimentRunStatus == 43 || ExperimentRunStatus == 404) {
+							NozzleOpened = 1;
+							currentState = END_OF_EXPERIMENT; //End of Experiment
+						}
+					}
+					break;
+
+				case NOZZLE_OPENED:
+				case END_OF_EXPERIMENT:
+					break;
 				}
-				int ExperimentRunStatus = ExperimentRun(config);
 #ifndef DEBUG
 				WriteSave(storage.saveFile);
 #endif
-				if (ExperimentRunStatus == 43) break;
-				else if (ExperimentRunStatus == 404) break;	//End of Experiment
 			}
-			else if (LOSignal == 0) { //change to LOW if connected to RaspberryPi
-#ifndef DEBUG
-				ExperimentStatus = 0;
-#endif
-				continue;
-			}
+			EoECompleted = 1;
 		}
 		else if (modeBit == 0) {	//Test Mode							//Manuel abbrechen
 			config = teststandard;
