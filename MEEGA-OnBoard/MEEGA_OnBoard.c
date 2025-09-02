@@ -143,12 +143,11 @@ void ServoRotation(int degree) {
 //################################################################## EXPERIMENT PROGRAM ##################################################################//
 //########################################################################################################################################################//
 
-int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0, ValveComplete = 0, ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, EoE = 0, SoE = 0, LO = 0, ExperimentStatus;
+int ValveOpen = 1, ValveClose = 0, ValveStuck = 3, valveStatus = 0, ValvePos = 0, ValveCompleted = 0, ServoRun = 1, ServoStop = 0, ServoStuck = 3, servoStatus = 0, nozzleStatus = 0, NozzleStuck = 3, NozzlePos = 0, NozzleOpen = 1, NozzleOpened = 0, EoE = 0, SoE = 0, LO = 0, ExperimentStatus;
 
-int ExperimentRun(struct params parameter) {
-	digitalWrite(LEDs, 1);	//LED on
-	ExperimentStatus = 2;	//Experiment started
-	digitalWrite(Reservoir_Valve,ValveOpen);	//command open valve
+int ValveRun(struct params parameter) {
+	digitalWrite(LEDs, 1);			//LED on
+	digitalWrite(Reservoir_Valve, ValveOpen);	//command open valve
 #ifdef DEBUG
 	printf("Command opening Valve\n");
 	ValvePos = digitalRead(ValveSwitch);		//Feedback signal
@@ -175,7 +174,7 @@ int ExperimentRun(struct params parameter) {
 #ifdef DEBUG
 			printf("Valve Error Code 1, Return ...\n");
 #else
-			ExperimentStatus = 4;
+			ExperimentStatus = 3;
 #endif
 			return 1;//abort test
 		}
@@ -193,7 +192,7 @@ int ExperimentRun(struct params parameter) {
 		printf("Valve Status: Valve is close\n");
 #else
 		valveStatus = ValveClose;
-		ValveComplete = 1; //Valve operation complete
+		ValveCompleted = 1; //Valve operation completed
 #endif
 		delay(parameter.ServoDelay);
 	}
@@ -208,11 +207,16 @@ int ExperimentRun(struct params parameter) {
 #ifdef DEBUG
 			printf("Valve Error Code 2, Return ...\n");
 #else
-			ExperimentStatus = 4;
+			ExperimentStatus = 3;
 #endif
 			return 2;//abort test
 		}
 	}
+	return 0;
+}
+
+
+int ExperimentRun(struct params parameter) {
 	if (strcmp(parameter.Mode, "Flight") == 0) {
 		ServoRotation(90); //command rotate the serve 90°
 #ifdef DEBUG
@@ -277,13 +281,10 @@ int ExperimentRun(struct params parameter) {
 				printf("Nozzle Cover is stuck in close position\n");
 #else
 				nozzleStatus = NozzleStuck;
-				ExperimentStatus = 4;
 #endif
 				if (strcmp(parameter.Mode, "Test") == 0) {
 #ifdef DEBUG
 					printf("Nozzle Error Code 3, Return ...\n");
-#else
-					ExperimentStatus = 4;
 #endif
 					return 3;//abort test
 				}
@@ -303,9 +304,6 @@ int ExperimentRun(struct params parameter) {
 #endif
 		digitalWrite(LEDs, 0);
 		nozzleStatus = 0;						//Reset simulation of nozzle cover open
-#ifndef DEBUG
-		ExperimentStatus = 3;
-#endif
 		delay(parameter.PoweroffDelay);
 	}
 	if (EoE == 1) {
@@ -317,16 +315,19 @@ int ExperimentRun(struct params parameter) {
 		delay(parameter.PoweroffDelay);
 #ifdef DEBUG
 		printf("End of Experiment: Successful\n");
-#else
-		ExperimentStatus = 5;
 #endif
 		return 43;	//End of Experiment
+	}
+	else if (strcmp(parameter.Mode, "Test") == 0) {
+#ifdef DEBUG
+		printf("End of Experiment: Test Mode\n");
+#else
+		ExperimentStatus = 3;
+#endif
 	}
 	else {
 #ifdef DEBUG
 		printf("End of Experiment: Error\n");
-#else
-		ExperimentStatus = 4;
 #endif
 		delay(parameter.PoweroffDelay);
 		return 404;	//Error in Experiment
@@ -448,7 +449,7 @@ void* LogThread(void* arg) {
 //BETA Control Panel Functions not yet implemented from DataHandling
 int ExperimentControl() {
 #ifndef DEBUG
-	ExperimentStatus = 6;
+	ExperimentStatus = 4;
 	struct StorageHub* storage;
 	while (1) {
 		DataPacket cmdpacket = GetInPacket(storage->buffer);
@@ -479,8 +480,6 @@ return 0;
 
 typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, EXPERIMENT_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
 ExperimentState currentState = WAIT_LO;
-int ValveOpened = 0;
-int NozzleOpened = 0;
 int experimentRunning = 0;
 
 #ifndef DEBUG
@@ -488,13 +487,13 @@ void FailSafeRecovery(StorageHub* storage) {
 	DataFrame lastFrame;
 	if (ReadFrame(storage->saveFile, System_Time)) {
 		currentState = lastFrame.currentState;
-		ValveOpened = lastFrame.ValveOpened;
+		ValveCompleted = lastFrame.ValveCompleted;
 		NozzleOpened = lastFrame.NozzleOpened;
 		experimentRunning = lastFrame.experimentRunning;
 	}
 	else {
 		currentState = WAIT_LO;
-		ValveOpened = 0;
+		ValveCompleted = 0;
 		NozzleOpened = 0;
 		experimentRunning = 0;
 	}
@@ -538,7 +537,7 @@ int main() {
 	struct StorageHub storage = Initialize(NULL);
 	FailSafeRecovery(&storage);
 #endif
-	//Idle: 0; LO: 1; Running SoE: 2; Success: 3; Failure: 4; EoE: 5; Experiment Contol Panel: 6 
+	//LO: 1; SoE: 2; EoE: 3; Experiment Contol Panel/Mode: 4 
 	ExperimentStatus = 0;
 	struct params config;
 
@@ -577,7 +576,7 @@ int main() {
 			if (LOSignal == 0) continue;
 
 			currentState = WAIT_LO;
-			ValveOpened = 0;
+			ValveCompleted = 0;
 			NozzleOpened = 0;
 			experimentRunning = 0;
 			while(currentState != END_OF_EXPERIMENT) {
@@ -612,10 +611,15 @@ int main() {
 					while (!SoESignal()) {
 						delay(100);
 					}
+					ExperimentStatus = 2; //Experiment started
 					currentState = VALVE_OPENED;
 					break;
 
 				case VALVE_OPENED:
+					if (!ValveCompleted) {
+						int ValveRunStatus = ValveRun(config);
+						ValveCompleted = 1;
+					}
 					currentState = EXPERIMENT_RUNNING;
 					break;
 
@@ -645,6 +649,7 @@ int main() {
 			config = teststandard;
 			//Test Mode
 			digitalWrite(LEDs, 1);
+			ExperimentStatus = 4;
 			while (!SoESignal()) {
 				delay(100);
 			}
