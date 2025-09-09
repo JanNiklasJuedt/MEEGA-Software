@@ -1,8 +1,10 @@
 #imports
 import sys
+import time
+
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog, QWidget)
-from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale)
+from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread)
 
 from MEEGA_mainWindow import *
 from MEEGA_startup import *
@@ -12,6 +14,9 @@ from MEEGA_documentation import *
 from MEEGA_error import *
 from MEEGA_controlPanel import *
 from MEEGA_results import *
+from MEEGA_calibration import *
+
+from MEEGA_PyDataHandling import *
 
 #class to handle program settings
 class Settings:
@@ -206,6 +211,16 @@ class GSConnection(QDialog):
         self.ui = Ui_ConnectionDialog()
         self.ui.setupUi(self)
 
+class DataHandlingThread(QThread):
+    def run(self):
+        period_ms = 1000 / 20
+        while True:
+            clock = time.monotonic_ns()
+            DataHandling.UpdateAll()
+            if self.isInterruptionRequested():
+               break
+            self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
+
 #Main
 if __name__ == "__main__":
     GS = QApplication()
@@ -217,30 +232,36 @@ if __name__ == "__main__":
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
+    #DataHandling setup
+    DataHandling.Initialize(b"")
+    dataHandlingThread = DataHandlingThread()
+    GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
+    dataHandlingThread.start()
+
     #window objects creation
-    mainWindow = GSMain(settings)
-    start = GSStart(settings)
-    control = GSControl()
-    time = GSLaunchTime(settings)
-    document = GSDocumentation()
-    error = GSError()
-    results = GSResults()
-    connectionWindow = GSConnection()
+    GSmain = GSMain(settings)
+    GSstart = GSStart(settings)
+    GScontrol = GSControl()
+    GStime = GSLaunchTime(settings)
+    GSdocument = GSDocumentation()
+    GSerror = GSError()
+    GSresults = GSResults()
+    GSconnection = GSConnection()
 
     #inter-window connections
-    mainWindow.ui.actionRestart.triggered.connect(start.show)
-    mainWindow.ui.actionRestart.triggered.connect(mainWindow.hide)
-    mainWindow.ui.actionControl_Panel.triggered.connect(control.show)
-    mainWindow.ui.actionDocumentation.triggered.connect(document.show)
-    mainWindow.ui.actionConnect.triggered.connect(connectionWindow.show)
-    mainWindow.ui.actionResults.triggered.connect(results.show)
-    mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(time.show)
-    start.accepted.connect(mainWindow.applySettings)
-    start.accepted.connect(mainWindow.show)
-    time.accepted.connect(mainWindow.applySettings)
+    GSmain.ui.actionRestart.triggered.connect(GSstart.show)
+    GSmain.ui.actionRestart.triggered.connect(GSmain.hide)
+    GSmain.ui.actionControl_Panel.triggered.connect(GScontrol.show)
+    GSmain.ui.actionDocumentation.triggered.connect(GSdocument.show)
+    GSmain.ui.actionConnect.triggered.connect(GSconnection.show)
+    GSmain.ui.actionResults.triggered.connect(GSresults.show)
+    GSmain.ui.actionEstimated_Launch_Time.triggered.connect(GStime.show)
+    GSstart.accepted.connect(GSmain.applySettings)
+    GSstart.accepted.connect(GSmain.show)
+    GStime.accepted.connect(GSmain.applySettings)
     
     #showing the startup screen
-    start.show()
+    GSstart.show()
 
     #starting the PyQt Application Loop (everything has to be defined prior to this)
     sys.exit(GS.exec())

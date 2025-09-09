@@ -38,6 +38,7 @@
     <Content Include="UI_Build.bat" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MEEGA_calibration.py" />
     <Compile Include="MEEGA_connection.py" />
     <Compile Include="MEEGA_controlPanel.py" />
     <Compile Include="MEEGA_documentation.py" />

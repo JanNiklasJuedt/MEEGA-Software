@@ -4,114 +4,74 @@ DataHandling = cdll.LoadLibrary("..\\x64\\Debug\\DataHandlingLibrary.dll")
 
 print("DLL " + DataHandling._name + " successfully loaded")
 
-PATHLENGTH = c_int.in_dll(DataHandling, "PathLength").value
-BUFFERLENGTH = c_int.in_dll(DataHandling, "BufferLength").value
-DATALENGTH = c_int.in_dll(DataHandling, "DataLength").value
-PAYLOADLENGTH = c_int.in_dll(DataHandling, "PayloadLength").value
-CHKSMLENGTH = c_int.in_dll(DataHandling, "ChksmLength").value
+PATH_LENGTH = c_int.in_dll(DataHandling, "PathLength").value
+DATA_LENGTH = c_int.in_dll(DataHandling, "DataLength").value
+CHKSM_LENGTH = c_int.in_dll(DataHandling, "ChksmLength").value
 
 class DataFrame(Structure):
-    _fields_ = [ ("sync", c_int16), ("flag", c_ubyte), ("data", c_ubyte * DATALENGTH) ]
-
-class DataPacket(Structure):
-    _fields_ = [ ("sync", c_int16), ("mode", c_ubyte), ("id", c_ubyte), ("payload", c_ubyte * PAYLOADLENGTH), ("chksm", c_ubyte * CHKSMLENGTH), ("crc", c_ubyte * CHKSMLENGTH) ]
-
-class DataBuffer(Structure):
-    _fields_ = [ ("incoming", DataPacket * BUFFERLENGTH), ("outgoing", DataPacket * BUFFERLENGTH), ("frameStack", DataFrame * BUFFERLENGTH), ("TCStack", DataFrame * BUFFERLENGTH) ]
-
-class FailSafe(Structure):
-    _fields_ = [ ("version", c_ubyte), ("dateTime", c_time_t), ("saveFilePath", c_wchar_p), ("complete", c_byte), ("nominalExit", c_byte), ("mode", c_char), ("conn", c_char), ("lang", c_char) ]
+    _fields_ = [ ("sync", c_int16), ("flag", c_ubyte), ("data", c_ubyte * DATA_LENGTH), ("chksm", c_ubyte * CHKSM_LENGTH) ]
 
 class SaveFileFrame(Structure):
     pass
 
 SaveFileFrame._fields_ = [ ("data", DataFrame), ("nextFrame", POINTER(SaveFileFrame)), ("previousFrame", POINTER(SaveFileFrame)) ]
 
-class SaveFile(Structure):
-    _fields_ = [ ("version", c_ubyte), ("dateTime", c_time_t), ("firstFrame", POINTER(SaveFileFrame)), ("lastFrame", POINTER(SaveFileFrame)), ("frameAmount", c_int), ("savedAmount", c_int), ("currentTC", POINTER(DataFrame)), ("saveFilePath", c_wchar_p) ]
+class CalibrationPoint(Structure):
+    _fields_ = [ ("digital", c_int), ("analog", c_float), ("valid", c_byte)]
 
-class StorageHub(Structure):
-    _fields_ = [ ("saveFile", POINTER(SaveFile)), ("failSafe", POINTER(FailSafe)), ("buffer", POINTER(DataBuffer)) ]
+DataHandling.DebugLog.argtypes = [c_char_p]
 
-DataHandling.Update.argtypes = [POINTER(StorageHub)]
+DataHandling.MapSensorValue.argtypes = [c_int, c_int]
+DataHandling.MapSensorValue.restype = c_float
 
-DataHandling.Initialize.argtypes = [c_wchar_p]
-DataHandling.Initialize.restype = StorageHub
+DataHandling.AddPoint.argtypes = [c_int, c_int, CalibrationPoint]
 
-DataHandling.CreateFrame.argtypes = [c_int16]
+DataHandling.ReadPoint.argtypes = [c_int, c_int]
+DataHandling.ReadPoint.restype = CalibrationPoint
+
+DataHandling.ReadCalibration.argtypes = [c_char_p]
+
+DataHandling.CreateCalibration.argtypes = [c_char_p]
+
+DataHandling.Initialize.argtypes = [c_char_p]
+
+DataHandling.CreateFrame.argtypes = [c_uint16]
 DataHandling.CreateFrame.restype = DataFrame
 
-DataHandling.CreateTC.argtypes = [c_int16]
+DataHandling.CreateTC.argtypes = [c_uint16]
 DataHandling.CreateTC.restype = DataFrame
+
+DataHandling.EmptyFrame.argtypes = [c_uint16]
+
+DataHandling.EmptyTC.argtypes = [c_uint16]
 
 DataHandling.WriteFrame.argtypes = [POINTER(DataFrame), c_int, c_int]
 
-DataHandling.WriteTC.argtypes = [POINTER(DataFrame), c_int, c_int]
+DataHandling.ReadFrame.argtypes = [DataFrame, c_int]
 
-DataHandling.ReadFrame.argtypes = [POINTER(DataFrame), c_int]
+DataHandling.FrameIsEmpty.argtypes = [DataFrame]
 
-DataHandling.ReadTC = [POINTER(DataFrame), c_int]
+DataHandling.FrameIsTC.argtypes = [DataFrame]
 
-DataHandling.FrameIsEmpty.argtypes = [POINTER(DataFrame)]
+DataHandling.FrameHasFlag.argtypes = [DataFrame, c_int]
 
-DataHandling.FrameIsTC.argtypes = [POINTER(DataFrame)]
+DataHandling.FrameAddFlag.argtypes = [POINTER(DataFrame), c_int]
 
-DataHandling.WritePacket.argtypes = [DataPacket]
-DataHandling.WritePacket.restype = POINTER(c_ubyte)
+DataHandling.AddOutFrame.argtypes = [DataFrame]
 
-DataHandling.ReadPacket.argtypes = [POINTER(c_ubyte)]
-DataHandling.ReadPacket.restype = DataPacket
+DataHandling.CreateSave.argtypes = [c_char_p]
 
-DataHandling.FormPackets.argtypes = [POINTER(DataBuffer)]
+DataHandling.ReadSave.argtypes = [c_char_p]
 
-DataHandling.FormFrames.argtypes = [POINTER(DataBuffer)]
-
-DataHandling.GetOutPacket.argtypes = [POINTER(DataBuffer)]
-DataHandling.GetOutPacket.restype = DataPacket
-
-DataHandling.GetInPacket.argtypes = [POINTER(DataBuffer)]
-DataHandling.GetInPacket.restype = DataPacket
-
-DataHandling.GetBufferFrame.argtypes = [POINTER(DataBuffer)]
-DataHandling.GetBufferFrame.restype = DataFrame
-
-DataHandling.GetBufferTC.argtypes = [POINTER(DataBuffer)]
-DataHandling.GetBufferTC.restype = DataFrame
-
-DataHandling.AddBufferFrame.argtypes = [POINTER(DataBuffer), DataFrame]
-
-DataHandling.AddBufferTC.argtypes = [POINTER(DataBuffer), DataFrame]
-
-DataHandling.AddInPacket.argtypes = [POINTER(DataBuffer), DataPacket]
-
-DataHandling.AddOutPacket.argtypes = [POINTER(DataBuffer), DataPacket]
-
-DataHandling.CreateBuffer.restype = POINTER(DataBuffer)
-
-DataHandling.CreateFailSafe.restype = POINTER(FailSafe)
-
-DataHandling.ReadFailSafe.restype = POINTER(FailSafe)
-
-DataHandling.UpdateFailSafe.argtypes = [POINTER(FailSafe)]
-
-DataHandling.WriteSave.argtypes = [POINTER(SaveFile)]
-
-DataHandling.CreateSave.argtypes = [c_wchar_p]
-DataHandling.CreateSave.restype = POINTER(SaveFile)
-
-DataHandling.VirtualSave.restype = POINTER(SaveFile)
-
-DataHandling.ReadSave.argtypes = [c_wchar_p]
-DataHandling.ReadSave.restype = POINTER(SaveFile)
-
-DataHandling.GetSaveFrame.argtypes = [POINTER(SaveFile), c_int]
+DataHandling.GetSaveFrame.argtypes = [c_int]
 DataHandling.GetSaveFrame.restype = POINTER(SaveFileFrame)
 
-DataHandling.UpdateTC.argtypes = [POINTER(SaveFile)]
-DataHandling.UpdateTC.restype = POINTER(DataFrame)
+DataHandling.UpdateTC.restype = DataFrame
 
-DataHandling.AddSaveFrame.argtypes = [POINTER(SaveFile), DataFrame]
+DataHandling.AddSaveFrame.argtypes = [DataFrame]
 DataHandling.AddSaveFrame.restype = POINTER(SaveFileFrame)
 
-DataHandling.CreateSaveFrame.argtypes = [POINTER(SaveFile), c_int16]
+DataHandling.CreateSaveFrame.argtypes = [c_uint16]
 DataHandling.CreateSaveFrame.restype = POINTER(SaveFileFrame)
+
+DataHandling.AddFrame.argtypes = [DataFrame]
