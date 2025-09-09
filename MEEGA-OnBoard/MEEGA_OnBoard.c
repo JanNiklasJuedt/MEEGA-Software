@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <pthread.h>
+#include "DataHandlingLibrary.h"
 
 #define DEBUG
 #define SERVO_WO_PWM
@@ -17,10 +18,10 @@
 static inline void pinMode(int pin, int mode) {
 	char *pinStr = " ", *modeStr = " ";
 	switch (pin) {
-	case 54: pinStr = "LEDs"; break;
-	case 29: pinStr = "Reservoir_Valve"; break;
+	case 54: pinStr = "LEDs_Pin"; break;
+	case 29: pinStr = "Valve_Pin"; break;
 	case 01: pinStr = "ValveSwitch"; break;
-	case 34: pinStr = "Nozzle_Servo"; break;
+	case 34: pinStr = "Servo_Pin"; break;
 	case 50: pinStr = "ServoSwitch_1"; break;
 	case 48: pinStr = "ServoSwitch_2"; break;
 	case 41: pinStr = "RPi_SOE"; break;
@@ -37,9 +38,9 @@ static inline void pinMode(int pin, int mode) {
 static inline void digitalWrite(int pin, int value) {
 	char* pinStr = " ", * modeStr = " ";
 	switch (pin) {
-	case 54: pinStr = "LEDs"; break;
-	case 29: pinStr = "Reservoir_Valve"; break;
-	case 34: pinStr = "Nozzle_Servo"; break;
+	case 54: pinStr = "LEDs_Pin"; break;
+	case 29: pinStr = "Valve_Pin"; break;
+	case 34: pinStr = "Servo_Pin"; break;
 	default: break;
 	}
 	switch (value) {
@@ -66,7 +67,7 @@ static inline int digitalRead(int pin) {
 static inline void softPwmWrite(int pin,int Value) {
 	char* pinStr = " ", * modeStr = " ";
 	switch (pin) {
-	case 34: pinStr = "Nozzle_Servo"; break;
+	case 34: pinStr = "Servo_Pin"; break;
 	default: break;
 	}
 	printf("[DEBUG] Pin %d (%s) set to value %d degree (%s)\n", pin, pinStr, Value, modeStr);
@@ -74,7 +75,7 @@ static inline void softPwmWrite(int pin,int Value) {
 static inline void softPwmCreate(int pin, int startValue, int endValue) {
 	char* pinStr = " ";
 	switch (pin) {
-	case 34: pinStr = "Nozzle_Servo"; break;
+	case 34: pinStr = "Servo_Pin"; break;
 	default: break;
 	}
 	printf("[DEBUG] Create PWM value from pin %d (%s), Range Value %d - %d\n", pin, pinStr, startValue, endValue);
@@ -86,7 +87,6 @@ static inline int analogRead(int pin) {
 	return 0;	//return 0 for debug testing
 }
 #else
-#include "DataHandlingLibrary.h"
 #include <wiringPi.h>	//Include wiringPi library for GPIO control
 #endif
 
@@ -98,10 +98,10 @@ static inline int analogRead(int pin) {
 #endif
 #endif
 
-#define LEDs 54	//pin
-#define Reservoir_Valve 29	//pin
+#define LEDs_Pin 54	//pin
+#define Valve_Pin 29	//pin
 #define ValveSwitch 01	//pin
-#define Nozzle_Servo 34	//pin
+#define Servo_Pin 34	//pin
 #define ServoSwitch_1 50	// Deckel ganz zu Feedback
 #define ServoSwitch_2 48	// Deckel ganz auf Feedback
 
@@ -132,34 +132,32 @@ struct parameter testrun = { .Mode = 2, .ServoAngle = 30, .ServoAngleReset = 0 }
 struct parameter DEBUGstandard = { .Mode = 3, .AfterLO = 5000, .EoEDelay = 3000 };
 struct parameter datalogging = { .FDA20 = 500, .FDA2 = 5000 }; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
 
-#ifdef DEBUG
+#ifndef DEBUG
 int Test_Abort = 0;
 #endif
+#ifdef DEBUG
 int delay(int millisecond) {	//1000x Second
 	clock_t start_time = clock();
 	clock_t wait_time = (millisecond * CLOCKS_PER_SEC) / 1000;
-#ifdef DEBUG
 	while (clock() < start_time + wait_time) if (Test_Abort) return 1;
-#else
-	while (clock() < start_time + wait_time) if(Test_Abort) return 1;
-#endif
 	return 0;
 }
+#endif
 
 #ifdef SERVO_WO_PWM		//Assume the servo 90° rotation is 1ms=0° to 2ms=90°
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
 	int pwmWidth = 10 + (degree * 10) / 90;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
-	softPwmCreate(Nozzle_Servo, 0, 100); //100%
-	softPwmWrite(Nozzle_Servo, pwmWidth);
+	softPwmCreate(Servo_Pin, 0, 100); //100%
+	softPwmWrite(Servo_Pin, pwmWidth);
 }
 #else
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
 	int pwmWidth = 1000 + (degree * 1000) / 90;	//pwm Width value from 1000 = 0° to 2000 = 90° in microsecond
-	gpioServo(Nozzle_Servo, pwmWidth);
+	gpioServo(Servo_Pin, pwmWidth);
 }
 #endif
 
@@ -177,8 +175,8 @@ int ValveRun(struct parameter parameter) {
 #ifndef DEBUG
 	DataFrame FrameTC = UpdateTC();
 #endif
-	digitalWrite(LEDs, 1);			//LED on
-	digitalWrite(Reservoir_Valve, ValveOpen);	//command open valve
+	digitalWrite(LEDs_Pin, 1);			//LED on
+	digitalWrite(Valve_Pin, ValveOpen);	//command open valve
 #ifdef DEBUG
 	printf("Command opening Valve\n");
 	ValvePos = digitalRead(ValveSwitch);		//Feedback signal
@@ -207,14 +205,11 @@ int ValveRun(struct parameter parameter) {
 			return -1;
 #else
 			FrameTC = UpdateTC();
-			if (ReadFrame(FrameTC, Test_Abort) == 1) {
-				ExperimentStatus = 3;
-				return -1; //abort test
-			}
+			if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 #endif
 		}
 	}
-	digitalWrite(Reservoir_Valve, ValveClose);	//command close valve
+	digitalWrite(Valve_Pin, ValveClose);	//command close valve
 #ifdef DEBUG
 	printf("Command closing Valve\n");
 	printf("*Input Valve 1 for open, 0 for close (std: close): "); scanf_s("%d", &ValvePos);
@@ -244,10 +239,7 @@ int ValveRun(struct parameter parameter) {
 			return -1;
 #else
 			FrameTC = UpdateTC();
-			if (ReadFrame(FrameTC, Test_Abort) == 1) {
-				ExperimentStatus = 3;
-				return -1; //abort test
-			}
+			if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 #endif
 		}
 	}
@@ -354,7 +346,6 @@ int ExperimentRun(struct parameter parameter) {
 		ServoRotation(parameter.ServoAngle); //command rotate the serve 30° for testing
 		if (parameter.ServoAngle <= 10) {
 			FrameTC = UpdateTC();
-			ExperimentStatus = 3;
 			return -1; //abort test
 		}
 		else if (parameter.ServoAngle == 30) {
@@ -362,23 +353,17 @@ int ExperimentRun(struct parameter parameter) {
 			ServoRotation(parameter.ServoAngleReset);
 		}
 		FrameTC = UpdateTC();
-		if (ReadFrame(FrameTC, Test_Abort) == 1) {
-			ExperimentStatus = 3;
-			return -1; //abort test
-		}
+		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 		//nozzleStatus = NozzleOpen;				//simulate nozzle cover open
 #endif
 #ifdef DEBUG
 		delay(DEBUGstandard.EoEDelay);
 #else
 		FrameTC = UpdateTC();
-		if (ReadFrame(FrameTC, Test_Abort) == 1) {
-			ExperimentStatus = 3;
-			return -1; //abort test
-		}
+		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 		delay(parameter.EoEDelay);
 #endif
-		digitalWrite(LEDs, 0);
+		digitalWrite(LEDs_Pin, 0);
 		nozzleStatus = 0;						//Reset simulation of nozzle cover open
 		delay(parameter.PoweroffDelay);
 	}
@@ -386,9 +371,9 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 		printf("Experiment: Successful\n");
 #else
-		ExperimentStatus = 3;
+		ExperimentStatus = End_Experiment;
 #endif
-		digitalWrite(LEDs, 0);			//LED off
+		digitalWrite(LEDs_Pin, 0);			//LED off
 		delay(parameter.PoweroffDelay);
 #ifdef DEBUG
 		printf("End of Experiment: Successful\n");
@@ -399,14 +384,14 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 		printf("End of Experiment: Test Mode\n");
 #else
-		ExperimentStatus = 3;
+		ExperimentStatus = End_Experiment;
 #endif
 	}
 	else if (-1){
 #ifdef DEBUG
 		printf("End of Experiment: Error\n");
 #endif
-		digitalWrite(LEDs, 0);			//LED off
+		digitalWrite(LEDs_Pin, 0);			//LED off
 		delay(parameter.PoweroffDelay);
 		return 404;	//Error in Experiment
 	}
@@ -416,25 +401,26 @@ int ExperimentRun(struct parameter parameter) {
 #ifndef DEBUG
 //BETA Control Panel Functions not yet implemented from DataHandling
 int ExperimentControl() {
-	ExperimentStatus = 4;
+	ExperimentStatus = Start_Experiment;
 	while (1) {
 		DataFrame FrameTC = UpdateTC();
 		//Valve Control
 		if (!FrameIsEmpty(FrameTC)) {
 
 			//Valve Control
-			if (ReadFrame(FrameTC, Valve_Control) == 1) digitalWrite(Reservoir_Valve, ValveOpen);	//command open valve
-			else if (ReadFrame(FrameTC, Valve_Control) == 0) digitalWrite(Reservoir_Valve, ValveClose);	//command close valve
+			if (ReadFrame(FrameTC, Valve_Control) == 1) digitalWrite(Valve_Pin, ValveOpen);	//command open valve
+			else if (ReadFrame(FrameTC, Valve_Control) == 0) digitalWrite(Valve_Pin, ValveClose);	//command close valve
 
 			//LEDs Control
-			if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs, ValveOpen);	//command open valve
-			else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs, ValveClose);	//command close valve
+			if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs_Pin, ValveOpen);	//command open valve
+			else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, ValveClose);	//command close valve
 
 			//Servo Control
 			if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
 		}
 		delay(500);
 	}
+	ExperimentStatus = End_Experiment;
 	return 0;
 }
 #endif
@@ -444,7 +430,7 @@ int ExperimentControl() {
 //###########################################################################################################################################################################//
 //################################################################## START OF DATA ACQUISITION AND LOGGING ##################################################################//
 //###########################################################################################################################################################################//
-#ifndef DEBUG
+#ifdef DEBUG
 void DataAcquisition(DataFrame* frame) {
 	int SystemTime = clock();	//System Time
 	int AmbientPressure = analogRead(0);
@@ -460,12 +446,12 @@ void DataAcquisition(DataFrame* frame) {
 	int NozzleTemperature_2 = analogRead(17);
 	int NozzleTemperature_3 = analogRead(27);
 	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback: fully open
-	int NozzleServo = digitalRead(Nozzle_Servo);	//Nozzle Servo Switch
-	int ReservoirValve = digitalRead(Reservoir_Valve);	//Reservoir Valve
-	int LEDsStat = digitalRead(LEDs);
-	int Sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
-	int Sensorboard_2 = 0;
-	int Mainboard = 0;			//Mainboard is not implemented yet ?
+	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
+	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
+	int LEDsStat = digitalRead(LEDs_Pin);
+	int sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
+	int sensorboard_2 = 0;
+	int mainboard = 0;			//Mainboard is not implemented yet ?
 	//Experiment Status CHECK!
 
 	WriteFrame(frame, System_Time, SystemTime);
@@ -485,9 +471,9 @@ void DataAcquisition(DataFrame* frame) {
 	WriteFrame(frame, Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, Reservoir_Valve, ReservoirValve);
 	WriteFrame(frame, LEDs, LEDsStat);
-	WriteFrame(frame, Sensorboard_1, Sensorboard_1);
-	WriteFrame(frame, Sensorboard_2, Sensorboard_2);
-	WriteFrame(frame, Mainboard, Mainboard);
+	WriteFrame(frame, Sensorboard_1, sensorboard_1);
+	WriteFrame(frame, Sensorboard_2, sensorboard_2);
+	WriteFrame(frame, Mainboard, mainboard);
 	WriteFrame(frame, Mode, ExperimentStatus);
 	WriteFrame(frame, Lift_Off, ExperimentStatus);
 	WriteFrame(frame, Start_Experiment, ExperimentStatus);
@@ -503,10 +489,10 @@ void Log() {
 		clock_t start = clock();
 		DataFrame frame = CreateFrame(sync++);
 		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
-		AddOutFrame(frame);	//Add the frame to the save file
+		AddFrame(frame);	//func from UPDATED DataHandlingLib
 		syncLimit++;
 		if (syncLimit >= 10) {
-			Update();	//Update the storage hub, this will write the packets to the harddrive if necessary
+			UpdateAll();	//Update the storage hub, this will write the packets to the harddrive if necessary
 			syncLimit = 0;								//Reset the sync limit
 		}
 		if (SoESignal()) {
@@ -564,29 +550,29 @@ void FailSafeRecovery() {
 //START OF MAIN PROGRAM
 int main() {
 #ifdef DEBUG
-	pinMode(Reservoir_Valve, OUTPUT);	//output should be in wiringPi library as define output 1
-	pinMode(Nozzle_Servo, OUTPUT);
-	pinMode(LEDs, OUTPUT);
+	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
+	pinMode(Servo_Pin, OUTPUT);
+	pinMode(LEDs_Pin, OUTPUT);
 
 	pinMode(ServoSwitch_1, INPUT);
 	pinMode(ServoSwitch_2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
-	softPwmCreate(Nozzle_Servo, 0, 360); 	//Create a soft PWM on the Nozzle Servo pin with a range of 0-360 degrees
+	softPwmCreate(Servo_Pin, 0, 90); 	//Create a soft PWM on the Nozzle Servo pin with a range of 0-90 degrees
 
 #else
 	wiringPiSetupGpio();
-	pinMode(Reservoir_Valve, OUTPUT);	//output should be in wiringPi library as define output 1
-	pinMode(Nozzle_Servo, OUTPUT);
-	pinMode(LEDs, OUTPUT);
+	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
+	pinMode(Servo_Pin, OUTPUT);
+	pinMode(LEDs_Pin, OUTPUT);
 
 	pinMode(ServoSwitch_1, INPUT);
 	pinMode(ServoSwitch_2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
-	softPwmCreate(Nozzle_Servo, 0, 360); 	//Create a soft PWM on the Nozzle Servo pin with a range of 0-360 degrees
+	softPwmCreate(Servo_Pin, 0, 90); 	//Create a soft PWM on the Nozzle Servo pin with a range of 0-90 degrees
 
 	pullUpDnControl(RPi_LO, PUD_DOWN);
 	pullUpDnControl(RPi_SOE, PUD_DOWN);
@@ -595,18 +581,17 @@ int main() {
 	FailSafeRecovery();
 #endif
 
-	//LO: 1; SoE: 2; EoE: 3; Experiment Contol Panel/Mode: 4 
-	ExperimentStatus = 0;
+	//ExperimentStatus: Lift_Off; Start_Experiment; End_Experiment; Mode
 	struct parameter config;
 
-#ifndef DEBUG
+#ifdef DEBUG
 	pthread_t logThread;
 	//create a thread that runs LogThread function: success->parallel programm; failure->no threads logging and return to NULL
 	//using if to let know if there is/are problem(s)
 	if (pthread_create(&logThread, NULL, LogThread, (void*)&config)) {	//Create a thread for logging
-		digitalWrite(LEDs, 1);
+		digitalWrite(LEDs_Pin, 1);
 		delay(5000);	//LED on for 5s then off: logging thread failed to start
-		digitalWrite(LEDs, 0);
+		digitalWrite(LEDs_Pin, 0);
 		return 1;
 	}
 #endif
@@ -628,6 +613,9 @@ int main() {
 		// Test Mode = 0, Flight Mode = 1
 
 		if (modeSel == 1) {		//Flight Mode
+#ifndef DEBUG
+			ExperimentStatus = Mode;
+#endif
 			config = flightstandard;
 #ifdef DEBUG
 			printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LOSignal);
@@ -651,7 +639,7 @@ int main() {
 #ifdef DEBUG
 					delay(DEBUGstandard.AfterLO);
 #else
-					ExperimentStatus = 1; //LO Signal received
+					ExperimentStatus = Lift_Off; //LO Signal received
 					delay(config.AfterLO);	//Wait for 55s after liftoff
 #endif
 					currentState = NOSECONE_SEPARATION;
@@ -659,19 +647,21 @@ int main() {
 					break;
 
 				case NOSECONE_SEPARATION:
-					digitalWrite(LEDs, 1);	//LED on
+					digitalWrite(LEDs_Pin, 1);	//LED on
 #ifdef DEBUG
 					printf("Nose Cone Separation\n");
 #endif
 					delay(config.NoseConeSeparation);			//Wait for Nozzle Cone Separation
-					digitalWrite(LEDs, 0);	//LED off
+					digitalWrite(LEDs_Pin, 0);	//LED off
 					currentState = WAIT_SOE;
 					UpdateFailSafe(); //Update the failsafe file to indicate that the Nose Cone Separation has been completed
 					break;
 
 				case WAIT_SOE:
 					while (!SoESignal()) delay(100);
-					ExperimentStatus = 2; //Experiment started
+#ifndef DEBUG
+					ExperimentStatus = Start_Experiment; //Experiment started
+#endif
 					currentState = VALVE_OPENED;
 					UpdateFailSafe(); //Update the failsafe file to indicate that the SoE signal has been received
 					break;
@@ -700,17 +690,23 @@ int main() {
 
 				case NOZZLE_OPENED:
 				case END_OF_EXPERIMENT:
+#ifndef DEBUG
+					ExperimentStatus = End_Experiment; //Experiment ended
+#endif
+					UpdateFailSafe();
 					break;
 				}
 			}
 			EoECompleted = 1;
-			UpdateFailSafe();
+
 #ifndef DEBUG
 			CloseAll();	//Close all files and threads
 #endif
 		}
 		else if (modeSel == 0) {	//Test Mode
-			ExperimentStatus = 4;
+#ifndef DEBUG
+			ExperimentStatus = Mode;
+#endif
 			while (!SoESignal()) delay(100);
 #ifdef DEBUG
 			config = dryrunstandard;
@@ -728,21 +724,25 @@ int main() {
 			int testRun = ReadFrame(FrameTC, Test_Run);
 
 			if (dryRun == 1) {
+				ExperimentStatus = Start_Experiment;
 				config = dryrunstandard;
 				int valveTest = ValveRun(config);
 				if (valveTest != -1) {
 					int experimentTest = ExperimentRun(config);
 					if (experimentTest == -1) {
+						ExperimentStatus = End_Experiment;
 						UpdateFailSafe();
 						continue; //abort test
 					}
 				}
 				else if (valveTest == -1) {
+					ExperimentStatus = End_Experiment;
 					UpdateFailSafe();
 					continue; //abort test
 				}
 			}
 			else if (testRun == 1) {
+				ExperimentStatus = Start_Experiment;
 				config = testrun;
 				config.ValveDelay = ReadFrame(FrameTC, Valve_Delay);		//Changeable Valve Delay from Ground Station
 				config.ServoDelay = ReadFrame(FrameTC, Servo_Delay);		//Changeable Servo Delay from Ground Station
@@ -753,18 +753,23 @@ int main() {
 				if (valveTest != -1) {
 					int experimentTest = ExperimentRun(config);
 					if (experimentTest == -1) {
+						ExperimentStatus = End_Experiment;
 						UpdateFailSafe();
 						continue; //abort test
 					}
 				}
 				else if (valveTest == -1) {
+					ExperimentStatus = End_Experiment;
 					UpdateFailSafe();
 					continue; //abort test
 				}
 			}
-			else ExperimentControl();
+			else {
+				ExperimentControl();
+				UpdateFailSafe();
+			}
 #endif
-			ExperimentStatus = 0;
+			ExperimentStatus = 0; //Reset Experiment Status
 
 			continue;
 		}
