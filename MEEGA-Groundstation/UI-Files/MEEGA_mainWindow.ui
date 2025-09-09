@@ -500,7 +500,7 @@
            <item row="1" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>P Board</string>
+              <string>P Chip</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -538,7 +538,7 @@
            <item row="2" column="0">
             <widget class="QLabel" name="label_11">
              <property name="text">
-              <string>T Board</string>
+              <string>T Chip</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -916,7 +916,7 @@
            <item row="1" column="7">
             <widget class="QLabel" name="label_9">
              <property name="text">
-              <string>Camera 2</string>
+              <string>Start of Experiment</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1152,7 +1152,7 @@
            <item row="0" column="7">
             <widget class="QLabel" name="label_37">
              <property name="text">
-              <string>Camera 1</string>
+              <string>Lift-Off</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
