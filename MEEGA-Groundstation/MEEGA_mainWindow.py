@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'MEEGA_mainWindow.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -1166,9 +1166,9 @@ class Ui_MainWindow(object):
         self.label_24.setText("")
         self.label_31.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 1", None))
         self.label_36.setText("")
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Board", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Chip", None))
         self.label_8.setText("")
-        self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Board", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Chip", None))
         self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
         self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Reservoir", None))
         self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Reservoir", None))
@@ -1188,7 +1188,7 @@ class Ui_MainWindow(object):
         self.label_5.setText("")
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 2", None))
         self.label_33.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 3", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Camera 2", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
         self.label_14.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
         self.label_23.setText("")
         self.label_35.setText("")
@@ -1199,7 +1199,7 @@ class Ui_MainWindow(object):
         self.label_17.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 2", None))
         self.label_27.setText("")
         self.label_21.setText("")
-        self.label_37.setText(QCoreApplication.translate("MainWindow", u"Camera 1", None))
+        self.label_37.setText(QCoreApplication.translate("MainWindow", u"Lift-Off", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"LEDs", None))
         self.label_25.setText("")
         self.label_logo.setText("")
