@@ -23,8 +23,8 @@ static inline void pinMode(int pin, int mode) {
 	case 29: pinStr = "Valve_Pin"; break;
 	case 01: pinStr = "ValveSwitch"; break;
 	case 34: pinStr = "Servo_Pin"; break;
-	case 50: pinStr = "ServoSwitch_1"; break;
-	case 48: pinStr = "ServoSwitch_2"; break;
+	case 50: pinStr = "Nozzle_Cover_1"; break;
+	case 48: pinStr = "Nozzle_Cover_2"; break;
 	case 41: pinStr = "RPi_SOE"; break;
 	case 47: pinStr = "RPi_LO";break;
 	default: break;
@@ -55,8 +55,8 @@ static inline int digitalRead(int pin) {
 	char* pinStr = " ";
 	switch (pin) {
 	case 01: pinStr = "ValveSwitch"; break;
-	case 50: pinStr = "ServoSwitch_1"; break;
-	case 48: pinStr = "ServoSwitch_2"; break;
+	case 50: pinStr = "Nozzle_Cover_1"; break;
+	case 48: pinStr = "Nozzle_Cover_2"; break;
 	case 41: pinStr = "RPi_SOE"; break;
 	case 47: pinStr = "RPi_LO";break;
 	default: break;
@@ -89,6 +89,7 @@ static inline int analogRead(int pin) {
 }
 #else
 #include <wiringPi.h>	//Include wiringPi library for GPIO control
+#include <sys/time.h>
 #endif
 
 #ifndef DEBUG
@@ -103,8 +104,8 @@ static inline int analogRead(int pin) {
 #define Valve_Pin 29	//pin
 #define ValveSwitch 01	//pin
 #define Servo_Pin 34	//pin
-#define ServoSwitch_1 50	// Deckel ganz zu Feedback
-#define ServoSwitch_2 48	// Deckel ganz auf Feedback
+#define Nozzle_Cover_1 50	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_2 48	//Nozzle Cover fully opened Feedback
 
 #define RPi_SOE 41	//pin
 #define RPi_LO 47	//pin
@@ -116,8 +117,7 @@ static inline int analogRead(int pin) {
 int SoESignal() {
 #ifdef DEBUG
 	int SoE;
-	SoE = 1;
-	//printf("*SoE Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &SoE);
+	printf("*SoE Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &SoE);
 	if (SoE == 1) return (digitalRead(RPi_SOE) == 0);
 	else return (digitalRead(RPi_SOE) == 1);
 #else
@@ -126,22 +126,26 @@ int SoESignal() {
 }
 
 struct parameter {
-	int Mode, ValveDelay, ServoDelay, ManualServoDelay, EoEDelay, PoweroffDelay, FDA20, FDA2, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset;
+	int Mode, ValveDelay, ServoDelay, ManualServoDelay, EoEDelay, PoweroffDelay, FDA20, BDA2, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset;
 };
 struct parameter flightstandard = { .Mode = 1, .NoseConeSeparation = 10000, .AfterLO = 55000, .ValveDelay = 5000, .ServoDelay = 6000, .ManualServoDelay = 20000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 1000, .ServoAngle = 90 };
 struct parameter dryrunstandard = { .Mode = 2, .ValveDelay = 5000, .ServoDelay = 6000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 3000, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter testrun = { .Mode = 2, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter DEBUGstandard = { .Mode = 3, .AfterLO = 5000, .EoEDelay = 3000 };
-struct parameter datalogging = { .FDA20 = 500, .FDA2 = 5000 }; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
-
-#ifndef DEBUG
-int Test_Abort = 0;
+#ifdef DEBUG 
+struct parameter datalogging = { .FDA20 = 50, .BDA2 = 500 }; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
+#else 
+struct parameter datalogging = { .FDA20 = 50000, .BDA2 = 500000 }; 
 #endif
+
+
+int Abort = 0;
+
 #ifdef DEBUG
 int delay(int millisecond) {	//1000x Second
 	clock_t start_time = clock();
 	clock_t wait_time = (millisecond * CLOCKS_PER_SEC) / 1000;
-	while (clock() < start_time + wait_time) if (Test_Abort) return 1;
+	while (clock() < start_time + wait_time) if (Abort) return 1;
 	return 0;
 }
 #endif
@@ -183,7 +187,7 @@ int ValveRun(struct parameter parameter) {
 	printf("Command opening Valve\n");
 	ValvePos = digitalRead(ValveSwitch);		//Feedback signal
 	ValvePos = ValveOpen; //For debug testing
-	//printf("*Input Valve 1 for open, 0 for close (std: open): "); scanf_s("%d", &ValvePos); //scanf_s is just for safety and used only in debug mode in visual studio
+	printf("*Input Valve 1 for open, 0 for close (std: open): "); scanf_s("%d", &ValvePos); //scanf_s is just for safety and used only in debug mode in visual studio
 #else
 	ValvePos = ValveOpen;	//ValvePos = digitalRead(ValveSwitch)		//Feedback signal
 #endif
@@ -215,8 +219,7 @@ int ValveRun(struct parameter parameter) {
 	digitalWrite(Valve_Pin, ValveClose);	//command close valve
 #ifdef DEBUG
 	printf("Command closing Valve\n");
-	//printf("*Input Valve 1 for open, 0 for close (std: close): "); scanf_s("%d", &ValvePos);
-	ValvePos = ValveClose;
+	printf("*Input Valve 1 for open, 0 for close (std: close): "); scanf_s("%d", &ValvePos);
 #else
 	ValvePos = ValveClose;	//ValvePos = digitalRead(ValveSwitch)		//Feedback signal
 #endif
@@ -226,11 +229,10 @@ int ValveRun(struct parameter parameter) {
 		printf("Valve Status: Valve is closed\n");
 #else
 		valveStatus = ValveClose;
-		ValveCompleted = 1; //Valve operation completed
 #endif
 		delay(parameter.ServoDelay);
 	}
-	else if (ValvePos = ValveOpen) {
+	else if (ValvePos == ValveOpen) {
 		//Valve error: in open position / cont. error
 #ifdef DEBUG
 		printf("Valve Status: Valve is stuck in open position\n");
@@ -263,14 +265,12 @@ int ExperimentRun(struct parameter parameter) {
 #endif
 		delay(parameter.NozzleOnCDelay);
 #ifdef DEBUG
-		//printf("*Input Nozzle Status 1 for fully open, 0 for stuck close (std: fully open): "); scanf_s("%d", &NozzlePos);
-		NozzlePos = 1; //For debug testing
+		printf("*Input Nozzle Status 1 for fully open, 0 for stuck close (std: fully open): "); scanf_s("%d", &NozzlePos);
 		if (NozzlePos == 1) {
 #else
-		if (digitalRead(ServoSwitch_2)) {
+		if (digitalRead(Nozzle_Cover_2)) {
 #endif
 			//Feedback signal
-			//Nozzle Cover Problem: in close position
 #ifdef DEBUG
 			printf("Nozzle Cover is opened\n");
 #else
@@ -286,7 +286,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 		else if (NozzlePos == 0) {
 #else
-		else if (digitalRead(ServoSwitch_1)) {
+		else if (digitalRead(Nozzle_Cover_1)) {
 #endif
 			//Nozzle Cover Problem: in close position
 			ServoRotation(parameter.ServoAngle); //command rotate the serve 90° second attempt*
@@ -299,7 +299,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 			if (NozzlePos == 1) {
 #else
-			if (digitalRead(ServoSwitch_2)) {
+			if (digitalRead(Nozzle_Cover_2)) {
 #endif
 #ifdef DEBUG
 				printf("Nozzle Cover is opened\n");
@@ -321,13 +321,13 @@ int ExperimentRun(struct parameter parameter) {
 					if (NozzlePos == 1) break;
 #else
 					ServoRotation(ReadFrame(FrameTC, Servo_Control));
-					if (digitalRead(ServoSwitch_2)) break;
+					if (digitalRead(Nozzle_Cover_2)) break;
 #endif
 				}
 #ifdef DEBUG
 				if (NozzlePos == 1) {
 #else
-				if (digitalRead(ServoSwitch_2)) {
+				if (digitalRead(Nozzle_Cover_2)) {
 					nozzleStatus = NozzleOpen;
 #endif
 					delay(parameter.EoEDelay);
@@ -336,7 +336,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 				else if (NozzlePos == 0) printf("Nozzle Cover is stuck in close position\n");
 #else
-				else if (digitalRead(ServoSwitch_1)) nozzleStatus = NozzleStuck;
+				else if (digitalRead(Nozzle_Cover_1)) nozzleStatus = NozzleStuck;
 #endif
 			}
 		}
@@ -372,11 +372,10 @@ int ExperimentRun(struct parameter parameter) {
 		nozzleStatus = 0;						//Reset simulation of nozzle cover open
 		delay(parameter.PoweroffDelay);
 	}
+
 	if (EoE == 1) {
 #ifdef DEBUG
 		printf("Experiment: Successful\n");
-#else
-		ExperimentStatus = End_Experiment;
 #endif
 		digitalWrite(LEDs_Pin, 0);			//LED off
 		delay(parameter.PoweroffDelay);
@@ -388,11 +387,19 @@ int ExperimentRun(struct parameter parameter) {
 	else if (parameter.Mode == 2) {
 #ifdef DEBUG
 		printf("End of Experiment: Test Mode\n");
+		ExperimentStatus = 3;
 #else
 		ExperimentStatus = End_Experiment;
 #endif
 	}
-	else if (-1){
+	else if (parameter.Mode == 2 && -1) {
+#ifdef DEBUG
+		printf("End of Experiment: Test Mode Error\n");
+#else
+		digitalWrite(LEDs_Pin, 0);			//LED off
+#endif
+	}
+	else {
 #ifdef DEBUG
 		printf("End of Experiment: Error\n");
 #endif
@@ -435,7 +442,7 @@ int ExperimentControl() {
 //###########################################################################################################################################################################//
 //################################################################## START OF DATA ACQUISITION AND LOGGING ##################################################################//
 //###########################################################################################################################################################################//
-
+int SoEReceived = 0;
 void DataAcquisition(DataFrame* frame) {
 #ifdef DEBUG
 	int SystemTime = clock();	//System Time
@@ -473,14 +480,13 @@ void DataAcquisition(DataFrame* frame) {
 	int NozzleTemperature_1 = analogRead(7);
 	int NozzleTemperature_2 = analogRead(17);
 	int NozzleTemperature_3 = analogRead(27);
-	int NozzleCover = digitalRead(ServoSwitch_2);	//Nozzle Cover Feedback: fully open
+	int NozzleCover = digitalRead(Nozzle_Cover_2);	//Nozzle Cover Feedback: fully open
 	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
 	int LEDsStat = digitalRead(LEDs_Pin);
 	int sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
 	int sensorboard_2 = 0;
 	int mainboard = 0;			//Mainboard is not implemented yet ?
-	int ExperimentStatus = 0;
 	//Experiment Status CHECK!
 #endif
 
@@ -516,7 +522,12 @@ void Log() {
 	int syncLimit = 0;			//Sync limit for the DataFrame, every 10 Frames a new Sync value is set
 
 	while (1) {
+#ifdef DEBUG
 		clock_t start = clock();
+#else
+		struct timeval start, end;
+		gettimeofday(&start,NULL);
+#endif
 		DataFrame frame = CreateFrame(sync++);
 		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
 		AddFrame(frame);	//func from UPDATED DataHandlingLib
@@ -527,27 +538,49 @@ void Log() {
 		UpdateAll();
 		int p = ReadFrame(frame, Ambient_Pressure);
 		float analysis = MapSensorValue(Ambient_Pressure, p);
-#else
+#endif
 		syncLimit++;
 		if (syncLimit >= 10) {
 			UpdateAll();	//Update the storage hub, this will write the packets to the harddrive if necessary
 			syncLimit = 0;								//Reset the sync limit
 		}
-		if (SoESignal()) {
+		if (SoEReceived) {
+//---------------------------------------------------------------------------------------FIX--------------------------------------------------------------------------------
 #ifdef DEBUG
-			printf("Full Data Acquisition");
-#endif
+			printf("Full Data Acquisition\n");
 			clock_t end = clock();
-			long duration = ((end - start)*1000)/CLOCKS_PER_SEC;
-			int wait = freq.FDA20 - (int)duration;
-			if (wait > 0) delay(wait); //Full Data Acquisition 20Hz
+			long duration = ((end - start) * 1000) / CLOCKS_PER_SEC;
+			long wait = freq.FDA20 - duration;
+			if (wait > 0) delay(wait);
+#else
+			gettimeofday(&end,NULL);
+			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+			suseconds_t wait = freq.FDA20 - duration;
+			if (wait > 0) usleep(wait); //Full Data Acquisition 20Hz
+#endif
 		}
 		else {
 #ifdef DEBUG
-			printf("Basic Data Acquisition");
+			printf("Basic Data Acquisition\n");
+			delay(freq.BDA2);		//Basic Data Acquisition 2Hz
+#else
+			gettimeofday(&end, NULL);
+			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
+			suseconds_t wait = freq.BDA2 - duration;
+			if (wait > 0) usleep(wait); //Basic Data Acquisition 2Hz
 #endif
-			delay(freq.FDA2);		//Basic Data Acquisition 2Hz
 		}
+		if (testrun.Mode == 2 || dryrunstandard.Mode == 2) {
+#ifdef DEBUG
+			if (Abort == 1) SoEReceived = 0;
+#else
+			if (ReadFrame(UpdateTC(), Test_Abort)) SoEReceived = 0;
+#endif
+		}
+#ifdef DEBUG
+		else if (ExperimentStatus == 3) SoEReceived = 0;
+#else
+		else if (ExperimentStatus == End_Experiment) SoEReceived = 0;
 #endif
 	}
 }
@@ -595,8 +628,8 @@ int main() {
 	pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
 
-	pinMode(ServoSwitch_1, INPUT);
-	pinMode(ServoSwitch_2, INPUT);
+	pinMode(Nozzle_Cover_1, INPUT);
+	pinMode(Nozzle_Cover_2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
@@ -607,19 +640,22 @@ int main() {
 	pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
 
-	pinMode(ServoSwitch_1, INPUT);
-	pinMode(ServoSwitch_2, INPUT);
+	pinMode(Nozzle_Cover_1, INPUT);
+	pinMode(Nozzle_Cover_2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
 	pullUpDnControl(RPi_LO, PUD_DOWN);
 	pullUpDnControl(RPi_SOE, PUD_DOWN);
 
-	Initialize(NULL);
+	Initialize("");
 	FailSafeRecovery();
 #endif
 
 	//ExperimentStatus: Lift_Off; Start_Experiment; End_Experiment; Mode
+#ifdef DEBUG
+	int ExperimentStatus = 0;
+#endif
 	struct parameter config;
 
 	pthread_t logThread;
@@ -644,8 +680,8 @@ int main() {
 		int LOSignal = digitalRead(RPi_LO);
 
 #ifdef DEBUG
-		int modeSel = 1;
-		//printf("*Mode selection 1 for Flight, 0 for Test: "); scanf_s("%d", &modeSel);
+		int modeSel;
+		printf("*Mode selection 1 for Flight, 0 for Test: "); scanf_s("%d", &modeSel);
 #else
 		DataFrame modeFrame = UpdateTC(); //Update the Tele Command frame from the Telemetry buffer
 		int modeSel = ReadFrame(modeFrame, Mode_Change);	//Read the mode change from the Tele Command
@@ -658,8 +694,7 @@ int main() {
 #endif
 			config = flightstandard;
 #ifdef DEBUG
-			LOSignal = 1;
-			//printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LOSignal);
+			printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LOSignal);
 #endif
 			if (LOSignal == 0) continue;
 
@@ -697,6 +732,7 @@ int main() {
 
 				case WAIT_SOE:
 					while (!SoESignal()) delay(100);
+					SoEReceived = 1;
 #ifndef DEBUG
 					ExperimentStatus = Start_Experiment; //Experiment started
 #endif
@@ -717,15 +753,19 @@ int main() {
 						experimentRunning = 1;
 
 						if (ExperimentRunStatus == 43 || ExperimentRunStatus == 404) {
-							NozzleOpened = 1;
-							currentState = END_OF_EXPERIMENT; //End of Experiment
+							currentState = NOZZLE_OPENED;
 						}
 					}
 					break;
 
 				case NOZZLE_OPENED:
+					NozzleOpened = 1;
+					currentState = END_OF_EXPERIMENT; //End of Experiment
+					break;
 				case END_OF_EXPERIMENT:
-#ifndef DEBUG
+#ifdef DEBUG
+					ExperimentStatus = 3;
+#else
 					ExperimentStatus = End_Experiment; //Experiment ended
 #endif
 					break;
@@ -740,6 +780,7 @@ int main() {
 			ExperimentStatus = Mode;
 #endif
 			while (!SoESignal()) delay(100);
+			SoEReceived = 1;
 #ifdef DEBUG
 			config = dryrunstandard;
 			int valveTest = ValveRun(config);
