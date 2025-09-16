@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>491</width>
-    <height>209</height>
+    <height>285</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,6 +19,61 @@
      <item>
       <property name="text">
        <string>P Ambient</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Reservoir</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Accumulator</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Nozzle 1</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Nozzle 2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Nozzle 3</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Compare</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Reservoir</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Accumulator</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Nozzle 1</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Nozzle 2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Nozzle 3</string>
       </property>
      </item>
     </widget>
@@ -47,32 +102,19 @@
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="3">
-      <widget class="QPushButton" name="pushButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Ok</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="text">
-        <string>Ok</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="2">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>°C</string>
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="enabled">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="lineEdit_2"/>
+     <item row="2" column="0">
+      <widget class="QRadioButton" name="radioButton_3">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item row="1" column="0">
       <widget class="QRadioButton" name="radioButton_2">
@@ -81,6 +123,33 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>°C</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>°C</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="lineEdit_2"/>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>°C</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLineEdit" name="lineEdit_3"/>
+     </item>
      <item row="0" column="0">
       <widget class="QRadioButton" name="radioButton">
        <property name="text">
@@ -88,14 +157,17 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="lineEdit">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Ok</string>
+     </property>
+    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">

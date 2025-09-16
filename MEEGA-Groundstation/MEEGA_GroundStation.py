@@ -3,12 +3,13 @@ import sys
 import time
 
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
-from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog, QWidget)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread)
 
 from MEEGA_mainWindow import *
+from MEEGA_calibration import *
 from MEEGA_startup import *
-from MEEGA_connection import *
+from MEEGA_Connection import *
 from MEEGA_time import *
 from MEEGA_documentation import *
 from MEEGA_error import *
@@ -38,6 +39,11 @@ class Settings:
 
 #class to define the Main Window
 class GSMain(QMainWindow):
+    ACTIVE = 0
+    ISSUES = 1
+    INACTIVE = 2
+    status = [0] * 20
+
     def __init__(self, settings: Settings):
         super().__init__()
 
@@ -107,8 +113,15 @@ class GSMain(QMainWindow):
             self.ui.actionConnect.setEnabled(True)
             self.ui.actionRetry.setEnabled(True)
             self.ui.actionDisconnect.setEnabled(True)
+            self.ui.menuSetup.popup(self.ui.menuSetup.pos())
+            self.ui.menuConnection.popup(self.ui.menuConnection.pos())
     def filePathChanges(self):
         pass
+    def fetchStatus(self):
+        for i in range(20):
+            match self.status[i]:
+                case self.ACTIVE:
+                    self.ui.statusLabel_
     
     #external functions (slots)
     @Slot()
@@ -211,6 +224,75 @@ class GSConnection(QDialog):
         self.ui = Ui_ConnectionDialog()
         self.ui.setupUi(self)
 
+class GSCalibration(QDialog):
+    selectedSensor = 0
+    selectedEntry = 0
+    calibrationPoints = [[0] * 3 for x in range(12)]
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_Sensor_Calibration()
+        self.ui.setupUi(self)
+
+        #create exclusive button group for radio buttons and add automatic disabling/enabling of lineEdits
+        self.buttonGroup = QButtonGroup(self)
+        self.buttonGroup.addButton(self.ui.radioButton)
+        self.buttonGroup.addButton(self.ui.radioButton_2)
+        self.buttonGroup.addButton(self.ui.radioButton_3)
+        self.buttonGroup.setExclusive(True)
+        self.ui.radioButton.clicked.connect(self.selectEntry)
+        self.ui.radioButton_2.clicked.connect(self.selectEntry)
+        self.ui.radioButton_3.clicked.connect(self.selectEntry)
+        self.ui.radioButton.click()
+
+        self.ui.comboBox.currentIndexChanged.connect(self.selectSensor)
+        self.ui.pushButton.clicked.connect(self.newCalibrationPoint)
+    
+    #select sensor and display already existing calibration points
+    @Slot()
+    def selectSensor(self):
+        self.selectedSensor = self.ui.comboBox.currentIndex()
+        self.ui.lineEdit.setText(str(self.calibrationPoints[self.selectedSensor][0]))
+        self.ui.lineEdit_2.setText(str(self.calibrationPoints[self.selectedSensor][1]))
+        self.ui.lineEdit_3.setText(str(self.calibrationPoints[self.selectedSensor][2]))
+
+    #enable lineEdit corresponding to selected radioButton, disable the others
+    @Slot()
+    def selectEntry(self):
+        match self.buttonGroup.checkedButton():
+            case self.ui.radioButton:
+                self.ui.lineEdit.setEnabled(True)
+                self.ui.lineEdit_2.setDisabled(True)
+                self.ui.lineEdit_3.setDisabled(True)
+                self.selectedEntry = 0
+            case self.ui.radioButton_2:
+                self.ui.lineEdit.setDisabled(True)
+                self.ui.lineEdit_2.setEnabled(True)
+                self.ui.lineEdit_3.setDisabled(True)
+                self.selectedEntry = 1
+            case self.ui.radioButton_3:
+                self.ui.lineEdit.setDisabled(True)
+                self.ui.lineEdit_2.setDisabled(True)
+                self.ui.lineEdit_3.setEnabled(True)
+                self.selectedEntry = 2
+    
+    #save the currently selected calibration point
+    @Slot()
+    def newCalibrationPoint(self):
+        currentEntry = ""
+        currentUnit = ""
+        match self.selectedEntry:
+            case 0:
+                currentEntry = self.ui.lineEdit.text()
+                currentUnit = self.ui.label_2.text()
+            case 1:
+                currentEntry = self.ui.lineEdit_2.text()
+                currentUnit = self.ui.label_3.text()
+            case 2:
+                currentEntry = self.ui.lineEdit_3.text()
+                currentUnit = self.ui.label_4.text()
+        self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
+        self.ui.label.setText(currentEntry + " " + currentUnit)
+
 class DataHandlingThread(QThread):
     def run(self):
         period_ms = 1000 / 20
@@ -247,6 +329,7 @@ if __name__ == "__main__":
     GSerror = GSError()
     GSresults = GSResults()
     GSconnection = GSConnection()
+    GScalibration = GSCalibration()
 
     #inter-window connections
     GSmain.ui.actionRestart.triggered.connect(GSstart.show)
@@ -259,6 +342,7 @@ if __name__ == "__main__":
     GSstart.accepted.connect(GSmain.applySettings)
     GSstart.accepted.connect(GSmain.show)
     GStime.accepted.connect(GSmain.applySettings)
+    GSmain.ui.actionCalibration.triggered.connect(GScalibration.show)
     
     #showing the startup screen
     GSstart.show()
