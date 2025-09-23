@@ -4,10 +4,12 @@
 #include <string.h>
 #include <pthread.h>
 #include "DataHandlingLibrary.h"
+#include <stdlib.h>
 
 #define DEBUG
 //Mode; SoE; LO; Valve; Nozzle Feedback: For DEBUG Test value must be 1, else 0
 #define SERVO_WO_PWM
+//#define SERVO_PWM
 #ifdef DEBUG
 
 #define HIGH 1
@@ -95,8 +97,16 @@ static inline int analogRead(int pin) {
 #ifndef DEBUG
 #ifdef SERVO_WO_PWM
 #include <softPwm.h>	//Include softPwm library for PWM control without PWM-Board
-#else
-#include <pigpio.h>		//Include pigpio library for PWM control with PWM-Board
+#endif
+#ifdef SERVO_PWM
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <unistd.h>
+
+#define PCA9685_ADDRESS 0x40 //i2cdetect -y 1	 CHECK
+//Registers
+#define SERVO0_ON_L 0x06
 #endif
 #endif
 
@@ -132,11 +142,6 @@ struct parameter flightstandard = { .Mode = 1, .NoseConeSeparation = 10000, .Aft
 struct parameter dryrunstandard = { .Mode = 2, .ValveDelay = 5000, .ServoDelay = 6000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 3000, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter testrun = { .Mode = 2, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter DEBUGstandard = { .Mode = 3, .AfterLO = 5000, .EoEDelay = 3000 };
-#ifdef DEBUG 
-struct parameter datalogging = { .FDA20 = 50, .BDA2 = 500 }; //FDA here is frames = frequency x duration. With FullData 20Hz & BasicData 2Hz
-#else 
-struct parameter datalogging = { .FDA20 = 50000, .BDA2 = 500000 }; 
-#endif
 
 
 int Abort = 0;
@@ -158,12 +163,44 @@ void ServoRotation(int degree) {
 	softPwmCreate(Servo_Pin, 0, 100); //100%
 	softPwmWrite(Servo_Pin, pwmWidth);
 }
-#else
-void ServoRotation(int degree) {
+#endif
+#ifdef SERVO_PWM
+int angle_pulse(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
-	int pwmWidth = 1000 + (degree * 1000) / 90;	//pwm Width value from 1000 = 0° to 2000 = 90° in microsecond
-	gpioServo(Servo_Pin, pwmWidth);
+	int min = 205; // 0 degree
+	int max = 307; // 90 degree
+	return (min + (degree*(max - min)) / 90);
+}
+void pwm_setup(int cd, int channel, int pulse) {
+	int on = 0, off = pulse;
+
+	unsigned char buffer[4];
+	buffer[0] = on & 0xFF;
+	buffer[1] = (on >> 8) & 0xFF;
+	buffer[2] = off & 0xFF;
+	buffer[3] = (off >> 8) & 0xFF;
+
+	int reg = SERVO0_ON_L + 4 * channel;
+	write(cd, &reg, 1);
+	write(cd, buffer, 4);
+}
+
+int Initialise_Servo() {
+	const char* i2c_dev = "/dev/i2c-1"; //I2C bus device on RaspberryPi
+	int cd = open(i2c_dev, O_RDWR);
+	if(cd < 0) return -2;	//Servo not avail
+	if (ioctl(cd, I2C_SLAVE, PCA9685_ADDRESS) < 0) {
+		close(cd);	//Servo board not responding
+		return -2;
+	}
+	
+	return cd;
+}
+
+void ServoRotation(int cd, int channel, int degree) {
+	int pulse = angle_pulse(degree)
+	pwm_setup(cd,channel,pulse);
 }
 #endif
 
@@ -258,7 +295,12 @@ int ExperimentRun(struct parameter parameter) {
 	DataFrame FrameTC = UpdateTC();
 #endif
 	if (parameter.Mode == 1) {
+#ifdef SERVO_WO_PWM
 		ServoRotation(parameter.ServoAngle); //command rotate the serve 90° first attempt*
+#endif
+#ifdef SERVO_PWM
+		ServoRotation(cd, 0, parameter.ServoAngle); //command rotate the serve 90° first attempt*
+#endif
 #ifdef DEBUG
 		printf("Command to run Servo\n");
 		printf("Servo run for 90 Degree\n");
@@ -289,7 +331,12 @@ int ExperimentRun(struct parameter parameter) {
 		else if (digitalRead(Nozzle_Cover_1)) {
 #endif
 			//Nozzle Cover Problem: in close position
+#ifdef SERVO_WO_PWM
 			ServoRotation(parameter.ServoAngle); //command rotate the serve 90° second attempt*
+#endif
+#ifdef SERVO_PWM
+			ServoRotation(cd, 0, parameter.ServoAngle); //command rotate the serve 90° second attempt*
+#endif
 #ifdef DEBUG
 			printf("Second attempt\n");
 			printf("Servo run for 90 Degree\n");
@@ -303,9 +350,9 @@ int ExperimentRun(struct parameter parameter) {
 #endif
 #ifdef DEBUG
 				printf("Nozzle Cover is opened\n");
-#else
-				nozzleStatus = NozzleOpen;
 #endif
+				nozzleStatus = NozzleOpen;
+
 #ifdef DEBUG
 				delay(DEBUGstandard.EoEDelay);
 #else
@@ -320,7 +367,7 @@ int ExperimentRun(struct parameter parameter) {
 					printf("Manual Servo Run: "); scanf_s("%d", &NozzlePos);
 					if (NozzlePos == 1) break;
 #else
-					ServoRotation(ReadFrame(FrameTC, Servo_Control));
+					ServoRotation(ReadFrame(FrameTC, Servo_Control));	//---------------------------------------------------------------------------------------------------------------------FIX
 					if (digitalRead(Nozzle_Cover_2)) break;
 #endif
 				}
@@ -348,14 +395,24 @@ int ExperimentRun(struct parameter parameter) {
 			return -1; //abort test
 		}
 #else
-		ServoRotation(parameter.ServoAngle); //command rotate the serve 30° for testing
+#ifdef SERVO_WO_PWM
+		ServoRotation(parameter.ServoAngle);
+#endif
+#ifdef SERVO_PWM
+		ServoRotation(cd, 0, parameter.ServoAngle); 
+#endif //command rotate the serve 30° for testing
 		if (parameter.ServoAngle <= 10) {
 			FrameTC = UpdateTC();
 			return -1; //abort test
 		}
 		else if (parameter.ServoAngle == 30) {
 			delay(parameter.NozzleOnCDelay);
-			ServoRotation(parameter.ServoAngleReset);
+#ifdef SERVO_WO_PWM
+			ServoRotation(parameter.ServoAngleReset); //command rotate the serve 90° first attempt*
+#endif
+#ifdef SERVO_PWM
+			ServoRotation(cd, 0, parameter.ServoAngleReset); //command rotate the serve 90° first attempt*
+#endif
 		}
 		FrameTC = UpdateTC();
 		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
@@ -517,7 +574,6 @@ void DataAcquisition(DataFrame* frame) {
 }
 
 void Log() {
-	struct parameter freq = datalogging; //Logging frequency parameters
 	int sync = 0;				//Sync value for the DataFrame
 	int syncLimit = 0;			//Sync limit for the DataFrame, every 10 Frames a new Sync value is set
 
@@ -550,24 +606,24 @@ void Log() {
 			printf("Full Data Acquisition\n");
 			clock_t end = clock();
 			long duration = ((end - start) * 1000) / CLOCKS_PER_SEC;
-			long wait = freq.FDA20 - duration;
+			long wait = (1000*1/20) - duration;	//Full Data 20Hz Frequency -> 50ms period
 			if (wait > 0) delay(wait);
 #else
 			gettimeofday(&end,NULL);
 			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
-			suseconds_t wait = freq.FDA20 - duration;
-			if (wait > 0) usleep(wait); //Full Data Acquisition 20Hz
+			suseconds_t wait = (1000000*1/20) - duration;	//Full Data 20Hz Frequency -> 50000us period
+			if (wait > 0) usleep(wait);
 #endif
 		}
 		else {
 #ifdef DEBUG
 			printf("Basic Data Acquisition\n");
-			delay(freq.BDA2);		//Basic Data Acquisition 2Hz
+			delay(1000*1/2);		//Basic Data 2Hz Frequency -> 500ms period
 #else
 			gettimeofday(&end, NULL);
 			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
-			suseconds_t wait = freq.BDA2 - duration;
-			if (wait > 0) usleep(wait); //Basic Data Acquisition 2Hz
+			suseconds_t wait = (1000000*1/2) - duration;	//Basic Data 2Hz Frequency -> 500000us period
+			if (wait > 0) usleep(wait);
 #endif
 		}
 		if (testrun.Mode == 2 || dryrunstandard.Mode == 2) {
@@ -647,6 +703,10 @@ int main() {
 
 	pullUpDnControl(RPi_LO, PUD_DOWN);
 	pullUpDnControl(RPi_SOE, PUD_DOWN);
+
+#ifdef SERVO_PWM
+	int servocd = Initialise_Servo();
+#endif
 
 	Initialize("");
 	FailSafeRecovery();
@@ -836,11 +896,15 @@ int main() {
 			else {
 				ExperimentControl();
 			}
+
 #endif
 			ExperimentStatus = 0; //Reset Experiment Status
 
 			continue;
 		}
 	}
+#ifdef SERVO_PWM
+	close(servocd);
+#endif
 	return 0;
 }
