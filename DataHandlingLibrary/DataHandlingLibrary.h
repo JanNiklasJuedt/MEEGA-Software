@@ -35,7 +35,7 @@ const int OUTPUT = DEBUG_OUTPUT;
 
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 
-#include <windows.h>
+#include "pch.h"
 
 #ifdef DATAHANDLINGLIBRARY_EXPORTS
 #define DATAHANDLINGLIBRARY_API __declspec(dllexport)
@@ -44,17 +44,19 @@ const int OUTPUT = DEBUG_OUTPUT;
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
-#define DEFAULTCOMPATH "COM1"
+#define DEFAULTCOMPATH "COM9"
 
-#elif (DATAHANDLINGLIBRARY_OS == LINUX)
+#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define DATAHANDLINGLIBRARY_CONSTANT
 #define DATAHANDLINGLIBRARY_API
-#define DEFAULTCOMPATH "/dev/ttyUART1"
+#define DEFAULTCOMPATH "/dev/tty1"
+#define INVALID_HANDLE_VALUE -1
 
 #endif // DATAHANDLINGLIBRARY_OS
 
@@ -81,6 +83,11 @@ const int OUTPUT = DEBUG_OUTPUT;
 #define BASE_RES 10 //Bits
 #define HIGH_RES 20 //Bits
 #define DELAY_LEN 16 //Bits
+#define BASE_LEN 1 //Bits
+#define HIGH_LEN 2 //Bits
+#define EXP_LEN 3 //Bits
+#define MAIN_LEN 4 //Bits
+#define TIME_LEN 32 //Bits
 
 #define BAUD_RATE 9600
 
@@ -111,7 +118,7 @@ enum DATAHANDLINGLIBRARY_API TMID{
 	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_Health,
 	Nozzle_Pressure_1_Health, Nozzle_Temperature_1_Health, Nozzle_Pressure_2_Health, Nozzle_Temperature_2_Health, Nozzle_Pressure_3_Health, Nozzle_Temperature_3_Health,
 	//Householding Misc:
-	Nozzle_Cover, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_1, Sensorboard_2, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode
+	Nozzle_Open, Nozzle_Closed, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_P, Sensorboard_T, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode, Experiment_State
 };
 
 enum DATAHANDLINGLIBRARY_API TCID {
@@ -148,7 +155,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 } DataPacket;
 
 //This acts as an input/output buffer for transmissions
-typedef struct DataBuffer {
+typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	unsigned char* incomingPos;
 	unsigned char incomingBytes;
 	unsigned char* outgoingPos;
@@ -160,7 +167,7 @@ typedef struct DataBuffer {
 } DataBuffer;
 
 //Stores all persistent data needed for a (spontanious) program reboot
-typedef struct FailSafe {
+typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	float version;
 	time_t dateTime;
 	//path used to look up the newest savefile
@@ -169,7 +176,7 @@ typedef struct FailSafe {
 	char complete;
 	//if the program has exited nominally (Bool)
 	char nominalExit;
-	//current operating mode of the program (test: "t" / flight: "f")
+	//current operating mode of the program (test: "0" / flight: "")
 	char mode;
 	//connection mode of the groundstation (unused for onboard)
 	char conn;
@@ -190,7 +197,7 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFileFrame {
 } SaveFileFrame;
 
 //Stores all data collected/received during the mission
-typedef struct SaveFile {
+typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	float version;
 	time_t dateTime;
 	//pointer towards the first "DataFrame", subsequent frames are pointed to by themselves
@@ -210,13 +217,14 @@ typedef struct SaveFile {
 	char saveFilePath[PATH_LENGTH];
 } SaveFile;
 
-typedef struct PortHandler {
+typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	DCB options;
+	HANDLE comHandle;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	struct termios options;
+	int comHandle;
 #endif
-	HANDLE comHandle;
 	char comPath[PATH_LENGTH];
 } PortHandler;
 
@@ -228,7 +236,7 @@ typedef struct DATAHANDLINGLIBRARY_API CalibrationPoint {
 } CalibrationPoint;
 
 //Stores all data neccessary for sensor value mapping
-typedef struct SensorCalibration {
+typedef struct DATAHANDLINGLIBRARY_API SensorCalibration {
 	float version;
 	time_t dateTime;
 	char sorted;
@@ -237,13 +245,13 @@ typedef struct SensorCalibration {
 	char calibrationFilePath[PATH_LENGTH];
 } SensorCalibration;
 
-typedef struct FrameLookUpTable {
+typedef struct DATAHANDLINGLIBRARY_API FrameLookUpTable {
 	int telemetry_Pos_Len[TELEMETRY_AMOUNT][2];
 	int telecommand_Pos_Len[TELECOMMAND_AMOUNT][2];
 } FrameLookUpTable;
 
 //Stores pointers to all top-level Data dataHandling components of the program
-typedef struct DataHandlingHub {
+typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 	struct SaveFile* saveFile;
 	struct FailSafe* failSafe;
 	struct DataBuffer* buffer;
@@ -252,11 +260,8 @@ typedef struct DataHandlingHub {
 	struct FrameLookUpTable* frameLookUp;
 } DataHandlingHub;
 
-//Core
-static struct DataHandlingHub dataHandling = { 0 };
-
-//Logs the message into the Debug Output, uses first character for formatting: ':' Headline, '_' End of HeadLine,  '?' Trying, '!' Error, '.' Success, '-' End of File
-DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
+//Logs the message into the Debug Output, uses first characters for formatting
+DATAHANDLINGLIBRARY_API void DebugLog(char* message, ...);
 
 //Calculates checksum of given DataPacket
 DATAHANDLINGLIBRARY_API int CalculateChecksum(DataPacket data);
@@ -265,15 +270,19 @@ DATAHANDLINGLIBRARY_API int CalculateChecksum(DataPacket data);
 DATAHANDLINGLIBRARY_API int CalculateCRC(DataPacket data);
 
 //Calls necessary functions for saving and transmitting data;
-//returns {-1} if there was an error with transmitting, {-2} if there was an error with receiving, {-3} if there was an error with saving, and {1} if succesful
 DATAHANDLINGLIBRARY_API int UpdateAll();
 
+//Updates the buffer, handles packet and transmission operations
 DATAHANDLINGLIBRARY_API int UpdateBuffer();
 
+//Writes all changes to the corresponding files
 DATAHANDLINGLIBRARY_API int UpdateFiles();
 
 //Returns a pointer to access all DataHandling structures
 DATAHANDLINGLIBRARY_API DataHandlingHub* GetDataHandling();
+
+//Returns a pointer to the FailSafe structure
+DATAHANDLINGLIBRARY_API FailSafe* GetFailSafe();
 
 //Maps digital sensor values to returned calibrated measurement values
 DATAHANDLINGLIBRARY_API float MapSensorValue(int id, int value);
@@ -297,7 +306,7 @@ DATAHANDLINGLIBRARY_API int WriteCalibration();
 DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 
 //Initializes Memory and loads Data from files if possible
-DATAHANDLINGLIBRARY_API int Initialize(const char path[]);
+DATAHANDLINGLIBRARY_API int Initialize();
 
 //Returns a new empty DataFrame with the specified Sync-Bytes value
 DATAHANDLINGLIBRARY_API DataFrame CreateFrame(uint16_t sync);
@@ -378,13 +387,10 @@ DATAHANDLINGLIBRARY_API void CloseSave();
 //Frees all allocated Memory, including "dataHandling" itself, and closes all open Files and Ports
 DATAHANDLINGLIBRARY_API void CloseAll();
 
-//Configures and opens the communication port
-int LoadPort();
+//Tries to send outgoing data via the configured output path, returns the amount of bytes send
+DATAHANDLINGLIBRARY_API int Send(char* start, int amount);
 
-//Tries to send buffered outgoing data via the configured output path, returns the amount of bytes send
-int Send();
-
-//Reads received data via the configured path into the incoming buffer, returns the amount of bytes received
-int Receive();
+//Reads received data via the configured path into the buffer, returns the amount of bytes received
+DATAHANDLINGLIBRARY_API int Receive(char* buffer, int max);
 
 #endif // DATAHANDLINGLIBRARY_H

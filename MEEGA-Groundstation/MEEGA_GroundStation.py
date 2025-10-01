@@ -204,6 +204,17 @@ class GSControl(QWidget):
         super().__init__()
         self.ui = Ui_controlPanel()
         self.ui.setupUi(self)
+        self.TC = DataHandling.CreateTC(1)
+
+        self.ui.pushButton_6.clicked.connect(self.LED_On)
+        self.ui.pushButton_7.clicked.connect(self.LED_Off)
+
+    def LED_On(self):
+        DataHandling.WriteFrame(self.TC, 7, 1)
+        DataHandling.AddOutFrame(self.TC)
+    def LED_Off(self):
+        DataHandling.WriteFrame(self.TC, 7, 0)
+        DataHandling.AddOutFrame(self.TC)
 
 class GSConnection(QDialog):
     def __init__(self):
@@ -219,7 +230,9 @@ class DataHandlingThread(QThread):
             DataHandling.UpdateAll()
             if self.isInterruptionRequested():
                break
-            self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
+            process_time = period_ms - (time.monotonic_ns() - clock) / 1000000
+            if process_time < 0: process_time = 0
+            self.msleep(process_time)
 
 #Main
 if __name__ == "__main__":
@@ -233,7 +246,7 @@ if __name__ == "__main__":
         GS.installTranslator(translator)
 
     #DataHandling setup
-    DataHandling.Initialize(b"")
+    DataHandling.Initialize()
     dataHandlingThread = DataHandlingThread()
     GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
     dataHandlingThread.start()

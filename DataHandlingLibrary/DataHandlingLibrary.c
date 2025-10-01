@@ -1,6 +1,8 @@
 //Source File of DataHandlingLibrary
-#include "pch.h"
 #include "DataHandlingLibrary.h"
+
+//Core
+static struct DataHandlingHub dataHandling = { 0 };
 
 //INTERNAL
 static int _SetPositions_();
@@ -20,7 +22,7 @@ int FormFrames(); //Converts all buffered incoming DataPackets into buffered Dat
 DataFrame GetOutFrame(); //Returns the latest buffered outgoing DataFrame and removes it from the buffer
 int AddInFrame(DataFrame frame); //Adds an incoming DataFrame to the Buffer, returns the corresponding index
 DataFrame GetInFrame(); //Returns the latest buffered incoming DataFrame and removes it from the buffer
-
+int LoadPort(); //Configures and opens the communication port
 
 //Implementations:
 
@@ -51,13 +53,13 @@ int UpdateBuffer()
 	}
 	int out = 1;
 	if (FormPackets() > 0)
-		if (Send() < 0)
+		if (Send(dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingBytes) < 0)
 			out -= 1;
-	if (Receive() > 0)
+	if (Receive(dataHandling.buffer->incomingPos, dataHandling.buffer->incomingBytes) > 0)
 	{
 		if (dataHandling.buffer->incomingBytes < PACKET_LENGTH) dataHandling.buffer->incomingBytes += PACKET_LENGTH;
 		if (FormFrames() > 0)
-			for (DataFrame temp = GetOutFrame(dataHandling.buffer); !FrameIsEmpty(temp); temp = GetOutFrame(dataHandling.buffer))
+			for (DataFrame temp = GetOutFrame(); !FrameIsEmpty(temp); temp = GetOutFrame())
 				AddSaveFrame(temp);
 		else out -= 1;
 	}
@@ -99,6 +101,12 @@ int UpdateFiles()
 DataHandlingHub* GetDataHandling()
 {
 	return &dataHandling;
+}
+
+FailSafe* GetFailSafe()
+{
+	if (dataHandling.failSafe == NULL) CreateFailSafe();
+	return dataHandling.failSafe;
 }
 
 float MapSensorValue(int id, int value)
@@ -159,7 +167,7 @@ void AddPoint(int id, int number, CalibrationPoint point)
 			dataHandling.calibration->sorted = 0;
 			dataHandling.calibration->changed = 1;
 		}
-		else DebugLog("!ID or number out of range");
+		else DebugLog("!ID# or number# out of range", id, number);
 	}
 	else DebugLog("!Calibration not found");
 }
@@ -175,7 +183,7 @@ CalibrationPoint ReadPoint(int id, int number)
 	if ((id >= 0) & (id < SENSOR_AMOUNT) & (number >= 0) & (number < CALIBRATION_POINTS)) 
 		return dataHandling.calibration->points[id][number];
 	else { 
-		DebugLog("!ID or number out of range");
+		DebugLog("!ID# or number# out of range", id, number);
 		return point;
 	}
 }
@@ -198,7 +206,7 @@ int WriteCalibration()
 void _SortCalibration_()
 {
 	if (dataHandling.calibration == NULL) {
-		DebugLog("!Calibration not found");
+		DebugLog("!Could not find Calibration");
 		return;
 	}
 	if (dataHandling.calibration->sorted) return;
@@ -220,7 +228,7 @@ void _SortCalibration_()
 
 #define RECURSIVE_LOG  if (!recursive) {recursive = 1; DebugLog(message + 1, args); recursive = 0;} else DebugLog(message + 1, args);
 
-void DebugLog(const char* message, ...)
+void DebugLog(char* message, ...)
 {
 	static int counter = -1, depth = 0, i = 0, recursive = 0, tailIndex = 0;
 	static FILE* output = NULL;
@@ -230,13 +238,14 @@ void DebugLog(const char* message, ...)
 	va_start(args, message);
 	if (output == NULL) {
 		if (DEBUG_OUTPUT == LOGFILE) {
-			fopen_s(&output, DEBUGLOG_NAME, "w");
+			output = fopen(DEBUGLOG_NAME, "w");
 			if (output == NULL) {
 				output = stdout;
 				DebugLog("!Could not open Debug logging file");
 			}
 		}
-		else output = stdout;
+		else if (DEBUG_OUTPUT == TERMINAL) output = stdout;
+		else return;
 	}
 	if (!recursive) {
 		head = "";
@@ -265,7 +274,7 @@ void DebugLog(const char* message, ...)
 		}
 		case '+': {
 			char change[PATH_LENGTH];
-			strcpy_s(change, PATH_LENGTH, message);
+			strcpy(change, message);
 			change[0] = '-';
 			DebugLog(change);
 			change[0] = '?';
@@ -300,7 +309,7 @@ void DebugLog(const char* message, ...)
 		}
 		case '#': {
 			if (tailIndex < 20) {
-				tail[tailIndex] = " Error Code: ";
+				tail[tailIndex] = ": ";
 				argument[tailIndex] = 'i';
 				tailIndex++;
 			}
@@ -372,12 +381,12 @@ int CreateCalibration(const char* path)
 	for (int i = 0; i < sizeof(SensorCalibration); i++) bytePtr[i] = 0;
 	new->version = CALIBRATION_VERSION;
 	new->dateTime = time(NULL);
-	strcpy_s(new->calibrationFilePath, PATH_LENGTH, path);
+	strcpy(new->calibrationFilePath, path);
 	dataHandling.calibration = new;
 	return 1;
 }
 
-int Initialize(const char path[])
+int Initialize()
 {
 	DebugLog(":Setting up DataHandling");
 	if (!ReadFailSafe()) {
@@ -391,13 +400,13 @@ int Initialize(const char path[])
 		ReadSave(dataHandling.failSafe->saveFilePath);
 	}
 	if (dataHandling.saveFile == NULL) {
-		CreateSave((path != NULL) ? path : SAVEFILE_NAME);
+		CreateSave(SAVEFILE_NAME);
 	}
 	if (dataHandling.saveFile == NULL) {
 		VirtualSave();
-		if (dataHandling.failSafe != NULL) strcpy_s(dataHandling.failSafe->saveFilePath, PATH_LENGTH, "");
+		if (dataHandling.failSafe != NULL) strcpy(dataHandling.failSafe->saveFilePath, "");
 	}
-	else if (!readExisting & (dataHandling.failSafe != NULL)) strcpy_s(dataHandling.failSafe->saveFilePath, PATH_LENGTH, (path != NULL) ? path : SAVEFILE_NAME);
+	else if (!readExisting & (dataHandling.failSafe != NULL)) strcpy(dataHandling.failSafe->saveFilePath, SAVEFILE_NAME);
 	
 	DebugLog("?Reserving Memory for Input / Output Buffer");
 	if (CreateBuffer()) DebugLog("Buffer created");
@@ -463,7 +472,7 @@ int _SetPositions_()
 	int id = 0;
 	for (; id < TELEMETRY_AMOUNT; id++) {
 		if ((id >= 0) & (id < SENSOR_AMOUNT)) length = BASE_RES;
-		if ((id >= SENSOR_AMOUNT) & (id < TELEMETRY_AMOUNT)) length = 1;
+		if ((id >= SENSOR_AMOUNT) & (id < TELEMETRY_AMOUNT)) length = BASE_LEN;
 		switch (id) {
 			case Compare_Temperature:
 			case Chamber_Pressure:
@@ -473,11 +482,12 @@ int _SetPositions_()
 			case Nozzle_Temperature_1:
 			case Nozzle_Temperature_2:
 			case Nozzle_Temperature_3: length = HIGH_RES; break;
+			case Experiment_State: length = EXP_LEN; break;
 			case Nozzle_Servo:
 			case Sensorboard_1:
-			case Sensorboard_2: length = 2; break;
-			case Mainboard: length = 4; break;
-			case System_Time: length = 32; break;
+			case Sensorboard_2: length = HIGH_LEN; break;
+			case Mainboard: length = MAIN_LEN; break;
+			case System_Time: length = TIME_LEN; break;
 		}
 		dataHandling.frameLookUp->telemetry_Pos_Len[id][0] = pos;
 		dataHandling.frameLookUp->telemetry_Pos_Len[id][1] = length;
@@ -488,7 +498,7 @@ int _SetPositions_()
 		}
 	}
 	for (id = 0, pos = 0; id < TELECOMMAND_AMOUNT; id++) {
-		if ((id >= 0) & (id < TELECOMMAND_AMOUNT)) length = 2;
+		if ((id >= 0) & (id < TELECOMMAND_AMOUNT)) length = BASE_LEN + 1;
 		switch (id) {
 			case Valve_Delay:
 			case Servo_Delay:
@@ -522,10 +532,10 @@ int _CreateHandler_()
 	}
 	dataHandling.handler->comHandle = INVALID_HANDLE_VALUE;
 	if (dataHandling.failSafe != NULL) 
-		strcpy_s(dataHandling.handler->comPath, PATH_LENGTH, dataHandling.failSafe->comPath);
+		strcpy(dataHandling.handler->comPath, dataHandling.failSafe->comPath);
 	else {
 		DebugLog("!Could not find FailSafe");
-		strcpy_s(dataHandling.handler->comPath, PATH_LENGTH, DEFAULTCOMPATH);
+		strcpy(dataHandling.handler->comPath, DEFAULTCOMPATH);
 	}
 	return 1;
 }
@@ -558,7 +568,7 @@ int WriteFrame(DataFrame* frame, int id, int value)
 	int index = (TC) ? dataHandling.frameLookUp->telecommand_Pos_Len[id][0] : dataHandling.frameLookUp->telemetry_Pos_Len[id][0];
 	int length = (TC) ? dataHandling.frameLookUp->telecommand_Pos_Len[id][1] : dataHandling.frameLookUp->telemetry_Pos_Len[id][1];
 	if (value < 0 || value >= 1 << length) {
-		DebugLog("!Value out of writable range");
+		DebugLog("!#Value out of writable range at Index", id);
 		return 0;
 	}
 	int old_value = 0;
@@ -592,7 +602,7 @@ int ReadFrame(DataFrame frame, int id)
 	}
 	int TC = FrameIsTC(frame);
 	if ((TC & (id >= TELECOMMAND_AMOUNT)) || id >= TELEMETRY_AMOUNT) {
-		DebugLog("!ID out of range");
+		DebugLog("!#ID out of range", id);
 		return 0;
 	}
 	int index = (TC) ? dataHandling.frameLookUp->telecommand_Pos_Len[id][0] : dataHandling.frameLookUp->telemetry_Pos_Len[id][0];
@@ -908,10 +918,10 @@ int CreateFailSafe()
 	new->dateTime = time(NULL);
 	new->version = FAILSAFE_VERSION;
 	new->mode = 'f';
-	strcpy_s(new->saveFilePath, PATH_LENGTH, SAVEFILE_NAME);
-	strcpy_s(new->comPath, PATH_LENGTH, DEFAULTCOMPATH);
+	strcpy(new->saveFilePath, SAVEFILE_NAME);
+	strcpy(new->comPath, DEFAULTCOMPATH);
 	FILE* file;
-	fopen_s(&file, FAILSAFE_NAME, "w");
+	file = fopen(FAILSAFE_NAME, "w");
 	if (file != NULL) {
 		fprintf(file, "Version: %f;\n", new->version);
 		fprintf(file, "Datetime: %lli;\n", new->dateTime);
@@ -930,6 +940,7 @@ int CreateFailSafe()
 
 int ReadFailSafe()
 {
+	return 0;
 	DebugLog(":Reading FailSafe");
 	if (dataHandling.failSafe != NULL) {
 		DebugLog("?Freeing FailSafe");
@@ -949,24 +960,25 @@ int ReadFailSafe()
 	float ReadVersion = 0.0f;
 	this->version = FAILSAFE_VERSION;
 	DebugLog("Memory initialized");
-	fopen_s(&file, FAILSAFE_NAME, "r");
+	file = fopen(FAILSAFE_NAME, "r");
 	if (file != NULL) {
-		if (fscanf_s(file, "Version: %f;", &ReadVersion) != EOF) {
+		DebugLog("File opened");
+		if (ReadVersion = fscanf(file, "Version: %f;") != EOF) {
 			if (ReadVersion == this->version) {
 				if (ReadVersion != this->version) return 0;
 				//Newest FileReader here:
 				char boolreader;
 				int length = PATH_LENGTH;
-				if (fscanf_s(file, "Datetime: %lli;\n", &this->dateTime) != EOF)
-					if (fscanf_s(file, "Savefile: %s;\n", &this->saveFilePath, length) != EOF) {
+				if (fscanf(file, "Datetime: %lli;\n", &this->dateTime) != EOF)
+					if (fscanf(file, "Savefile: %s;\n", &this->saveFilePath, length) != EOF) {
 						length = 1;
-						if (fscanf_s(file, "Complete: %c;\n", &boolreader, length) != EOF) {
+						if (fscanf(file, "Complete: %c;\n", &boolreader, length) != EOF) {
 							this->complete = (boolreader == 'y') ? 1 : 0;
-							if (fscanf_s(file, "Nominal Exit: %c;\n", &boolreader, length) != EOF) {
+							if (fscanf(file, "Nominal Exit: %c;\n", &boolreader, length) != EOF) {
 								this->nominalExit = (boolreader == 'y') ? 1 : 0;
-								if (fscanf_s(file, "Mode: %c;\n", &this->mode, length) != EOF)
-									if (fscanf_s(file, "Connection: %c;\n", &this->conn, length) != EOF)
-										if (fscanf_s(file, "Language: %c;", &this->lang, length) != EOF) {
+								if (fscanf(file, "Mode: %c;\n", &this->mode, length) != EOF)
+									if (fscanf(file, "Connection: %c;\n", &this->conn, length) != EOF)
+										if (fscanf(file, "Language: %c;", &this->lang, length) != EOF) {
 											DebugLog("_@Failsafe read", this);
 											fclose(file);
 											return 1;
@@ -1156,7 +1168,15 @@ void CloseAll()
 	if (dataHandling.failSafe != NULL) free(dataHandling.failSafe);
 	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
 	if (dataHandling.handler != NULL) {
-		if (!CloseHandle(dataHandling.handler->comHandle)) DebugLog("!Could not close serial Port");
+#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+		if (!CloseHandle(dataHandling.handler->comHandle)) {
+#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
+		if (!close(dataHandling.handler->comHandle)) {
+#else
+		if (0) {
+#endif
+			DebugLog("!Could not close serial Port");
+		}
 		free(dataHandling.handler);
 	}
 	if (dataHandling.saveFile != NULL) {
@@ -1188,7 +1208,7 @@ int WriteSave()
 	}
 	FILE* file = NULL;
 	if (dataHandling.saveFile->saveFilePath[0] != '\0') {
-		fopen_s(&file, dataHandling.saveFile->saveFilePath, "ab");
+		file = fopen(dataHandling.saveFile->saveFilePath, "ab");
 		if (file != NULL) {
 			SaveFileFrame* current = GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount - 1);
 			char* bytePtr = NULL;
@@ -1221,8 +1241,8 @@ int CreateSave(const char path[])
 	dataHandling.saveFile->savedAmount = 0;
 	FILE* file = NULL;
 	if (path != NULL) {
-		fopen_s(&file, path, "wb");
-		strcpy_s(dataHandling.saveFile->saveFilePath, PATH_LENGTH, path);
+		file = fopen(path, "wb");
+		strcpy(dataHandling.saveFile->saveFilePath, path);
 	}
 	if (file != NULL) {
 		fprintf(file, "%f", SAVEFILE_VERSION);
@@ -1244,7 +1264,7 @@ int CreateSave(const char path[])
 
 int _SetPortConfig_()
 {
-	if ((dataHandling.handler == NULL) || (dataHandling.handler->comHandle == NULL)) {
+	if ((dataHandling.handler == NULL) || (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE)) {
 		DebugLog("!Unitialized DataHandling or invalid serial port");
 		return 0;
 	}
@@ -1257,7 +1277,7 @@ int _SetPortConfig_()
 		dataHandling.handler->options.BaudRate = BAUD_RATE;
 	}
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	if (tcgetattr(dataHandling.handler->comHandle, &(dataHandling.handler->options))) {
+	if (tcgetattr(dataHandling.handler->comHandle, &(dataHandling.handler->options)) == 0) {
 		dataHandling.handler->options.c_iflag = IGNPAR;
 		dataHandling.handler->options.c_cflag = BAUD_RATE | CS8 | CLOCAL | CREAD;
 		dataHandling.handler->options.c_oflag = 0;
@@ -1286,25 +1306,36 @@ int LoadPort()
 #endif
 	if (dataHandling.handler->comHandle != INVALID_HANDLE_VALUE) {
 		if (_SetPortConfig_()) {
+#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 			if (SetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options))) return 1;
-			else DebugLog("!#Could not set CommState of serial Port", (int)GetLastError());
+#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
+			tcflush(dataHandling.handler->comHandle, TCIOFLUSH);
+			if (tcsetattr(dataHandling.handler->comHandle, TCSANOW, &(dataHandling.handler->options)) == 0) return 1;
+#else
+			if (0);
+#endif
+			else DebugLog("!#Could not set CommState of serial Port", errno);
 		}
 	}
-	else DebugLog("!#Could not open serial Port", (int)GetLastError());
+	else DebugLog("!#Could not open serial Port", errno);
 	return 0;
 }
 
-int Send()
+int Send(char* start, int amount)
 {
-	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
+	if (dataHandling.handler == NULL) {
 		DebugLog("!Uninitialized DataHandling");
+		return -1;
+	}
+	if (start == NULL) {
+		DebugLog("!NULL Pointer passed");
 		return -1;
 	}
 	int number = 0;
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (WriteFile(dataHandling.handler->comHandle, dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingBytes, &number, NULL))
+	if (WriteFile(dataHandling.handler->comHandle, start, amount, &number, NULL))
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	number = write(dataHandling.handler->comHandle, dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingBytes);
+	number = write(dataHandling.handler->comHandle, start, amount);
 	if (number >= 0)
 #else 
 	if (0)
@@ -1318,17 +1349,21 @@ int Send()
 	return -1;
 }
 
-int Receive()
+int Receive(char* buffer, int max)
 {
-	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
+	if (dataHandling.handler == NULL) {
 		DebugLog("!Uninitialized DataHandling");
+		return -1;
+	}
+	if (buffer == NULL) {
+		DebugLog("!NULL Pointer passed");
 		return -1;
 	}
 	int number = 0;
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (ReadFile(dataHandling.handler->comHandle, dataHandling.buffer->incomingPos, dataHandling.buffer->incomingBytes, &number, NULL))
+	if (ReadFile(dataHandling.handler->comHandle, buffer, max, &number, NULL))
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	number = read(dataHandling.handler->comHandle, dataHandling.buffer->incomingPos, dataHandling.buffer->incomingBytes);
+	number = read(dataHandling.handler->comHandle, buffer, max);
 	if (number >= 0)
 #else
 	if (0)
