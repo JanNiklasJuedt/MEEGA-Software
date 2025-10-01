@@ -9,7 +9,7 @@
 #define DEBUG
 //Mode; SoE; LO; Valve; Nozzle Feedback: For DEBUG Test value must be 1, else 0
 #define SERVO_WO_PWM
-//#define SERVO_PWM
+//#define SERVO_WO_PWMv2
 #ifdef DEBUG
 
 #define HIGH 1
@@ -98,27 +98,18 @@ static inline int analogRead(int pin) {
 #ifdef SERVO_WO_PWM
 #include <softPwm.h>	//Include softPwm library for PWM control without PWM-Board
 #endif
-#ifdef SERVO_PWM
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
-#include <unistd.h>
-
-#define PCA9685_ADDRESS 0x40 //i2cdetect -y 1	 CHECK
-//Registers
-#define SERVO0_ON_L 0x06
-#endif
 #endif
 
-#define LEDs_Pin 54	//pin
-#define Valve_Pin 29	//pin
+#define LEDs_Pin 4	//pin
+#define Valve_Pin 16	//pin
 #define ValveSwitch 01	//pin
-#define Servo_Pin 34	//pin
-#define Nozzle_Cover_1 50	//Nozzle Cover fully closed Feedback
-#define Nozzle_Cover_2 48	//Nozzle Cover fully opened Feedback
+#define Servo_Pin 12	//pin
+#define Servo_On 5	//pin
+#define Nozzle_Cover_1 17	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_2 27	//Nozzle Cover fully opened Feedback
 
-#define RPi_SOE 41	//pin
-#define RPi_LO 47	//pin
+#define RPi_SOE 25	//pin
+#define RPi_LO 23	//pin
 
 
 //#########################################################################################################################################################//
@@ -159,51 +150,33 @@ int delay(int millisecond) {	//1000x Second
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
-	int pwmWidth = 10 + (degree * 10) / 90;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
-	softPwmCreate(Servo_Pin, 0, 100); //100%
+	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
+	int minR = 1000;
+	int maxR = 2000;
+	int pulse_us = minR + degree * (maxR - minR) / 90;
+	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
 	softPwmWrite(Servo_Pin, pwmWidth);
 }
 #endif
-#ifdef SERVO_PWM
-int angle_pulse(int degree) {
+#ifdef SERVO_WO_PWMv2
+void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
-	int min = 205; // 0 degree
-	int max = 307; // 90 degree
-	return (min + (degree*(max - min)) / 90);
-}
-void pwm_setup(int cd, int channel, int pulse) {
-	int on = 0, off = pulse;
-
-	unsigned char buffer[4];
-	buffer[0] = on & 0xFF;
-	buffer[1] = (on >> 8) & 0xFF;
-	buffer[2] = off & 0xFF;
-	buffer[3] = (off >> 8) & 0xFF;
-
-	int reg = SERVO0_ON_L + 4 * channel;
-	write(cd, &reg, 1);
-	write(cd, buffer, 4);
-}
-
-int Initialise_Servo() {
-	const char* i2c_dev = "/dev/i2c-1"; //I2C bus device on RaspberryPi
-	int cd = open(i2c_dev, O_RDWR);
-	if(cd < 0) return -2;	//Servo not avail
-	if (ioctl(cd, I2C_SLAVE, PCA9685_ADDRESS) < 0) {
-		close(cd);	//Servo board not responding
-		return -2;
+	int minR = 1052;
+	int maxR = 2060;
+	double pulse_us = minR + degree * (maxR-minR)/90;
+	double Width = pulse_us / 100;
+	int intWidth = (int)Width;
+	if (Width - intWidth >= 0.6) {
+		int pwmWidth = intWidth + 1;
+		softPwmWrite(Servo_Pin, pwmWidth);
 	}
-	
-	return cd;
-}
-
-void ServoRotation(int cd, int channel, int degree) {
-	int pulse = angle_pulse(degree)
-	pwm_setup(cd,channel,pulse);
+	else {
+		int pwmWidth = intWidth;
+		softPwmWrite(Servo_Pin, pwmWidth);
+	}
 }
 #endif
-
 
 
 //########################################################################################################################################################//
@@ -298,9 +271,6 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef SERVO_WO_PWM
 		ServoRotation(parameter.ServoAngle); //command rotate the serve 90° first attempt*
 #endif
-#ifdef SERVO_PWM
-		ServoRotation(cd, 0, parameter.ServoAngle); //command rotate the serve 90° first attempt*
-#endif
 #ifdef DEBUG
 		printf("Command to run Servo\n");
 		printf("Servo run for 90 Degree\n");
@@ -334,9 +304,6 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef SERVO_WO_PWM
 			ServoRotation(parameter.ServoAngle); //command rotate the serve 90° second attempt*
 #endif
-#ifdef SERVO_PWM
-			ServoRotation(cd, 0, parameter.ServoAngle); //command rotate the serve 90° second attempt*
-#endif
 #ifdef DEBUG
 			printf("Second attempt\n");
 			printf("Servo run for 90 Degree\n");
@@ -362,13 +329,15 @@ int ExperimentRun(struct parameter parameter) {
 			}
 			else {
 				//Manual override to open the nozzle cover
-				for (int attempt = 0; attempt < 3; attempt++) {
 #ifdef DEBUG
-					printf("Manual Servo Run: "); scanf_s("%d", &NozzlePos);
-					if (NozzlePos == 1) break;
+				while (NozzlePos != 1) {
 #else
-					ServoRotation(ReadFrame(FrameTC, Servo_Control));	//---------------------------------------------------------------------------------------------------------------------FIX
-					if (digitalRead(Nozzle_Cover_2)) break;
+				while (!digitalRead(Nozzle_Cover_2)) {
+#endif
+#ifdef DEBUG
+					printf("Attempt to open nozzle: "); scanf_s("%d", &NozzlePos);
+#else
+					ServoRotation(parameter.ServoAngle);
 #endif
 				}
 #ifdef DEBUG
@@ -397,9 +366,6 @@ int ExperimentRun(struct parameter parameter) {
 #else
 #ifdef SERVO_WO_PWM
 		ServoRotation(parameter.ServoAngle);
-#endif
-#ifdef SERVO_PWM
-		ServoRotation(cd, 0, parameter.ServoAngle); 
 #endif //command rotate the serve 30° for testing
 		if (parameter.ServoAngle <= 10) {
 			FrameTC = UpdateTC();
@@ -409,9 +375,6 @@ int ExperimentRun(struct parameter parameter) {
 			delay(parameter.NozzleOnCDelay);
 #ifdef SERVO_WO_PWM
 			ServoRotation(parameter.ServoAngleReset); //command rotate the serve 90° first attempt*
-#endif
-#ifdef SERVO_PWM
-			ServoRotation(cd, 0, parameter.ServoAngleReset); //command rotate the serve 90° first attempt*
 #endif
 		}
 		FrameTC = UpdateTC();
@@ -683,6 +646,7 @@ int main() {
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
 	pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
+	pinMode(Servo_On, OUTPUT);
 
 	pinMode(Nozzle_Cover_1, INPUT);
 	pinMode(Nozzle_Cover_2, INPUT);
@@ -695,18 +659,17 @@ int main() {
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
 	pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
+	pinMode(Servo_On, OUTPUT);
 
 	pinMode(Nozzle_Cover_1, INPUT);
 	pinMode(Nozzle_Cover_2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
+	softPwmCreate(Servo_Pin, 0, 200); //50Hz refresh rate, cycle: 20ms/50Hz
+
 	pullUpDnControl(RPi_LO, PUD_DOWN);
 	pullUpDnControl(RPi_SOE, PUD_DOWN);
-
-#ifdef SERVO_PWM
-	int servocd = Initialise_Servo();
-#endif
 
 	Initialize("");
 	FailSafeRecovery();
@@ -809,6 +772,7 @@ int main() {
 
 				case EXPERIMENT_RUNNING:
 					if (!NozzleOpened) {
+						digitalWrite(Servo_On, 1);
 						int ExperimentRunStatus = ExperimentRun(config);
 						experimentRunning = 1;
 
@@ -820,6 +784,7 @@ int main() {
 
 				case NOZZLE_OPENED:
 					NozzleOpened = 1;
+					digitalWrite(Servo_On, 0);
 					currentState = END_OF_EXPERIMENT; //End of Experiment
 					break;
 				case END_OF_EXPERIMENT:
@@ -903,8 +868,5 @@ int main() {
 			continue;
 		}
 	}
-#ifdef SERVO_PWM
-	close(servocd);
-#endif
 	return 0;
 }
