@@ -289,6 +289,7 @@ class GSConnection(QDialog):
 class GSCalibration(QDialog):
     selectedSensor = 0
     selectedEntry = 0
+    currentUnit = ""
     calibrationPoints = [[0] * 3 for x in range(12)]
     def __init__(self):
         super().__init__()
@@ -318,7 +319,7 @@ class GSCalibration(QDialog):
             frame = frame.contents.data
             digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
             mappedValue = DataHandling.MapSensorValue(self.selectedSensor, digitalValue)
-            self.ui.label.setText(mappedValue + " " + self.ui.label_2.text())
+            self.ui.label.setText(mappedValue + " " + self.currentUnit)
     
     #select sensor and display already existing calibration points, according Units
     @Slot()
@@ -327,14 +328,13 @@ class GSCalibration(QDialog):
         self.ui.lineEdit.setText(str(self.calibrationPoints[self.selectedSensor][0]))
         self.ui.lineEdit_2.setText(str(self.calibrationPoints[self.selectedSensor][1]))
         self.ui.lineEdit_3.setText(str(self.calibrationPoints[self.selectedSensor][2]))
-        currentUnit = ""
-        if self.selectedSensor in [0,1,2,3,4,5]:
-            currentUnit = "Pa"
+        if self.selectedSensor in [0,2,4,6,8,10]:
+            self.currentUnit = "Pa"
         else:
-            currentUnit = "K"
-        self.ui.label_2.setText(currentUnit)
-        self.ui.label_3.setText(currentUnit)
-        self.ui.label_4.setText(currentUnit)
+            self.currentUnit = "K"
+        self.ui.label_2.setText(self.currentUnit)
+        self.ui.label_3.setText(self.currentUnit)
+        self.ui.label_4.setText(self.currentUnit)
 
     #enable lineEdit corresponding to selected radioButton, disable the others
     @Slot()
@@ -360,19 +360,18 @@ class GSCalibration(QDialog):
     @Slot()
     def newCalibrationPoint(self):
         currentEntry = ""
-        currentUnit = ""
         match self.selectedEntry:
             case 0:
                 currentEntry = self.ui.lineEdit.text()
-                currentUnit = self.ui.label_2.text()
             case 1:
                 currentEntry = self.ui.lineEdit_2.text()
-                currentUnit = self.ui.label_3.text()
             case 2:
                 currentEntry = self.ui.lineEdit_3.text()
-                currentUnit = self.ui.label_4.text()
-        digitalValue = DataHandling.readFrame(DataHandling.GetSaveFrame[-1].contents.data, self.selectedSensor)
-        DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
+        frame = DataHandling.GetSaveFrame(-1)
+        if not bool(frame) == False:
+            frame = frame.contents.data
+            digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
+            DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
 class DataHandlingThread(QThread):
