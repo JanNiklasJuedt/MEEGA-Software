@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'MEEGA_calibration.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,10 +24,21 @@ class Ui_Sensor_Calibration(object):
     def setupUi(self, Sensor_Calibration):
         if not Sensor_Calibration.objectName():
             Sensor_Calibration.setObjectName(u"Sensor_Calibration")
-        Sensor_Calibration.resize(491, 209)
+        Sensor_Calibration.resize(491, 285)
         self.verticalLayout = QVBoxLayout(Sensor_Calibration)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.comboBox = QComboBox(Sensor_Calibration)
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.setObjectName(u"comboBox")
 
@@ -51,45 +62,60 @@ class Ui_Sensor_Calibration(object):
 
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
-        self.pushButton = QPushButton(Sensor_Calibration)
-        self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setEnabled(False)
+        self.lineEdit = QLineEdit(Sensor_Calibration)
+        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineEdit.setEnabled(True)
 
-        self.gridLayout.addWidget(self.pushButton, 0, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit, 0, 2, 1, 1)
 
-        self.pushButton_2 = QPushButton(Sensor_Calibration)
-        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.radioButton_3 = QRadioButton(Sensor_Calibration)
+        self.radioButton_3.setObjectName(u"radioButton_3")
 
-        self.gridLayout.addWidget(self.pushButton_2, 1, 3, 1, 1)
-
-        self.label_2 = QLabel(Sensor_Calibration)
-        self.label_2.setObjectName(u"label_2")
-
-        self.gridLayout.addWidget(self.label_2, 0, 2, 1, 1)
-
-        self.lineEdit_2 = QLineEdit(Sensor_Calibration)
-        self.lineEdit_2.setObjectName(u"lineEdit_2")
-
-        self.gridLayout.addWidget(self.lineEdit_2, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.radioButton_3, 2, 0, 1, 1)
 
         self.radioButton_2 = QRadioButton(Sensor_Calibration)
         self.radioButton_2.setObjectName(u"radioButton_2")
 
         self.gridLayout.addWidget(self.radioButton_2, 1, 0, 1, 1)
 
+        self.label_3 = QLabel(Sensor_Calibration)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout.addWidget(self.label_3, 1, 3, 1, 1)
+
+        self.label_4 = QLabel(Sensor_Calibration)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout.addWidget(self.label_4, 2, 3, 1, 1)
+
+        self.lineEdit_2 = QLineEdit(Sensor_Calibration)
+        self.lineEdit_2.setObjectName(u"lineEdit_2")
+
+        self.gridLayout.addWidget(self.lineEdit_2, 1, 2, 1, 1)
+
+        self.label_2 = QLabel(Sensor_Calibration)
+        self.label_2.setObjectName(u"label_2")
+
+        self.gridLayout.addWidget(self.label_2, 0, 3, 1, 1)
+
+        self.lineEdit_3 = QLineEdit(Sensor_Calibration)
+        self.lineEdit_3.setObjectName(u"lineEdit_3")
+
+        self.gridLayout.addWidget(self.lineEdit_3, 2, 2, 1, 1)
+
         self.radioButton = QRadioButton(Sensor_Calibration)
         self.radioButton.setObjectName(u"radioButton")
 
         self.gridLayout.addWidget(self.radioButton, 0, 0, 1, 1)
 
-        self.lineEdit = QLineEdit(Sensor_Calibration)
-        self.lineEdit.setObjectName(u"lineEdit")
-        self.lineEdit.setEnabled(False)
-
-        self.gridLayout.addWidget(self.lineEdit, 0, 1, 1, 1)
-
 
         self.verticalLayout.addLayout(self.gridLayout)
+
+        self.pushButton = QPushButton(Sensor_Calibration)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setEnabled(True)
+
+        self.verticalLayout.addWidget(self.pushButton)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
@@ -113,12 +139,25 @@ class Ui_Sensor_Calibration(object):
     def retranslateUi(self, Sensor_Calibration):
         Sensor_Calibration.setWindowTitle(QCoreApplication.translate("Sensor_Calibration", u"MEEGA - Sensor Calibration", None))
         self.comboBox.setItemText(0, QCoreApplication.translate("Sensor_Calibration", u"P Ambient", None))
+        self.comboBox.setItemText(1, QCoreApplication.translate("Sensor_Calibration", u"P Reservoir", None))
+        self.comboBox.setItemText(2, QCoreApplication.translate("Sensor_Calibration", u"P Accumulator", None))
+        self.comboBox.setItemText(3, QCoreApplication.translate("Sensor_Calibration", u"P Nozzle 1", None))
+        self.comboBox.setItemText(4, QCoreApplication.translate("Sensor_Calibration", u"P Nozzle 2", None))
+        self.comboBox.setItemText(5, QCoreApplication.translate("Sensor_Calibration", u"P Nozzle 3", None))
+        self.comboBox.setItemText(6, QCoreApplication.translate("Sensor_Calibration", u"T Compare", None))
+        self.comboBox.setItemText(7, QCoreApplication.translate("Sensor_Calibration", u"T Reservoir", None))
+        self.comboBox.setItemText(8, QCoreApplication.translate("Sensor_Calibration", u"T Accumulator", None))
+        self.comboBox.setItemText(9, QCoreApplication.translate("Sensor_Calibration", u"T Nozzle 1", None))
+        self.comboBox.setItemText(10, QCoreApplication.translate("Sensor_Calibration", u"T Nozzle 2", None))
+        self.comboBox.setItemText(11, QCoreApplication.translate("Sensor_Calibration", u"T Nozzle 3", None))
 
         self.label.setText(QCoreApplication.translate("Sensor_Calibration", u"0.001 \u00b0C", None))
-        self.pushButton.setText(QCoreApplication.translate("Sensor_Calibration", u"Ok", None))
-        self.pushButton_2.setText(QCoreApplication.translate("Sensor_Calibration", u"Ok", None))
-        self.label_2.setText(QCoreApplication.translate("Sensor_Calibration", u"\u00b0C", None))
+        self.radioButton_3.setText("")
         self.radioButton_2.setText("")
+        self.label_3.setText(QCoreApplication.translate("Sensor_Calibration", u"\u00b0C", None))
+        self.label_4.setText(QCoreApplication.translate("Sensor_Calibration", u"\u00b0C", None))
+        self.label_2.setText(QCoreApplication.translate("Sensor_Calibration", u"\u00b0C", None))
         self.radioButton.setText("")
+        self.pushButton.setText(QCoreApplication.translate("Sensor_Calibration", u"Ok", None))
     # retranslateUi
 

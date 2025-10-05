@@ -1,0 +1,8 @@
+Version: 1.000000;
+Datetime: 1758039722;
+Savefile: MEEGA_SaveFile.meega;
+Complete: n;
+Nominal Exit: y;
+Mode: f;
+Connection: a;
+Language: e;

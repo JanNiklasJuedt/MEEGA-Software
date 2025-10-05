@@ -1,6 +1,8 @@
 #imports
+from asyncio.windows_events import NULL
 import sys
 import time
+from tkinter import SEL
 
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
@@ -39,20 +41,51 @@ class Settings:
 
 #class to define the Main Window
 class GSMain(QMainWindow):
-    ACTIVE = 0
-    ISSUES = 1
-    INACTIVE = 2
-    status = [0] * 20
-
     def __init__(self, settings: Settings):
         super().__init__()
-
-        self.settings = settings
-        self.setLocale(settings.locale)
 
         #importing visuals from the ui-file
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        #creating variables
+        self.ACTIVE = 0
+        self.ISSUES = 1
+        self.INACTIVE = 2
+
+        #creating local status list
+        self.status = [[self.ACTIVE, ""] for _ in range(20)]
+        self.status[0][1] = self.ui.statusLabelPAmbient
+        self.status[1][1] = self.ui.statusLabelTCompare
+        self.status[2][1] = self.ui.statusLabelPReservoir
+        self.status[3][1] = self.ui.statusLabelTReservoir
+        self.status[4][1] = self.ui.statusLabelPAccumulator
+        self.status[5][1] = self.ui.statusLabelTAccumulator
+        self.status[6][1] = self.ui.statusLabelPNozzle1
+        self.status[7][1] = self.ui.statusLabelTNozzle1
+        self.status[8][1] = self.ui.statusLabelPNozzle2
+        self.status[9][1] = self.ui.statusLabelTNozzle2
+        self.status[10][1] = self.ui.statusLabelPNozzle3
+        self.status[11][1] = self.ui.statusLabelTNozzle3
+        self.status[12][1] = self.ui.statusLabelServo
+        self.status[13][1] = self.ui.statusLabelValve
+        self.status[14][1] = self.ui.statusLabelLED
+        self.status[15][1] = self.ui.statusLabelPChip
+        self.status[16][1] = self.ui.statusLabelTChip
+        self.status[17][1] = self.ui.statusLabelMainboard
+        self.status[18][1] = self.ui.statusLabelLiftOff
+        self.status[19][1] = self.ui.statusLabelSOE
+
+        #creating status pixmaps
+        self.activepix = QPixmap("Ressources\\active.png")
+        self.issuespix = QPixmap("Ressources\\issues.png")
+        self.inactivepix = QPixmap("Ressources\\inactive.png")
+
+        self.scalePixmaps()        
+        self.fetchStatus()
+
+        self.settings = settings
+        self.setLocale(settings.locale)
 
         #creating the big logo
         self.logo = QPixmap("Ressources\\meega_logo_small.png")
@@ -83,6 +116,16 @@ class GSMain(QMainWindow):
         self.ui.actionQuit.triggered.connect(self.app.quit)
 
     #internal functions
+    def scalePixmaps(self):
+            #Pixmaps an die aktuelle Label-Groesse anpassen
+            label_size = self.ui.statusLabelMainboard.size()
+            circle_diameter = min(label_size.width(), label_size.height())
+            self.activepix_scaled = self.activepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.inactivepix_scaled = self.inactivepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    def resizeEvent(self, event):
+            self.scalePixmaps(event)
+            super().resizeEvent(event)
     def retranslateUi(self):
         self.ui.retranslateUi()
     def languageChanges(self):
@@ -118,10 +161,29 @@ class GSMain(QMainWindow):
     def filePathChanges(self):
         pass
     def fetchStatus(self):
+        #update the local status list from DataHandling
+        frame = DataHandling.GetSaveFrame(-1)
+        if not bool(frame) == False:
+            frame = frame.contents.data
+            for i in range(12):
+                self.status[i][0] = DataHandling.ReadFrame(frame, 12+i)
+            self.status[12][0] = DataHandling.ReadFrame(frame, 25)
+            self.status[13][0] = DataHandling.ReadFrame(frame, 26)
+            self.status[14][0] = DataHandling.ReadFrame(frame, 28)
+            self.status[15][0] = DataHandling.ReadFrame(frame, 29)
+            self.status[16][0] = DataHandling.ReadFrame(frame, 30)
+            self.status[17][0] = DataHandling.ReadFrame(frame, 31)
+            self.status[18][0] = DataHandling.ReadFrame(frame, 33)
+            self.status[19][0] = DataHandling.ReadFrame(frame, 34)
+        #update the displayed status pixmaps
         for i in range(20):
-            match self.status[i]:
+            match self.status[i][0]:
                 case self.ACTIVE:
-                    self.ui.statusLabel_
+                    self.status[i][1].setPixmap(self.activepix_scaled)
+                case self.ISSUES:
+                    self.status[i][1].setPixmap(self.issuespix_scaled)
+                case self.INACTIVE:
+                    self.status[i][1].setPixmap(self.inactivepix_scaled)
     
     #external functions (slots)
     @Slot()
@@ -244,16 +306,35 @@ class GSCalibration(QDialog):
         self.ui.radioButton_3.clicked.connect(self.selectEntry)
         self.ui.radioButton.click()
 
+        self.selectSensor()
         self.ui.comboBox.currentIndexChanged.connect(self.selectSensor)
         self.ui.pushButton.clicked.connect(self.newCalibrationPoint)
     
-    #select sensor and display already existing calibration points
+
+    #update the displayed sensor value
+    def updateValue(self):
+        frame = DataHandling.GetSaveFrame(-1)
+        if not bool(frame) == False:
+            frame = frame.contents.data
+            digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
+            mappedValue = DataHandling.MapSensorValue(self.selectedSensor, digitalValue)
+            self.ui.label.setText(mappedValue + " " + self.ui.label_2.text())
+    
+    #select sensor and display already existing calibration points, according Units
     @Slot()
     def selectSensor(self):
         self.selectedSensor = self.ui.comboBox.currentIndex()
         self.ui.lineEdit.setText(str(self.calibrationPoints[self.selectedSensor][0]))
         self.ui.lineEdit_2.setText(str(self.calibrationPoints[self.selectedSensor][1]))
         self.ui.lineEdit_3.setText(str(self.calibrationPoints[self.selectedSensor][2]))
+        currentUnit = ""
+        if self.selectedSensor in [0,1,2,3,4,5]:
+            currentUnit = "Pa"
+        else:
+            currentUnit = "K"
+        self.ui.label_2.setText(currentUnit)
+        self.ui.label_3.setText(currentUnit)
+        self.ui.label_4.setText(currentUnit)
 
     #enable lineEdit corresponding to selected radioButton, disable the others
     @Slot()
@@ -290,15 +371,22 @@ class GSCalibration(QDialog):
             case 2:
                 currentEntry = self.ui.lineEdit_3.text()
                 currentUnit = self.ui.label_4.text()
+        digitalValue = DataHandling.readFrame(DataHandling.GetSaveFrame[-1].contents.data, self.selectedSensor)
+        DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
-        self.ui.label.setText(currentEntry + " " + currentUnit)
 
 class DataHandlingThread(QThread):
+    def __init__(self, mainWindow, calibrationWindow):
+        super().__init__()
+        self.mainWindow = mainWindow
+        self.calibrationWindow = calibrationWindow
     def run(self):
         period_ms = 1000 / 20
         while True:
             clock = time.monotonic_ns()
             DataHandling.UpdateAll()
+            self.mainWindow.fetchStatus()
+            self.calibrationWindow.updateValue()
             if self.isInterruptionRequested():
                break
             self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
@@ -314,12 +402,6 @@ if __name__ == "__main__":
     if translator.load(settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
 
-    #DataHandling setup
-    DataHandling.Initialize(b"")
-    dataHandlingThread = DataHandlingThread()
-    GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
-    dataHandlingThread.start()
-
     #window objects creation
     GSmain = GSMain(settings)
     GSstart = GSStart(settings)
@@ -330,6 +412,12 @@ if __name__ == "__main__":
     GSresults = GSResults()
     GSconnection = GSConnection()
     GScalibration = GSCalibration()
+
+    #DataHandling setup
+    DataHandling.Initialize(b"")
+    dataHandlingThread = DataHandlingThread(GSmain, GScalibration)
+    GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
+    dataHandlingThread.start()
 
     #inter-window connections
     GSmain.ui.actionRestart.triggered.connect(GSstart.show)

@@ -432,7 +432,7 @@
             </widget>
            </item>
            <item row="4" column="6">
-            <widget class="QLabel" name="statusLabel_15">
+            <widget class="QLabel" name="statusLabelTNozzle2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -446,7 +446,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -470,7 +470,7 @@
             </widget>
            </item>
            <item row="5" column="6">
-            <widget class="QLabel" name="statusLabel_16">
+            <widget class="QLabel" name="statusLabelTNozzle3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -484,7 +484,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -508,7 +508,7 @@
             </widget>
            </item>
            <item row="0" column="6">
-            <widget class="QLabel" name="statusLabel_11">
+            <widget class="QLabel" name="statusLabelTCompare">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -522,7 +522,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -579,7 +579,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QLabel" name="statusLabel_2">
+            <widget class="QLabel" name="statusLabelTChip">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -593,7 +593,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -607,7 +607,7 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="statusLabel_0">
+            <widget class="QLabel" name="statusLabelMainboard">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -621,7 +621,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -635,7 +635,7 @@
             </widget>
            </item>
            <item row="1" column="8">
-            <widget class="QLabel" name="statusLabel_18">
+            <widget class="QLabel" name="statusLabelSOE">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -649,7 +649,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -709,7 +709,7 @@
             </widget>
            </item>
            <item row="5" column="4">
-            <widget class="QLabel" name="statusLabel_10">
+            <widget class="QLabel" name="statusLabelPNozzle3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -723,7 +723,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -737,7 +737,7 @@
             </widget>
            </item>
            <item row="2" column="4">
-            <widget class="QLabel" name="statusLabel_7">
+            <widget class="QLabel" name="statusLabelPAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -751,7 +751,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -765,7 +765,7 @@
             </widget>
            </item>
            <item row="2" column="6">
-            <widget class="QLabel" name="statusLabel_13">
+            <widget class="QLabel" name="statusLabelTAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -779,7 +779,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -793,7 +793,7 @@
             </widget>
            </item>
            <item row="0" column="8">
-            <widget class="QLabel" name="statusLabel_17">
+            <widget class="QLabel" name="statusLabelLiftOff">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -807,7 +807,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -821,7 +821,7 @@
             </widget>
            </item>
            <item row="3" column="4">
-            <widget class="QLabel" name="statusLabel_8">
+            <widget class="QLabel" name="statusLabelPNozzle1">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -835,7 +835,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -866,7 +866,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLabel" name="statusLabel_1">
+            <widget class="QLabel" name="statusLabelPChip">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -880,7 +880,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -934,7 +934,7 @@
             </widget>
            </item>
            <item row="3" column="6">
-            <widget class="QLabel" name="statusLabel_14">
+            <widget class="QLabel" name="statusLabelTNozzle1">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -948,7 +948,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -962,7 +962,7 @@
             </widget>
            </item>
            <item row="1" column="6">
-            <widget class="QLabel" name="statusLabel_12">
+            <widget class="QLabel" name="statusLabelTReservoir">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -976,7 +976,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1000,7 +1000,7 @@
             </widget>
            </item>
            <item row="5" column="1">
-            <widget class="QLabel" name="statusLabel_4">
+            <widget class="QLabel" name="statusLabelValve">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1014,7 +1014,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1028,7 +1028,7 @@
             </widget>
            </item>
            <item row="0" column="4">
-            <widget class="QLabel" name="statusLabel_5">
+            <widget class="QLabel" name="statusLabelPAmbient">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1042,7 +1042,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1056,7 +1056,7 @@
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QLabel" name="statusLabel_3">
+            <widget class="QLabel" name="statusLabelServo">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1070,7 +1070,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1094,7 +1094,7 @@
             </widget>
            </item>
            <item row="1" column="4">
-            <widget class="QLabel" name="statusLabel_6">
+            <widget class="QLabel" name="statusLabelPReservoir">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1108,7 +1108,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1122,7 +1122,7 @@
             </widget>
            </item>
            <item row="2" column="8">
-            <widget class="QLabel" name="statusLabel_19">
+            <widget class="QLabel" name="statusLabelLED">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1136,7 +1136,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -1170,7 +1170,7 @@
             </widget>
            </item>
            <item row="4" column="4">
-            <widget class="QLabel" name="statusLabel_9">
+            <widget class="QLabel" name="statusLabelPNozzle2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1184,7 +1184,7 @@
               </size>
              </property>
              <property name="frameShape">
-              <enum>QFrame::Shape::Panel</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Sunken</enum>
@@ -2180,7 +2180,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>23</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="font">
