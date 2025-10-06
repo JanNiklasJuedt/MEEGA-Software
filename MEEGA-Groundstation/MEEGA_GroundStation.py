@@ -276,10 +276,9 @@ class GSError(QDialog):
 
  ###Baustelle:
         
-        #Hook, wenn sich ein knopf ändert
-         ****
-        # Knöpfe per enable ausschalten
-
+        #Hook, wenn sich ein knopf ï¿½ndert
+        # Knï¿½pfe per enable ausschalten
+  
 class GSControl(QWidget):
     def __init__(self, settings: Settings):
         super().__init__()
@@ -288,112 +287,94 @@ class GSControl(QWidget):
         self.ui.setupUi(self)
 
         # Initialize control states
-        self.valve_state = "Closed"  # Default state !!soll false!!
-        self.led_state = "Off"      # Default state  !!soll false!!
-        self.camera_state = "Off"   # Default state  !!soll false!!
-        self.servo_angle = 0        # Default angle  !!boole Wert !!
-        self.test_run_active = False # Default state
-        self.dry_run_active = False # Default state
-        
+        self.valveControl = 0  # closed
+        self.ledState = 0      # False (Off)
+        self.servoAngle = 0 # in 1/10 Â°
+        self.dryRunActive = 0
+        self.testRunActive = 0  
         # Initialize duration values
-        self.preparation_duration = QTime(0, 0, 0)
-        self.experiment_duration = QTime(0, 0, 0)
-        self.shutdown_duration = QTime(0, 0, 0)
-        
+        self.preparationDuration = QTime(0, 0, 0)
+        self.experimentDuration = QTime(0, 0, 0)
+        self.shutdownDuration = QTime(0, 0, 0)
         # Connect signals to slots
-        self._connect_signals()
+        self.connectSignals()
         
-    def _connect_signals(self):
+    def connectSignals(self):
         # Valve controls
-        self.ui.pushButton.clicked.connect(self._on_valve_open)
-        self.ui.pushButton_2.clicked.connect(self._on_valve_close)
-        
+        self.ui.openValveButton.clicked.connect(self.openValve)
+        self.ui.closeValveButton.clicked.connect(self.closeValve)
         # Servo controls
-        self.ui.pushButton_3.clicked.connect(self._on_servo_set)
-        
+        self.ui.setServoButton.clicked.connect(self.setServoAngle)
         # LED controls
-        self.ui.pushButton_6.clicked.connect(self._on_led_on)
-        self.ui.pushButton_7.clicked.connect(self._on_led_off)
-        
-        # Camera controls
-        self.ui.pushButton_8.clicked.connect(self._on_camera_on)
-        self.ui.pushButton_9.clicked.connect(self._on_camera_off)
-        
+        self.ui.ledOnButton.clicked.connect(self.onLED)
+        self.ui.ledOffButton.clicked.connect(self.offLED)
         # Test run controls
-        self.ui.pushButton_4.clicked.connect(self._on_test_start)
-        self.ui.pushButton_5.clicked.connect(self._on_test_stop)
-        
+        self.ui.startTestButton.clicked.connect(self.startTest)
+        self.ui.stopTestButton.clicked.connect(self.stopTest)
         # Dry run control
-        self.ui.pushButton_13.clicked.connect(self._on_dry_run)
-        
+        self.ui.dryRunOnButton.clicked.connect(self.dryRunOn)
         # Duration time edits
-        self.ui.timeEdit_2.timeChanged.connect(self._on_preparation_duration_changed)
-        self.ui.timeEdit.timeChanged.connect(self._on_experiment_duration_changed)
-        self.ui.timeEdit_3.timeChanged.connect(self._on_shutdown_duration_changed)
-        
+        self.ui.prepTimeEdit.timeChanged.connect(self.setPreparationDuration)
+        self.ui.expTimeEdit.timeChanged.connect(self.setExperimentDuration)
+        self.ui.shutdTimeEdit.timeChanged.connect(self.setShutdownDuration)
         # Reset buttons
-        self.ui.pushButton_10.clicked.connect(self._on_reset_preparation)
-        self.ui.pushButton_11.clicked.connect(self._on_reset_experiment)
-        self.ui.pushButton_12.clicked.connect(self._on_reset_shutdown)
+        self.ui.prepResetButton.clicked.connect(self.resetPreparationDuration)
+        self.ui.expResetButton.clicked.connect(self.resetExperimentDuration)
+        self.ui.shutdResetButton.clicked.connect(self.resetShutdownDuration)
     
     # Valve control slots
-    def _on_valve_open(self):
-        self.valve_state = "Open"
-        
-    def _on_valve_close(self):
-        self.valve_state = "Closed"
-    
+    @Slot()
+    def openValve(self):
+        self.valveControl = 1
+        DataHandling.CreateTC()
+    @Slot()
+    def closeValve(self):
+        self.valveControl = 0
     # Servo control slot
-    def _on_servo_set(self):
-        self.servo_angle = self.ui.doubleSpinBox.value()
-    
+    @Slot()
+    def setServoAngle(self):
+        self.servoAngle = self.ui.servoValueBox.value()
     # LED control slots
-    def _on_led_on(self):
-        self.led_state = "On"
-        
-    def _on_led_off(self):
-        self.led_state = "Off"
-    
-    # Camera control slots
-    def _on_camera_on(self):
-        self.camera_state = "On"
-        
-    def _on_camera_off(self):
-        self.camera_state = "Off"
-    
+    @Slot()
+    def onLED(self):
+        self.ledState = 0
+    @Slot()
+    def offLED(self):
+        self.ledState = 1
     # Test run control slots
-    def _on_test_start(self):
-        self.test_run_active = True
-        
-    def _on_test_stop(self):
-        self.test_run_active = False
-    
+    @Slot()
+    def startTest(self):
+        self.testRunActive = 1
+    @Slot()
+    def stopTest(self):
+        self.testRunActive = 0
     # Dry run control slot
-    def _on_dry_run(self):
-        self.dry_run_active = True
-    
+    @Slot()
+    def dryRunOn(self):
+        self.dryRunActive = 1
     # Duration change slots
-    def _on_preparation_duration_changed(self, time):
-        self.preparation_duration = time
-        
-    def _on_experiment_duration_changed(self, time):
-        self.experiment_duration = time
-        
-    def _on_shutdown_duration_changed(self, time):
-        self.shutdown_duration = time
-    
+    @Slot()
+    def setPreparationDuration(self, time):
+        self.preparationDuration = time
+    @Slot()
+    def setExperimentDuration(self, time):
+        self.experimentDuration = time
+    @Slot()
+    def setShutdownDuration(self, time):
+        self.shutdownDuration = time
     # Reset duration slots
-    def _on_reset_preparation(self):
-        self.ui.timeEdit_2.setTime(QTime(0, 0, 0))
-        self.preparation_duration = QTime(0, 0, 0)
-        
-    def _on_reset_experiment(self):
-        self.ui.timeEdit.setTime(QTime(0, 0, 0))
-        self.experiment_duration = QTime(0, 0, 0)
-        
-    def _on_reset_shutdown(self):
-        self.ui.timeEdit_3.setTime(QTime(0, 0, 0))
-        self.shutdown_duration = QTime(0, 0, 0)
+    @Slot()
+    def resetPreparationDuration(self):
+        self.ui.prepTimeEdit.setTime(QTime(0, 0, 0))
+        self.preparationDuration = QTime(0, 0, 0)
+    @Slot()
+    def resetExperimentDuration(self):
+        self.ui.expTimeEdit.setTime(QTime(0, 0, 0))
+        self.experimentDuration = QTime(0, 0, 0)
+    @Slot()
+    def resetShutdownDuration(self):
+        self.ui.shutdTimeEdit.setTime(QTime(0, 0, 0))
+        self.shutdownDuration = QTime(0, 0, 0)
 
     @Slot()
     def fetchSettings(self):
@@ -401,7 +382,7 @@ class GSControl(QWidget):
         return {
             'valve_state': self.valve_state,
             'led_state': self.led_state,
-            'camera_state': self.camera_state,                  #!!Umbennen und für telecommand benutzen!!
+            'camera_state': self.camera_state,                  #!!Umbennen und fï¿½r telecommand benutzen!!
             'servo_angle': self.servo_angle,                   #!!return funktioniert nicht gut mit Signal&Slots!!
             'test_run_active': self.test_run_active,
             'dry_run_active': self.dry_run_active,
@@ -409,8 +390,6 @@ class GSControl(QWidget):
             'experiment_duration': self.experiment_duration,
             'shutdown_duration': self.shutdown_duration
         }
-
-   
 
 class GSConnection(QDialog):
     def __init__(self):
@@ -539,7 +518,7 @@ if __name__ == "__main__":
     #window objects creation
     GSmain = GSMain(settings)
     GSstart = GSStart(settings)
-    GScontrol = GSControl()
+    GScontrol = GSControl(settings)
     GStime = GSLaunchTime(settings)
     GSdocument = GSDocumentation()
     GSerror = GSError()

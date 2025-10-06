@@ -24,7 +24,7 @@ class Ui_controlPanel(object):
     def setupUi(self, controlPanel):
         if not controlPanel.objectName():
             controlPanel.setObjectName(u"controlPanel")
-        controlPanel.resize(400, 411)
+        controlPanel.resize(400, 448)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -52,15 +52,15 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton = QPushButton(self.groupBox)
-        self.pushButton.setObjectName(u"pushButton")
+        self.openValveButton = QPushButton(self.groupBox)
+        self.openValveButton.setObjectName(u"openValveButton")
 
-        self.horizontalLayout.addWidget(self.pushButton)
+        self.horizontalLayout.addWidget(self.openValveButton)
 
-        self.pushButton_2 = QPushButton(self.groupBox)
-        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.closeValveButton = QPushButton(self.groupBox)
+        self.closeValveButton.setObjectName(u"closeValveButton")
 
-        self.horizontalLayout.addWidget(self.pushButton_2)
+        self.horizontalLayout.addWidget(self.closeValveButton)
 
 
         self.formLayout.setLayout(0, QFormLayout.ItemRole.FieldRole, self.horizontalLayout)
@@ -72,16 +72,16 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.doubleSpinBox = QDoubleSpinBox(self.groupBox)
-        self.doubleSpinBox.setObjectName(u"doubleSpinBox")
-        self.doubleSpinBox.setMaximum(360.000000000000000)
+        self.servoValueBox = QDoubleSpinBox(self.groupBox)
+        self.servoValueBox.setObjectName(u"servoValueBox")
+        self.servoValueBox.setMaximum(90.000000000000000)
 
-        self.horizontalLayout_2.addWidget(self.doubleSpinBox)
+        self.horizontalLayout_2.addWidget(self.servoValueBox)
 
-        self.pushButton_3 = QPushButton(self.groupBox)
-        self.pushButton_3.setObjectName(u"pushButton_3")
+        self.setServoButton = QPushButton(self.groupBox)
+        self.setServoButton.setObjectName(u"setServoButton")
 
-        self.horizontalLayout_2.addWidget(self.pushButton_3)
+        self.horizontalLayout_2.addWidget(self.setServoButton)
 
 
         self.formLayout.setLayout(1, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_2)
@@ -108,38 +108,18 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.pushButton_6 = QPushButton(self.groupBox)
-        self.pushButton_6.setObjectName(u"pushButton_6")
+        self.ledOnButton = QPushButton(self.groupBox)
+        self.ledOnButton.setObjectName(u"ledOnButton")
 
-        self.horizontalLayout_4.addWidget(self.pushButton_6)
+        self.horizontalLayout_4.addWidget(self.ledOnButton)
 
-        self.pushButton_7 = QPushButton(self.groupBox)
-        self.pushButton_7.setObjectName(u"pushButton_7")
+        self.ledOffButton = QPushButton(self.groupBox)
+        self.ledOffButton.setObjectName(u"ledOffButton")
 
-        self.horizontalLayout_4.addWidget(self.pushButton_7)
+        self.horizontalLayout_4.addWidget(self.ledOffButton)
 
 
         self.formLayout_3.setLayout(0, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_4)
-
-        self.label_5 = QLabel(self.groupBox)
-        self.label_5.setObjectName(u"label_5")
-
-        self.formLayout_3.setWidget(1, QFormLayout.ItemRole.LabelRole, self.label_5)
-
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.pushButton_8 = QPushButton(self.groupBox)
-        self.pushButton_8.setObjectName(u"pushButton_8")
-
-        self.horizontalLayout_5.addWidget(self.pushButton_8)
-
-        self.pushButton_9 = QPushButton(self.groupBox)
-        self.pushButton_9.setObjectName(u"pushButton_9")
-
-        self.horizontalLayout_5.addWidget(self.pushButton_9)
-
-
-        self.formLayout_3.setLayout(1, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_5)
 
 
         self.verticalLayout_2.addLayout(self.formLayout_3)
@@ -161,15 +141,15 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.pushButton_4 = QPushButton(self.groupBox_2)
-        self.pushButton_4.setObjectName(u"pushButton_4")
+        self.startTestButton = QPushButton(self.groupBox_2)
+        self.startTestButton.setObjectName(u"startTestButton")
 
-        self.horizontalLayout_3.addWidget(self.pushButton_4)
+        self.horizontalLayout_3.addWidget(self.startTestButton)
 
-        self.pushButton_5 = QPushButton(self.groupBox_2)
-        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.stopTestButton = QPushButton(self.groupBox_2)
+        self.stopTestButton.setObjectName(u"stopTestButton")
 
-        self.horizontalLayout_3.addWidget(self.pushButton_5)
+        self.horizontalLayout_3.addWidget(self.stopTestButton)
 
 
         self.formLayout_2.setLayout(0, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
@@ -185,17 +165,17 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.timeEdit_2 = QTimeEdit(self.groupBox_2)
-        self.timeEdit_2.setObjectName(u"timeEdit_2")
-        self.timeEdit_2.setMaximumTime(QTime(0, 59, 59))
-        self.timeEdit_2.setCurrentSection(QDateTimeEdit.Section.SecondSection)
+        self.prepTimeEdit = QTimeEdit(self.groupBox_2)
+        self.prepTimeEdit.setObjectName(u"prepTimeEdit")
+        self.prepTimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.prepTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_6.addWidget(self.timeEdit_2)
+        self.horizontalLayout_6.addWidget(self.prepTimeEdit)
 
-        self.pushButton_10 = QPushButton(self.groupBox_2)
-        self.pushButton_10.setObjectName(u"pushButton_10")
+        self.prepResetButton = QPushButton(self.groupBox_2)
+        self.prepResetButton.setObjectName(u"prepResetButton")
 
-        self.horizontalLayout_6.addWidget(self.pushButton_10)
+        self.horizontalLayout_6.addWidget(self.prepResetButton)
 
 
         self.formLayout_2.setLayout(2, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_6)
@@ -207,17 +187,17 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.timeEdit = QTimeEdit(self.groupBox_2)
-        self.timeEdit.setObjectName(u"timeEdit")
-        self.timeEdit.setMaximumTime(QTime(0, 59, 59))
-        self.timeEdit.setCurrentSection(QDateTimeEdit.Section.SecondSection)
+        self.expTimeEdit = QTimeEdit(self.groupBox_2)
+        self.expTimeEdit.setObjectName(u"expTimeEdit")
+        self.expTimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.expTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_7.addWidget(self.timeEdit)
+        self.horizontalLayout_7.addWidget(self.expTimeEdit)
 
-        self.pushButton_11 = QPushButton(self.groupBox_2)
-        self.pushButton_11.setObjectName(u"pushButton_11")
+        self.expResetButton = QPushButton(self.groupBox_2)
+        self.expResetButton.setObjectName(u"expResetButton")
 
-        self.horizontalLayout_7.addWidget(self.pushButton_11)
+        self.horizontalLayout_7.addWidget(self.expResetButton)
 
 
         self.formLayout_2.setLayout(3, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_7)
@@ -229,17 +209,17 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.timeEdit_3 = QTimeEdit(self.groupBox_2)
-        self.timeEdit_3.setObjectName(u"timeEdit_3")
-        self.timeEdit_3.setMaximumTime(QTime(0, 59, 59))
-        self.timeEdit_3.setCurrentSection(QDateTimeEdit.Section.SecondSection)
+        self.shutdTimeEdit = QTimeEdit(self.groupBox_2)
+        self.shutdTimeEdit.setObjectName(u"shutdTimeEdit")
+        self.shutdTimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.shutdTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_8.addWidget(self.timeEdit_3)
+        self.horizontalLayout_8.addWidget(self.shutdTimeEdit)
 
-        self.pushButton_12 = QPushButton(self.groupBox_2)
-        self.pushButton_12.setObjectName(u"pushButton_12")
+        self.shutdResetButton = QPushButton(self.groupBox_2)
+        self.shutdResetButton.setObjectName(u"shutdResetButton")
 
-        self.horizontalLayout_8.addWidget(self.pushButton_12)
+        self.horizontalLayout_8.addWidget(self.shutdResetButton)
 
 
         self.formLayout_2.setLayout(4, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_8)
@@ -251,10 +231,10 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.pushButton_13 = QPushButton(self.groupBox_2)
-        self.pushButton_13.setObjectName(u"pushButton_13")
+        self.dryRunOnButton = QPushButton(self.groupBox_2)
+        self.dryRunOnButton.setObjectName(u"dryRunOnButton")
 
-        self.horizontalLayout_9.addWidget(self.pushButton_13)
+        self.horizontalLayout_9.addWidget(self.dryRunOnButton)
 
 
         self.formLayout_2.setLayout(5, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_9)
@@ -272,30 +252,27 @@ class Ui_controlPanel(object):
         controlPanel.setWindowTitle(QCoreApplication.translate("controlPanel", u"MEEGA - Control Panel", None))
         self.groupBox.setTitle(QCoreApplication.translate("controlPanel", u"Experiment Control", None))
         self.label.setText(QCoreApplication.translate("controlPanel", u"Valve", None))
-        self.pushButton.setText(QCoreApplication.translate("controlPanel", u"Open", None))
-        self.pushButton_2.setText(QCoreApplication.translate("controlPanel", u"Close", None))
+        self.openValveButton.setText(QCoreApplication.translate("controlPanel", u"Open", None))
+        self.closeValveButton.setText(QCoreApplication.translate("controlPanel", u"Close", None))
         self.label_2.setText(QCoreApplication.translate("controlPanel", u"Servo", None))
-        self.pushButton_3.setText(QCoreApplication.translate("controlPanel", u"Set", None))
+        self.setServoButton.setText(QCoreApplication.translate("controlPanel", u"Set", None))
         self.label_4.setText(QCoreApplication.translate("controlPanel", u"LEDs", None))
-        self.pushButton_6.setText(QCoreApplication.translate("controlPanel", u"On", None))
-        self.pushButton_7.setText(QCoreApplication.translate("controlPanel", u"Off", None))
-        self.label_5.setText(QCoreApplication.translate("controlPanel", u"Camera", None))
-        self.pushButton_8.setText(QCoreApplication.translate("controlPanel", u"On", None))
-        self.pushButton_9.setText(QCoreApplication.translate("controlPanel", u"Off", None))
+        self.ledOnButton.setText(QCoreApplication.translate("controlPanel", u"On", None))
+        self.ledOffButton.setText(QCoreApplication.translate("controlPanel", u"Off", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("controlPanel", u"Test Mode", None))
         self.label_3.setText(QCoreApplication.translate("controlPanel", u"Test Run", None))
-        self.pushButton_4.setText(QCoreApplication.translate("controlPanel", u"Start", None))
-        self.pushButton_5.setText(QCoreApplication.translate("controlPanel", u"Stop", None))
+        self.startTestButton.setText(QCoreApplication.translate("controlPanel", u"Start", None))
+        self.stopTestButton.setText(QCoreApplication.translate("controlPanel", u"Stop", None))
         self.label_7.setText(QCoreApplication.translate("controlPanel", u"Preparation Duration", None))
-        self.timeEdit_2.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.pushButton_10.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.prepTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.prepResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
         self.label_6.setText(QCoreApplication.translate("controlPanel", u"Experiment Duration", None))
-        self.timeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.pushButton_11.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.expTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.expResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
         self.label_8.setText(QCoreApplication.translate("controlPanel", u"Shutdown Duration", None))
-        self.timeEdit_3.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.pushButton_12.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.shutdTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.shutdResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
         self.label_9.setText(QCoreApplication.translate("controlPanel", u"Dry Run", None))
-        self.pushButton_13.setText(QCoreApplication.translate("controlPanel", u"On", None))
+        self.dryRunOnButton.setText(QCoreApplication.translate("controlPanel", u"On", None))
     # retranslateUi
 

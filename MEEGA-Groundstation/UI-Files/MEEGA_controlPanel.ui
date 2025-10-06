@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>411</height>
+    <height>448</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -53,14 +53,14 @@
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="openValveButton">
             <property name="text">
              <string>Open</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="closeValveButton">
             <property name="text">
              <string>Close</string>
             </property>
@@ -78,14 +78,14 @@
         <item row="1" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QDoubleSpinBox" name="doubleSpinBox">
+           <widget class="QDoubleSpinBox" name="servoValueBox">
             <property name="maximum">
-             <double>360.000000000000000</double>
+             <double>90.000000000000000</double>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="setServoButton">
             <property name="text">
              <string>Set</string>
             </property>
@@ -126,39 +126,14 @@
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QPushButton" name="pushButton_6">
+           <widget class="QPushButton" name="ledOnButton">
             <property name="text">
              <string>On</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_7">
-            <property name="text">
-             <string>Off</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Camera</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QPushButton" name="pushButton_8">
-            <property name="text">
-             <string>On</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_9">
+           <widget class="QPushButton" name="ledOffButton">
             <property name="text">
              <string>Off</string>
             </property>
@@ -199,14 +174,14 @@
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QPushButton" name="pushButton_4">
+         <widget class="QPushButton" name="startTestButton">
           <property name="text">
            <string>Start</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_5">
+         <widget class="QPushButton" name="stopTestButton">
           <property name="text">
            <string>Stop</string>
           </property>
@@ -240,7 +215,7 @@
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
-         <widget class="QTimeEdit" name="timeEdit_2">
+         <widget class="QTimeEdit" name="prepTimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -249,7 +224,7 @@
            </time>
           </property>
           <property name="currentSection">
-           <enum>QDateTimeEdit::Section::SecondSection</enum>
+           <enum>QDateTimeEdit::Section::MinuteSection</enum>
           </property>
           <property name="displayFormat">
            <string>mm:ss</string>
@@ -257,7 +232,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_10">
+         <widget class="QPushButton" name="prepResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -275,7 +250,7 @@
       <item row="3" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <widget class="QTimeEdit" name="timeEdit">
+         <widget class="QTimeEdit" name="expTimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -284,7 +259,7 @@
            </time>
           </property>
           <property name="currentSection">
-           <enum>QDateTimeEdit::Section::SecondSection</enum>
+           <enum>QDateTimeEdit::Section::MinuteSection</enum>
           </property>
           <property name="displayFormat">
            <string>mm:ss</string>
@@ -292,7 +267,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_11">
+         <widget class="QPushButton" name="expResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -310,7 +285,7 @@
       <item row="4" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <item>
-         <widget class="QTimeEdit" name="timeEdit_3">
+         <widget class="QTimeEdit" name="shutdTimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -319,7 +294,7 @@
            </time>
           </property>
           <property name="currentSection">
-           <enum>QDateTimeEdit::Section::SecondSection</enum>
+           <enum>QDateTimeEdit::Section::MinuteSection</enum>
           </property>
           <property name="displayFormat">
            <string>mm:ss</string>
@@ -327,7 +302,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_12">
+         <widget class="QPushButton" name="shutdResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -345,7 +320,7 @@
       <item row="5" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_9">
         <item>
-         <widget class="QPushButton" name="pushButton_13">
+         <widget class="QPushButton" name="dryRunOnButton">
           <property name="text">
            <string>On</string>
           </property>
