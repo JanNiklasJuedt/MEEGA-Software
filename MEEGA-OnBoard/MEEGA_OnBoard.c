@@ -5,11 +5,16 @@
 #include <pthread.h>
 #include "DataHandlingLibrary.h"
 #include <stdlib.h>
+#include <stdint.h>
+
 
 #define DEBUG
 //Mode; SoE; LO; Valve; Nozzle Feedback: For DEBUG Test value must be 1, else 0
 #define SERVO_WO_PWM
 //#define SERVO_WO_PWMv2
+//#define WIRINGPISPI
+//#define SPIDEV
+
 #ifdef DEBUG
 
 #define HIGH 1
@@ -98,6 +103,26 @@ static inline int analogRead(int pin) {
 #ifdef SERVO_WO_PWM
 #include <softPwm.h>	//Include softPwm library for PWM control without PWM-Board
 #endif
+#endif
+
+#ifdef WIRINGPISPI
+#include <wiringPiSPI.h>	//Include wiringPiSPI library for SPI control
+
+#define SPI_PRESSURE 0	//SPI Channel 0
+#define PRESSURE_SENSORS 6
+
+#define SPI_TEMPERATURE 1	//SPI Channel 1
+#define TEMPERATURE_SENSORS 6
+#endif
+
+#ifdef SPIDEV
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
+
+#define SPI_PRESSURE "/dev/spidev0.0"
+#define SPI_TEMPERATURE "/dev/spidev0.1"
 #endif
 
 #define LEDs_Pin 4	//pin
@@ -468,6 +493,67 @@ int ExperimentControl() {
 #endif
 
 
+//#############################################################################################################################################################//
+//################################################################## SPI FOR SEMSORS LOGGING ##################################################################//
+//#############################################################################################################################################################//
+#ifdef SPIDEV
+static int InitializeSPI(const char* device, uint8_t mode, uint32_t speed) {
+	int fd = open(device, O_RDWR);
+	uint8_t mode = SPI_MODE_0;
+	uint32_t speed = 1000000;
+
+	if (fd < 0) return -1; // Failed to open device
+	
+	// Set SPI mode
+	if (ioctl(fd, SPI_IOC_WR_MODE, &mode) == -1) { // Failed to set SPI mode
+		close(fd);
+		return -1;
+	}
+	
+	// Set max speed
+	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) == -1) { // Failed to set max speed
+		close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+static void TransferSPI(int fd, uint8_t* txBuf, uint8_t* rxBuf, size_t length) {
+	struct spi_ioc_transfer trf = {
+		.tx_buf = (unsigned long)txBuf,
+		.rx_buf = (unsigned long)rxBuf,
+		.len = length,
+		.delay_usecs = 0,
+		.speed_hz = 1000000,
+		.bits_per_word = 8,
+	};
+	ioctl(fd, SPI_IOC_MESSAGE(1), &trf);
+}
+#endif
+
+#ifdef WIRINGPISPI
+float pressureRead[PRESSURE_SENSORS];
+float temperatureRead[TEMPERATURE_SENSORS];
+
+void ReadPressureSensors(float* Sensors) {
+	uint8_t txBuf[1] = { 0xA1 }; // Request data from channel 0
+	uint8_t rxBuf[PRESSURE_SENSORS * sizeof(float)] = {0};
+	wiringPiSPIDataRW(SPI_PRESSURE, txBuf, sizeof(txBuf));
+	wiringPiSPIDataRW(SPI_PRESSURE, rxBuf, sizeof(rxBuf));
+	
+	memcpy(Sensors, rxBuf, sizeof(rxBuf));
+}
+
+void ReadTemperatureSensors(float* Sensors) {
+	uint8_t txBuf[1] = { 0xA1 }; // Request data from channel 0
+	uint8_t rxBuf[TEMPERATURE_SENSORS * sizeof(float)] = { 0 };
+	wiringPiSPIDataRW(SPI_TEMPERATURE, txBuf, sizeof(txBuf));
+	wiringPiSPIDataRW(SPI_TEMPERATURE, rxBuf, sizeof(rxBuf));
+
+	memcpy(Sensors, rxBuf, sizeof(rxBuf));
+}
+#endif
+
 
 //###########################################################################################################################################################################//
 //################################################################## START OF DATA ACQUISITION AND LOGGING ##################################################################//
@@ -498,19 +584,22 @@ void DataAcquisition(DataFrame* frame) {
 	int mainboard = 0;			//Mainboard is not implemented yet ?
 	int ExperimentStatus = 1;
 #else
+	ReadPressureSensors(pressureRead);
+	ReadTemperatureSensors(temperatureRead);
+
 	int SystemTime = clock();	//System Time
-	int AmbientPressure = analogRead(0);
-	int CompareTemperature = analogRead(1);
-	int TankPressure = analogRead(2);
-	int TankTemperature = analogRead(3);
-	int ChamberPressure = analogRead(4);
-	int ChamberTemperature = analogRead(5);
-	int NozzlePressure_1 = analogRead(6);
-	int NozzlePressure_2 = analogRead(16);
-	int NozzlePressure_3 = analogRead(26);
-	int NozzleTemperature_1 = analogRead(7);
-	int NozzleTemperature_2 = analogRead(17);
-	int NozzleTemperature_3 = analogRead(27);
+	float AmbientPressure = pressureRead[0];
+	float CompareTemperature = temperatureRead[0];
+	float TankPressure = pressureRead[1];
+	float TankTemperature = temperatureRead[1];
+	float ChamberPressure = pressureRead[2];
+	float ChamberTemperature = temperatureRead[2];
+	float NozzlePressure_1 = pressureRead[3];
+	float NozzlePressure_2 = pressureRead[4];
+	float NozzlePressure_3 = pressureRead[5];
+	float NozzleTemperature_1 = temperatureRead[3];
+	float NozzleTemperature_2 = temperatureRead[4];
+	float NozzleTemperature_3 = temperatureRead[5];
 	int NozzleCover_1 = digitalRead(Nozzle_Cover_S1);	//Nozzle Cover Feedback: fully close
 	int NozzleCover_2 = digitalRead(Nozzle_Cover_S2);	//Nozzle Cover Feedback: fully open
 	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
