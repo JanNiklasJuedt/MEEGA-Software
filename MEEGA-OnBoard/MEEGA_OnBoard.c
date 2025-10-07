@@ -25,8 +25,8 @@ static inline void pinMode(int pin, int mode) {
 	case 29: pinStr = "Valve_Pin"; break;
 	case 01: pinStr = "ValveSwitch"; break;
 	case 34: pinStr = "Servo_Pin"; break;
-	case 50: pinStr = "Nozzle_Cover_1"; break;
-	case 48: pinStr = "Nozzle_Cover_2"; break;
+	case 50: pinStr = "Nozzle_Cover_S1"; break;
+	case 48: pinStr = "Nozzle_Cover_S2"; break;
 	case 41: pinStr = "RPi_SOE"; break;
 	case 47: pinStr = "RPi_LO";break;
 	default: break;
@@ -57,8 +57,8 @@ static inline int digitalRead(int pin) {
 	char* pinStr = " ";
 	switch (pin) {
 	case 01: pinStr = "ValveSwitch"; break;
-	case 50: pinStr = "Nozzle_Cover_1"; break;
-	case 48: pinStr = "Nozzle_Cover_2"; break;
+	case 50: pinStr = "Nozzle_Cover_S1"; break;
+	case 48: pinStr = "Nozzle_Cover_S2"; break;
 	case 41: pinStr = "RPi_SOE"; break;
 	case 47: pinStr = "RPi_LO";break;
 	default: break;
@@ -105,8 +105,8 @@ static inline int analogRead(int pin) {
 #define ValveSwitch 01	//pin
 #define Servo_Pin 12	//pin
 #define Servo_On 5	//pin
-#define Nozzle_Cover_1 17	//Nozzle Cover fully closed Feedback
-#define Nozzle_Cover_2 27	//Nozzle Cover fully opened Feedback
+#define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
 
 #define RPi_SOE 25	//pin
 #define RPi_LO 23	//pin
@@ -127,9 +127,9 @@ int SoESignal() {
 }
 
 struct parameter {
-	int Mode, ValveDelay, ServoDelay, ManualServoDelay, EoEDelay, PoweroffDelay, FDA20, BDA2, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset;
+	int Mode, ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, FDA20, BDA2, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset, ServoRetryDelay;
 };
-struct parameter flightstandard = { .Mode = 1, .NoseConeSeparation = 10000, .AfterLO = 55000, .ValveDelay = 5000, .ServoDelay = 6000, .ManualServoDelay = 20000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 1000, .ServoAngle = 90 };
+struct parameter flightstandard = { .Mode = 1, .NoseConeSeparation = 10000, .AfterLO = 55000, .ValveDelay = 5000, .ServoDelay = 6000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 1000, .ServoAngle = 90, .ServoRetryDelay = 3000 };
 struct parameter dryrunstandard = { .Mode = 2, .ValveDelay = 5000, .ServoDelay = 6000, .EoEDelay = 30000, .PoweroffDelay = 1000, .NozzleOnCDelay = 3000, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter testrun = { .Mode = 2, .ServoAngle = 30, .ServoAngleReset = 0 };
 struct parameter DEBUGstandard = { .Mode = 3, .AfterLO = 5000, .EoEDelay = 3000 };
@@ -280,7 +280,7 @@ int ExperimentRun(struct parameter parameter) {
 		printf("*Input Nozzle Status 1 for fully open, 0 for stuck close (std: fully open): "); scanf_s("%d", &NozzlePos);
 		if (NozzlePos == 1) {
 #else
-		if (digitalRead(Nozzle_Cover_2)) {
+		if (digitalRead(Nozzle_Cover_S2)) {
 #endif
 			//Feedback signal
 #ifdef DEBUG
@@ -298,7 +298,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 		else if (NozzlePos == 0) {
 #else
-		else if (digitalRead(Nozzle_Cover_1)) {
+		else if (digitalRead(Nozzle_Cover_S1)) {
 #endif
 			//Nozzle Cover Problem: in close position
 #ifdef SERVO_WO_PWM
@@ -313,7 +313,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 			if (NozzlePos == 1) {
 #else
-			if (digitalRead(Nozzle_Cover_2)) {
+			if (digitalRead(Nozzle_Cover_S2)) {
 #endif
 #ifdef DEBUG
 				printf("Nozzle Cover is opened\n");
@@ -328,22 +328,32 @@ int ExperimentRun(struct parameter parameter) {
 				EoE = 1; //Successful End of Experiment
 			}
 			else {
-				//Manual override to open the nozzle cover
+				//Attempt to open the nozzle cover
+				int Nozzle_Cover = 0; // Close
+				for (int i = 0; i < 3; i++) {	//-------------------------------------------------CHANGEABLE NUMBER OF ATTEMPTS--------------------------------------------------
 #ifdef DEBUG
-				while (NozzlePos != 1) {
+					printf("Attempt open nozzle: "); scanf_s("%d", &NozzlePos);
+					delay(parameter.NozzleOnCDelay);
 #else
-				while (!digitalRead(Nozzle_Cover_2)) {
+					digitalWrite(Servo_Pin,1);
+					delay(parameter.ServoRetryDelay);
+					digitalWrite(Servo_Pin, 0);
+					delay(parameter.NozzleOnCDelay);
 #endif
 #ifdef DEBUG
-					printf("Attempt to open nozzle: "); scanf_s("%d", &NozzlePos);
+					if (NozzlePos == 1) {
 #else
-					ServoRotation(parameter.ServoAngle);
+					if (digitalRead(Nozzle_Cover_S2)) {
 #endif
+						Nozzle_Cover = 1; // Open
+						break;
+					}
 				}
+
+				if (Nozzle_Cover == 1) {
 #ifdef DEBUG
-				if (NozzlePos == 1) {
+					printf("Nozzle Cover is opened\n");
 #else
-				if (digitalRead(Nozzle_Cover_2)) {
 					nozzleStatus = NozzleOpen;
 #endif
 					delay(parameter.EoEDelay);
@@ -352,7 +362,7 @@ int ExperimentRun(struct parameter parameter) {
 #ifdef DEBUG
 				else if (NozzlePos == 0) printf("Nozzle Cover is stuck in close position\n");
 #else
-				else if (digitalRead(Nozzle_Cover_1)) nozzleStatus = NozzleStuck;
+				else if (digitalRead(Nozzle_Cover_S1)) nozzleStatus = NozzleStuck;
 #endif
 			}
 		}
@@ -478,12 +488,13 @@ void DataAcquisition(DataFrame* frame) {
 	int NozzleTemperature_1 = 78;
 	int NozzleTemperature_2 = 83;
 	int NozzleTemperature_3 = 79;
-	int NozzleCover = 1;	//Nozzle Cover Feedback: fully open
+	int NozzleCover_1 = 0;	//Nozzle Cover Feedback: fully close
+	int NozzleCover_2 = 1;	//Nozzle Cover Feedback: fully open
 	int NozzleServo = 1;	//Nozzle Servo Switch
 	int ReservoirValve = 1;	//Reservoir Valve
 	int LEDsStat = 1;
-	int sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
-	int sensorboard_2 = 0;
+	int Sensorboard_P = 0;		//Sensorboard is not implemented yet ?
+	int Sensorboard_T = 0;
 	int mainboard = 0;			//Mainboard is not implemented yet ?
 	int ExperimentStatus = 1;
 #else
@@ -500,12 +511,13 @@ void DataAcquisition(DataFrame* frame) {
 	int NozzleTemperature_1 = analogRead(7);
 	int NozzleTemperature_2 = analogRead(17);
 	int NozzleTemperature_3 = analogRead(27);
-	int NozzleCover = digitalRead(Nozzle_Cover_2);	//Nozzle Cover Feedback: fully open
+	int NozzleCover_1 = digitalRead(Nozzle_Cover_S1);	//Nozzle Cover Feedback: fully close
+	int NozzleCover_2 = digitalRead(Nozzle_Cover_S2);	//Nozzle Cover Feedback: fully open
 	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
 	int LEDsStat = digitalRead(LEDs_Pin);
-	int sensorboard_1 = 0;		//Sensorboard is not implemented yet ?
-	int sensorboard_2 = 0;
+	int Sensorboard_P = 0;		//Sensorboard is not implemented yet ?
+	int Sensorboard_T = 0;
 	int mainboard = 0;			//Mainboard is not implemented yet ?
 	//Experiment Status CHECK!
 #endif
@@ -523,12 +535,13 @@ void DataAcquisition(DataFrame* frame) {
 	WriteFrame(frame, Nozzle_Temperature_1, NozzleTemperature_1);
 	WriteFrame(frame, Nozzle_Temperature_2, NozzleTemperature_2);
 	WriteFrame(frame, Nozzle_Temperature_3, NozzleTemperature_3);
-	WriteFrame(frame, Nozzle_Cover, NozzleCover);
+	WriteFrame(frame, Nozzle_Cover_1, NozzleCover_1);
+	WriteFrame(frame, Nozzle_Cover_2, NozzleCover_2);
 	WriteFrame(frame, Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, Reservoir_Valve, ReservoirValve);
 	WriteFrame(frame, LEDs, LEDsStat);
-	WriteFrame(frame, Sensorboard_1, sensorboard_1);
-	WriteFrame(frame, Sensorboard_2, sensorboard_2);
+	WriteFrame(frame, Sensorboard_1, Sensorboard_P);
+	WriteFrame(frame, Sensorboard_2, Sensorboard_T);
 	WriteFrame(frame, Mainboard, mainboard);
 	WriteFrame(frame, Mode, ExperimentStatus);
 	WriteFrame(frame, Lift_Off, ExperimentStatus);
@@ -648,8 +661,8 @@ int main() {
 	pinMode(LEDs_Pin, OUTPUT);
 	pinMode(Servo_On, OUTPUT);
 
-	pinMode(Nozzle_Cover_1, INPUT);
-	pinMode(Nozzle_Cover_2, INPUT);
+	pinMode(Nozzle_Cover_S1, INPUT);
+	pinMode(Nozzle_Cover_S2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
@@ -661,8 +674,8 @@ int main() {
 	pinMode(LEDs_Pin, OUTPUT);
 	pinMode(Servo_On, OUTPUT);
 
-	pinMode(Nozzle_Cover_1, INPUT);
-	pinMode(Nozzle_Cover_2, INPUT);
+	pinMode(Nozzle_Cover_S1, INPUT);
+	pinMode(Nozzle_Cover_S2, INPUT);
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
@@ -701,6 +714,14 @@ int main() {
 		//int flightmode = 1;
 		//int testmode = 0;
 		int LOSignal = digitalRead(RPi_LO);
+
+		//RESET
+		SoEReceived = 0;
+		digitalWrite(Servo_On, 0);
+#ifdef DEBUG
+		ServoRotation(0);
+#endif
+		//RESET
 
 #ifdef DEBUG
 		int modeSel;
@@ -756,6 +777,7 @@ int main() {
 				case WAIT_SOE:
 					while (!SoESignal()) delay(100);
 					SoEReceived = 1;
+					digitalWrite(Servo_On, 1);
 #ifndef DEBUG
 					ExperimentStatus = Start_Experiment; //Experiment started
 #endif
@@ -772,7 +794,6 @@ int main() {
 
 				case EXPERIMENT_RUNNING:
 					if (!NozzleOpened) {
-						digitalWrite(Servo_On, 1);
 						int ExperimentRunStatus = ExperimentRun(config);
 						experimentRunning = 1;
 
@@ -806,12 +827,15 @@ int main() {
 #endif
 			while (!SoESignal()) delay(100);
 			SoEReceived = 1;
+			digitalWrite(Servo_On, 1);
 #ifdef DEBUG
 			config = dryrunstandard;
 			int valveTest = ValveRun(config);
 			if (valveTest != -1) {
 				int experimentTest = ExperimentRun(config);
-				if (experimentTest == -1) continue;
+				if (experimentTest == -1) {
+					continue;
+				}
 			}
 			else if (valveTest == -1) {
 				continue; //abort test
@@ -829,6 +853,7 @@ int main() {
 					int experimentTest = ExperimentRun(config);
 					if (experimentTest == -1) {
 						ExperimentStatus = End_Experiment;
+						digitalWrite(Servo_On, 0);
 						continue; //abort test
 					}
 				}
@@ -843,13 +868,13 @@ int main() {
 				config.ValveDelay = ReadFrame(FrameTC, Valve_Delay);		//Changeable Valve Delay from Ground Station
 				config.ServoDelay = ReadFrame(FrameTC, Servo_Delay);		//Changeable Servo Delay from Ground Station
 				config.EoEDelay = ReadFrame(FrameTC, EoE_Delay);			//Changebale End of Experiment Delay from Ground Station
-				config.PoweroffDelay = ReadFrame(FrameTC, Power_Off_Delay);	//Changeable Power off Delay
 
 				int valveTest = ValveRun(config);
 				if (valveTest != -1) {
 					int experimentTest = ExperimentRun(config);
 					if (experimentTest == -1) {
 						ExperimentStatus = End_Experiment;
+						digitalWrite(Servo_On, 0);
 						continue; //abort test
 					}
 				}
