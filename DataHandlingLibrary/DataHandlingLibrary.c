@@ -11,6 +11,9 @@ static int _CreateHandler_();
 static int _CreateFrameLookUp_();
 static void _SortCalibration_();
 static SYNC_TYPE _GetSync_();
+static byte _ToMSG_(byte type, byte id);
+static void _FromMSG_(byte msg, byte* type_out, byte* id_out);
+static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount);
 
 //EX-EXPORT (INTERNAL)
 DataPacket GetInPacket();
@@ -26,7 +29,7 @@ DataFrame GetInFrame(); //Returns the latest buffered incoming DataFrame and rem
 int LoadPort(); //Configures and opens the communication port
 
 //Implementations:
-CHKSM_TYPE CalculateChecksum(DataPacket data)
+CHKSM_TYPE CalculateChecksum(DataFrame data)
 {
 	//WIP
 	return 42;
@@ -34,7 +37,7 @@ CHKSM_TYPE CalculateChecksum(DataPacket data)
 CHKSM_TYPE CalculateCRC(DataPacket data)
 {
 	//WIP
-	return 42;
+	return 0;
 }
 
 int UpdateAll()
@@ -56,8 +59,9 @@ int UpdateBuffer()
 		amount = Send(dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingbytes);
 		if (amount < 0)
 			out -= 1;
-		else {
-			dataHandling.buffer->outgoingPos += amount;
+		else if (amount != 0) {
+			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+			dataHandling.buffer->outgoingPos = (byte*)dataHandling.buffer->outPackets + amount % PACKET_LENGTH;
 			dataHandling.buffer->outgoingbytes -= amount;
 		}
 	}
@@ -117,7 +121,7 @@ FailSafe* GetFailSafe()
 	return dataHandling.failSafe;
 }
 
-float MapSensorValue(int id, int value)
+float MapSensorValue(int id, long long value)
 {
 	if (CALIBRATION_METHOD == NONE) return (float)value;
 	if ((dataHandling.calibration != NULL) & (id >= 0) & (id < SENSOR_AMOUNT) || (CALIBRATION_POINTS < 2)) {
@@ -162,7 +166,7 @@ float MapSensorValue(int id, int value)
 	return 0.0f;
 }
 
-void WritePoint(int id, int number, int digitalValue, float analogValue)
+void WritePoint(int id, int number, long long digitalValue, float analogValue)
 {
 	CalibrationPoint point = { digitalValue, analogValue , 1};
 	AddPoint(id, number, point);
@@ -246,11 +250,44 @@ static SYNC_TYPE _GetSync_()
 	return current++;
 }
 
+static byte _ToMSG_(byte type, byte id)
+{
+	if ((id < (1 << MSG_ID_LEN)) & (type < (1 << (8 - MSG_ID_LEN)))) return (type << MSG_ID_LEN) + id;
+	return 0;
+}
+
+void _FromMSG_(byte msg, byte* type_out, byte* id_out)
+{
+	*id_out = msg % (1 << MSG_ID_LEN);
+	*type_out = msg >> MSG_ID_LEN;
+	return;
+}
+
+void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
+{
+	if (elementSize < 0 || arraySize < 0 || array == NULL) return;
+	int i;
+	byte* byteArray = (byte*) array;
+	if (offsetAmount < 0) {
+		for (i = 0; i < (arraySize * elementSize); i++) {
+			if (i < ((arraySize + offsetAmount) * elementSize)) byteArray[i + offsetAmount * elementSize] = byteArray[i];
+			else byteArray[i] = 0;
+		}
+	}
+	else if (offsetAmount > 0) {
+		for (i = (arraySize * elementSize) - 1; i > 0; i--) {
+			if (i >= (offsetAmount * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
+			else byteArray[i] = 0;
+		}
+	}
+	return;
+}
+
 void DebugLog(const char* message, ...)
 {
 	static int lineCounter = -1, depth = 0;
 	static FILE* output = NULL;
-	static char *error = "Error: ", *numeric = " {%i}", *pointer = " at 0x%p", *string = " %s", *test = " ...", *counter = "[%00i] ";
+	static char *error = "Error: ", *numeric = " {%i}", *pointer = " at 0x%p", *string = " %s", *test = " ...", *counter = "[%02i] ";
 	if (DEBUG_OUTPUT == NONE) return;
 	va_list args;
 	va_start(args, message);
@@ -423,7 +460,7 @@ DataFrame CreateTC()
 {
 	DataFrame temp = EmptyFrame();
 	temp.sync = _GetSync_();
-	FrameAddFlag(&temp, TeleCommand);
+	FrameSetFlag(&temp, TeleCommand);
 	return temp;
 }
 
@@ -650,40 +687,16 @@ int FrameIsTC(DataFrame frame)
 
 int FrameHasFlag(DataFrame frame, int id)
 {
-	int group1 = frame.flag >> 6, group2 = (frame.flag % (1 << 6)) >> 3, group3 = (frame.flag % (1 << 3));
-	if (id >= 10) {
-		if (id >= 100) {
-			return group1 == id / 100;
-		}
-		else {
-			return group2 == id / 10;
-		}
-	}
-	else {
-		return group3 == id;
-	}
-	return 0;
+	if (id >= 8 || id < 0) return 0;
+	return (frame.flag >> id) % (1 << (id + 1));
 }
 
-void FrameAddFlag(DataFrame* frame, int id)
+void FrameSetFlag(DataFrame* frame, int id)
 {
-	if (frame == NULL) return;
-	int group1 = frame->flag >> 6, group2 = (frame->flag % (1 << 6)) >> 3, group3 = (frame->flag % (1 << 3));
-	if (id >= 10) {
-		if (id >= 100) {
-			if (id < ((1 << 2) * 100)) group1 = id / 100;
-			else return;
-		}
-		else {
-			if (id < ((1 << 3) * 10)) group2 = id / 10;
-			else return;
-		}
-	}
-	else {
-		if (id <= (1 << 3)) group3 = id;
-		else return;
-	}
-	frame->flag = (group1 << 6) + (group2 << 3) + group1;
+	if (frame == NULL || id >= 8 || id < 0) return;
+	if ((frame->flag >> id) % (1 << (id + 1))) frame->flag -= 1 << id;
+	else frame->flag += + 1 << id;
+	return;
 }
 
 DataPacket CreatePacket(SYNC_TYPE sync)
@@ -727,18 +740,19 @@ int FormPackets()
 	DataPacket currentPacket; 
 	DataFrame currentFrame = GetOutFrame();
 	int number = 0;
-	int id, payloadIndex, dataIndex;
+	int payloadIndex, dataIndex;
+	byte id, tc;
 	for (; !FrameIsEmpty(currentFrame); currentFrame = GetOutFrame()) {
 		dataIndex = 0;
-		for (id = 0; id < 1 << 6; id++, number++) {
+		tc = FrameIsTC(currentFrame);
+		for (id = 0; id < (1 << MSG_ID_LEN); id++, number++) {
 			currentPacket = CreatePacket(currentFrame.sync);
-			currentPacket.mode = (dataHandling.failSafe != NULL) ? dataHandling.failSafe->mode : 0;
-			currentPacket.id = id;
+			currentPacket.msg = _ToMSG_(tc, id);
 			for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
 				if (dataIndex < DATA_LENGTH) currentPacket.payload[payloadIndex] = currentFrame.data[dataIndex];
 				else currentPacket.payload[payloadIndex] = 0;
 			}
-			currentPacket.chksm = CalculateChecksum(currentPacket);
+			currentPacket.chksm = currentFrame.chksm;
 			currentPacket.crc = CalculateCRC(currentPacket);
 			AddOutPacket(currentPacket);
 			if (dataIndex >= DATA_LENGTH) break;
@@ -755,18 +769,34 @@ int FormFrames()
 	}
 	DataPacket currentPacket = GetInPacket();
 	DataFrame* framePtr = dataHandling.buffer->inFrames;
-	int sync = framePtr->sync, number = 0;
-	int bufferIndex, payloadIndex, dataIndex;
+	int number = 0;
+	int payloadIndex = 0, dataIndex = 0;
+	byte id, type, foundMatch, faulty;
 	for (; !PacketIsEmpty(currentPacket); currentPacket = GetInPacket(), number++) {
-		if (sync != currentPacket.sync) {
-			for (bufferIndex = 0, framePtr = dataHandling.buffer->outFrames; bufferIndex < BUFFER_LENGTH || framePtr->sync == currentPacket.sync; bufferIndex++, framePtr = dataHandling.buffer->outFrames + bufferIndex);
-			if (framePtr->sync != currentPacket.sync) framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame(currentPacket.sync));
-			sync = framePtr->sync;
+		faulty = 0, foundMatch = 0;
+		if (CalculateCRC(currentPacket) != 0) faulty = 1;
+		_FromMSG_(currentPacket.msg, &type, &id);
+		if (framePtr->sync != currentPacket.sync) {
+			for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames; framePtr++) {
+				if ((framePtr->sync == currentPacket.sync) & (framePtr->chksm == currentPacket.chksm)) {
+					foundMatch = 1;
+					break;
+				}
+			}
+			if (!foundMatch) {
+				framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame(currentPacket.sync));
+				if (type) FrameSetFlag(framePtr, TeleCommand);
+				framePtr->chksm = currentPacket.chksm;
+			}
 		}
-		for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++) {
-			dataIndex = payloadIndex + PAYLOAD_LENGTH * currentPacket.id;
-			if (dataIndex < DATA_LENGTH) framePtr->data[dataIndex] = currentPacket.payload[payloadIndex];
+		dataIndex = id * PAYLOAD_LENGTH;
+		for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
+			if (dataIndex < DATA_LENGTH) {
+				if (framePtr->data[dataIndex] != 0) break;
+				framePtr->data[dataIndex] = currentPacket.payload[payloadIndex];
+			}
 		}
+		if (faulty) FrameSetFlag(framePtr, Biterror);
 	}
 	return number;
 }
@@ -818,6 +848,8 @@ DataFrame GetInFrame()
 			break;
 		}
 	}
+	if (temp.chksm != CalculateChecksum(temp)) FrameSetFlag(&temp, Partial);
+	else if (!FrameHasFlag(temp, Biterror)) FrameSetFlag(&temp, OK);
 	return temp;
 }
 
@@ -834,6 +866,7 @@ int AddOutPacket(DataPacket data)
 			break;
 		}
 	}
+	dataHandling.buffer->outgoingbytes += PACKET_LENGTH;
 	return i;
 }
 
@@ -1418,6 +1451,7 @@ int Send(byte* start, int amount)
 	if (0)
 #endif
 	{
+		DebugLog("Sent# Bytes", number);
 		return number;
 	}
 	DebugLog("!Unable to write to serial Port");
@@ -1444,6 +1478,7 @@ int Receive(byte* buffer, int max)
 	if (0)
 #endif
 	{
+		DebugLog("Received# Bytes", number);
 		return number;
 	}
 	DebugLog("!Unable to listen to serial Port");

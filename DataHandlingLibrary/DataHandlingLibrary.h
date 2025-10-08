@@ -63,6 +63,7 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 #endif // NULL
 
 //DataHandling Constants
+#define FRAME_LENGTH sizeof(DataFrame)
 #define PACKET_LENGTH sizeof(DataPacket)
 
 #define PATH_LENGTH 100 //Chars
@@ -88,6 +89,7 @@ typedef unsigned char byte;
 #define EXP_LEN 3 //Bits
 #define MAIN_LEN 4 //Bits
 #define TIME_LEN 32 //Bits
+#define MSG_ID_LEN 6 //Bits
 
 #define BAUD_RATE 9600
 
@@ -128,7 +130,7 @@ enum DATAHANDLINGLIBRARY_API TCID {
 
 //DataFrame annotation flags
 enum DATAHANDLINGLIBRARY_API Flag {
-	Source = 0, OK = 1, Partial = 2, Biterror = 3, Overwrite = 4, TeleCommand = 10, Idle = 20, Experiment = 30, Full = 100, Sensor = 200
+	Source, OK, Biterror, Partial, TeleCommand
 };
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
@@ -145,10 +147,8 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	//Used to stitch together DataFrames (= DataFrame.sync)
 	SYNC_TYPE sync;
-	//Used to denote the current program mode
-	byte mode;
 	//Used to identify payload data
-	byte id;
+	byte msg;
 	byte payload[PAYLOAD_LENGTH];
 	//Checksum output
 	CHKSM_TYPE chksm;
@@ -159,9 +159,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 //This acts as an input/output buffer for transmissions
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	byte* incomingPos;
-	byte incomingbytes;
+	int incomingbytes;
 	byte* outgoingPos;
-	byte outgoingbytes;
+	int outgoingbytes;
 	struct DataPacket inPackets[BUFFER_LENGTH];
 	struct DataPacket outPackets[BUFFER_LENGTH];
 	struct DataFrame inFrames[BUFFER_LENGTH];
@@ -236,7 +236,7 @@ typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 
 //Stores one calibration point consisting of the digital ADC output and the corresponding analog calibration measurement
 typedef struct DATAHANDLINGLIBRARY_API CalibrationPoint {
-	int digital;
+	long long digital;
 	float analog;
 	char valid;
 } CalibrationPoint;
@@ -270,8 +270,8 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 //Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,$,@)
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
-//Calculates checksum of given DataPacket
-DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataPacket data);
+//Calculates checksum of given DataFrame
+DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataFrame data);
 
 //Calculates cyclic redundancy check of given DataPacket
 DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateCRC(DataPacket data);
@@ -292,10 +292,10 @@ DATAHANDLINGLIBRARY_API DataHandlingHub* GetDataHandling();
 DATAHANDLINGLIBRARY_API FailSafe* GetFailSafe();
 
 //Maps digital sensor values to returned calibrated measurement values
-DATAHANDLINGLIBRARY_API float MapSensorValue(int id, int value);
+DATAHANDLINGLIBRARY_API float MapSensorValue(int id, long long value);
 
 //Writes a calibration point into the SensorCalibration structure
-DATAHANDLINGLIBRARY_API void WritePoint(int id, int number, int digitalValue, float analogValue);
+DATAHANDLINGLIBRARY_API void WritePoint(int id, int number, long long digitalValue, float analogValue);
 
 //Writes a calibration point into the SensorCalibration structure
 DATAHANDLINGLIBRARY_API void AddPoint(int id, int number, CalibrationPoint point);
@@ -343,7 +343,7 @@ DATAHANDLINGLIBRARY_API int FrameIsTC(DataFrame frame);
 DATAHANDLINGLIBRARY_API int FrameHasFlag(DataFrame frame, int id);
 
 //Sets the given flag-ID (enum Flags) for the given frame
-DATAHANDLINGLIBRARY_API void FrameAddFlag(DataFrame* frame, int id);
+DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id);
 
 //Adds an outgoing DataFrame to the Buffer, returns the corresponding index
 DATAHANDLINGLIBRARY_API int AddOutFrame(DataFrame frame);
