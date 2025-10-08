@@ -10,13 +10,14 @@ static int _SetPortConfig_();
 static int _CreateHandler_();
 static int _CreateFrameLookUp_();
 static void _SortCalibration_();
+static SYNC_TYPE _GetSync_();
 
-//PRIVATE (INTERNAL)
+//EX-EXPORT (INTERNAL)
 DataPacket GetInPacket();
-DataPacket GetOutPacket();
-int AddInPacket(DataPacket data);
 int AddOutPacket(DataPacket data);
 int VirtualSave();
+DataPacket CreatePacket(SYNC_TYPE sync);
+DataPacket EmptyPacket();
 int FormPackets(); //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
 int FormFrames(); //Converts all buffered incoming DataPackets into buffered DataFrames (with {0} values if parts are missing), returns the amount converted
 DataFrame GetOutFrame(); //Returns the latest buffered outgoing DataFrame and removes it from the buffer
@@ -25,16 +26,15 @@ DataFrame GetInFrame(); //Returns the latest buffered incoming DataFrame and rem
 int LoadPort(); //Configures and opens the communication port
 
 //Implementations:
-
-int CalculateChecksum(DataPacket data)
+CHKSM_TYPE CalculateChecksum(DataPacket data)
 {
 	//WIP
-	return 1;
+	return 42;
 }
-int CalculateCRC(DataPacket data)
+CHKSM_TYPE CalculateCRC(DataPacket data)
 {
 	//WIP
-	return 0;
+	return 42;
 }
 
 int UpdateAll()
@@ -51,13 +51,21 @@ int UpdateBuffer()
 		DebugLog("!Uninitiated DataHandling");
 		return 0;
 	}
-	int out = 1;
-	if (FormPackets() > 0)
-		if (Send(dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingBytes) < 0)
+	int out = 0, amount = 0;
+	if (FormPackets() > 0) {
+		amount = Send(dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingbytes);
+		if (amount < 0)
 			out -= 1;
-	if (Receive(dataHandling.buffer->incomingPos, dataHandling.buffer->incomingBytes) > 0)
+		else {
+			dataHandling.buffer->outgoingPos += amount;
+			dataHandling.buffer->outgoingbytes -= amount;
+		}
+	}
+	amount = Receive(dataHandling.buffer->incomingPos, dataHandling.buffer->incomingbytes);
+	if (amount > 0)
 	{
-		if (dataHandling.buffer->incomingBytes < PACKET_LENGTH) dataHandling.buffer->incomingBytes += PACKET_LENGTH;
+		dataHandling.buffer->incomingPos += amount;
+		dataHandling.buffer->incomingbytes += (DATA_LENGTH / PAYLOAD_LENGTH * PACKET_LENGTH) - amount;
 		if (FormFrames() > 0)
 			for (DataFrame temp = GetOutFrame(); !FrameIsEmpty(temp); temp = GetOutFrame())
 				AddSaveFrame(temp);
@@ -68,7 +76,7 @@ int UpdateBuffer()
 
 int UpdateFiles()
 {
-	int out = 1;
+	int out = 0;
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
 		out -= 1;
@@ -232,6 +240,12 @@ void _SortCalibration_()
 	dataHandling.calibration->sorted = 1;
 }
 
+static SYNC_TYPE _GetSync_()
+{
+	static SYNC_TYPE current = 0;
+	return current++;
+}
+
 void DebugLog(const char* message, ...)
 {
 	static int lineCounter = -1, depth = 0;
@@ -340,7 +354,7 @@ int CreateCalibration(const char* path)
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*) new;
+	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(SensorCalibration); i++) bytePtr[i] = 0;
 	new->version = CALIBRATION_VERSION;
 	new->dateTime = time(NULL);
@@ -398,25 +412,27 @@ int Initialize()
 	return 1;
 }
 
-DataFrame CreateFrame(uint16_t sync)
+DataFrame CreateFrame()
 {
-	DataFrame temp = { 0 };
-	char* bytePtr = (char*) & temp;
-	for (int i = 0; i < sizeof(DataFrame); i++) bytePtr[i] = 0;
-	temp.sync = sync;
+	DataFrame temp = EmptyFrame();
+	temp.sync = _GetSync_();
 	return temp;
 }
 
-DataFrame CreateTC(uint16_t sync)
+DataFrame CreateTC()
 {
-	DataFrame temp = CreateFrame(sync);
+	DataFrame temp = EmptyFrame();
+	temp.sync = _GetSync_();
 	FrameAddFlag(&temp, TeleCommand);
 	return temp;
 }
 
 DataFrame EmptyFrame()
 {
-	return CreateFrame(0);
+	DataFrame temp = { 0 };
+	byte* bytePtr = (byte*)&temp;
+	for (int i = 0; i < sizeof(DataFrame); i++) bytePtr[i] = 0;
+	return temp;
 }
 
 DataFrame EmptyTC() 
@@ -485,7 +501,7 @@ int _CreateHandler_()
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*) dataHandling.handler;
+	byte* bytePtr = (byte*) dataHandling.handler;
 	for (int i = 0; i < sizeof(PortHandler); i++) {
 		bytePtr[i] = 0;
 	}
@@ -507,7 +523,7 @@ int _CreateFrameLookUp_()
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*)dataHandling.frameLookUp;
+	byte* bytePtr = (byte*)dataHandling.frameLookUp;
 	for (int i = 0; i < sizeof(FrameLookUpTable); i++)
 		bytePtr[i] = 0;
 	return 1;
@@ -557,10 +573,10 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	long long workspace = 0;
 	long long return_value = 0;
 	long long new_value = value;
-	char* BytePtr = (char*) &old_value;
+	byte* bytePtr = (byte*) &old_value;
 	for (int i = 0; i < ((length / 8) + (offset != 0 ) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
-		BytePtr[i] = frame->data[index / 8 + i];
+		bytePtr[i] = frame->data[index / 8 + i];
 	}
 	workspace = old_value;
 	old_value >>= offset;
@@ -569,10 +585,10 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	new_value <<= offset;
 	old_value <<= offset;
 	new_value = workspace - old_value + new_value;
-	BytePtr = (char*) &new_value;
+	bytePtr = (byte*) &new_value;
 	for (int i = 0; i < ((length / 8) + (offset != 0) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
-		frame->data[index / 8 + i] = BytePtr[i];
+		frame->data[index / 8 + i] = bytePtr[i];
 	}
 	return return_value;
 }
@@ -612,10 +628,10 @@ long long ReadFrame(DataFrame frame, int id)
 	}
 	int offset = index % 8;
 	long long value = 0;
-	char* BytePtr = (char*) &value;
+	byte* bytePtr = (byte*) &value;
 	for (int i = 0; i < ((length / 8) + (offset != 0) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
-		BytePtr[i] = frame.data[index / 8 + i];
+		bytePtr[i] = frame.data[index / 8 + i];
 	}
 	value >>= offset;
 	value %= 1ll << length;
@@ -670,13 +686,13 @@ void FrameAddFlag(DataFrame* frame, int id)
 	frame->flag = (group1 << 6) + (group2 << 3) + group1;
 }
 
-DataPacket CreatePacket(int16_t sync)
+DataPacket CreatePacket(SYNC_TYPE sync)
 {
 	DataPacket out = { 0 };
-	char* bytePtr = (char*) &out;
+	byte* bytePtr = (byte*) &out;
 	for (int i = 0; i < sizeof(out); i++)
 		bytePtr[i] = 0;
-	if (sync != 0) out.sync = sync;
+	out.sync = sync;
 	return out;
 }
 
@@ -712,17 +728,20 @@ int FormPackets()
 	DataFrame currentFrame = GetOutFrame();
 	int number = 0;
 	int id, payloadIndex, dataIndex;
-	for (; !FrameIsEmpty(currentFrame); currentFrame = GetOutFrame(), number++) {
-		for (id = 0; id <= 255; id++) {
+	for (; !FrameIsEmpty(currentFrame); currentFrame = GetOutFrame()) {
+		dataIndex = 0;
+		for (id = 0; id < 1 << 6; id++, number++) {
 			currentPacket = CreatePacket(currentFrame.sync);
-			currentPacket.mode = (DATAHANDLINGLIBRARY_OS == LINUX_OS) ? 0 : 1;
+			currentPacket.mode = (dataHandling.failSafe != NULL) ? dataHandling.failSafe->mode : 0;
 			currentPacket.id = id;
-			for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++) {
-				dataIndex = payloadIndex + PAYLOAD_LENGTH * id;
+			for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
 				if (dataIndex < DATA_LENGTH) currentPacket.payload[payloadIndex] = currentFrame.data[dataIndex];
 				else currentPacket.payload[payloadIndex] = 0;
 			}
+			currentPacket.chksm = CalculateChecksum(currentPacket);
+			currentPacket.crc = CalculateCRC(currentPacket);
 			AddOutPacket(currentPacket);
+			if (dataIndex >= DATA_LENGTH) break;
 		}
 	}
 	return number;
@@ -750,22 +769,6 @@ int FormFrames()
 		}
 	}
 	return number;
-}
-
-DataPacket GetOutPacket()
-{
-	if (dataHandling.buffer == NULL) {
-		DebugLog("!Uninitialized DataHandling");
-		return EmptyPacket();
-	}
-	DataPacket temp = EmptyPacket();
-	for (int i = BUFFER_LENGTH; i > 0; i--) {
-		temp = dataHandling.buffer->outPackets[i - 1];
-		if (!PacketIsEmpty(temp)) {
-			dataHandling.buffer->outPackets[i - 1] = EmptyPacket();
-		}
-	}
-	return temp;
 }
 
 DataPacket GetInPacket()
@@ -834,22 +837,6 @@ int AddOutPacket(DataPacket data)
 	return i;
 }
 
-int AddInPacket(DataPacket data)
-{
-	if (dataHandling.buffer == NULL) {
-		DebugLog("!Uninitialized DataHandling");
-		return -1;
-	}
-	int i = 0;
-	for (; i <= BUFFER_LENGTH; i++) {
-		if (PacketIsEmpty(dataHandling.buffer->inPackets[i])) {
-			dataHandling.buffer->inPackets[i] = data;
-			break;
-		}
-	}
-	return i;
-}
-
 int AddOutFrame(DataFrame frame)
 {
 	if (dataHandling.buffer == NULL) {
@@ -864,13 +851,6 @@ int AddOutFrame(DataFrame frame)
 		}
 	}
 	return i;
-}
-
-void AddFrame(DataFrame frame)
-{
-	AddSaveFrame(frame);
-	AddOutFrame(frame);
-	return;
 }
 
 int AddInFrame(DataFrame frame)
@@ -889,6 +869,13 @@ int AddInFrame(DataFrame frame)
 	return i;
 }
 
+void AddFrame(DataFrame frame)
+{
+	AddSaveFrame(frame);
+	AddOutFrame(frame);
+	return;
+}
+
 int CreateBuffer()
 {
 	if (dataHandling.buffer != NULL) {
@@ -900,11 +887,11 @@ int CreateBuffer()
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*) new;
+	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(DataBuffer); i++) bytePtr[i] = 0;
 	dataHandling.buffer = new;
-	new->incomingPos = (char*) new->inPackets;
-	new->outgoingPos = (char*) new->outPackets;
+	new->incomingPos = (byte*) new->inPackets;
+	new->outgoingPos = (byte*) new->outPackets;
 	return 1;
 }
 
@@ -914,12 +901,12 @@ int CreateFailSafe()
 		free(dataHandling.failSafe);
 		dataHandling.failSafe = NULL;
 	}
-	FailSafe* new = (FailSafe*)malloc(sizeof(FailSafe));
+	FailSafe* new = malloc(sizeof(FailSafe));
 	if (new == NULL) {
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*) new;
+	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(FailSafe); i++) bytePtr[i] = 0;
 	new->nominalExit = 1;
 	new->conn = 'a';
@@ -959,13 +946,13 @@ int ReadFailSafe()
 		DebugLog("FailSafe freed");
 	}
 	FILE* file = NULL;
-	FailSafe* this = (FailSafe*)malloc(sizeof(FailSafe));
+	FailSafe* this = malloc(sizeof(FailSafe));
 	if (this == NULL) {
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
 	dataHandling.failSafe = this;
-	char* bytePtr = (char*) this;
+	byte* bytePtr = (byte*) this;
 	for (int i = 0; i < sizeof(FailSafe); i++) bytePtr[i] = 0;
 	float ReadVersion = 0.0f;
 	this->version = FAILSAFE_VERSION;
@@ -1054,12 +1041,12 @@ int VirtualSave()
 		free(dataHandling.saveFile);
 		dataHandling.saveFile = NULL;
 	}
-	SaveFile* new = (SaveFile*) malloc(sizeof(SaveFile));
+	SaveFile* new = malloc(sizeof(SaveFile));
 	if (new == NULL) {
 		DebugLog("!Memory allocation failed");
 		return 0;
 	}
-	char* bytePtr = (char*) new;
+	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(SaveFile); i++) bytePtr[i] = 0;
 	new->dateTime = time(NULL);
 	new->savedAmount = -1;
@@ -1142,7 +1129,7 @@ int ReadSave(const char path[])
 	}
 	DebugLog("Opened SaveFile");
 	if (!VirtualSave()) return 0;
-	char* writePtr = (char*) &dataHandling.saveFile->dateTime;
+	byte* writePtr = (byte*) &dataHandling.saveFile->dateTime;
 	int i = 0;
 	if (fscanf(file, "%f", &dataHandling.saveFile->version) == EOF) {
 		DebugLog("!Unexpected End of File");
@@ -1157,7 +1144,7 @@ int ReadSave(const char path[])
 	for (i = 0; 1; i++){
 		if (i % sizeof(DataFrame) == 0) {
 			CreateSaveFrame(0);
-			writePtr = (char*) &dataHandling.saveFile->lastFrame->data;
+			writePtr = (byte*) &dataHandling.saveFile->lastFrame->data;
 		}
 		if (fscanf(file, "%c", writePtr) == EOF) break;
 	}
@@ -1183,11 +1170,11 @@ int WriteSave()
 	if (dataHandling.saveFile->saveFilePath[0] != '\0') {
 		file = fopen(dataHandling.saveFile->saveFilePath, "ab");
 		if (file != NULL) {
-			SaveFileFrame* current = GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount - 1);
-			char* bytePtr = NULL;
+			SaveFileFrame* current = GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount);
+			byte* bytePtr = NULL;
 			int number = 0;
 			while (current != NULL) {
-				bytePtr = (char*)&(current->data);
+				bytePtr = (byte*)&(current->data);
 				number += (int)fwrite(bytePtr, sizeof(DataFrame), 1, file);
 				current = current->nextFrame;
 				dataHandling.saveFile->savedAmount++;
@@ -1250,7 +1237,7 @@ SaveFileFrame* AddSaveFrame(DataFrame data)
 		DebugLog("!SaveFile could not be found");
 		return NULL;
 	}
-	SaveFileFrame* newFrame = (SaveFileFrame*) malloc(sizeof(SaveFileFrame));
+	SaveFileFrame* newFrame = malloc(sizeof(SaveFileFrame));
 	if (newFrame == NULL) {
 		DebugLog("!Memory allocation failed");
 		return NULL;
@@ -1272,14 +1259,13 @@ SaveFileFrame* AddSaveFrame(DataFrame data)
 	return dataHandling.saveFile->lastFrame;
 }
 
-SaveFileFrame* CreateSaveFrame(uint16_t sync)
+SaveFileFrame* CreateSaveFrame()
 {
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!SaveFile could not be found");
 		return NULL;
 	}
-	DataFrame data = CreateFrame(sync);
-	return AddSaveFrame(data);
+	return AddSaveFrame(CreateFrame());
 }
 
 void CloseSave()
@@ -1294,14 +1280,12 @@ void CloseSave()
 	SaveFileFrame *current = dataHandling.saveFile->lastFrame, *last = dataHandling.saveFile->firstFrame, *next;
 	if (current != NULL) {
 		next = current->previousFrame;
-		if (next != NULL) {
-			while ((next != dataHandling.saveFile->firstFrame) & (next != NULL)) {
-				free(current);
-				current = next;
-				next = next->previousFrame;
-			}
+		while (next != NULL) {
+			free(current);
+			current = next;
+			next = next->previousFrame;
 		}
-		if (current != last) DebugLog("!Could not parse SaveFileFrames"); //TBC
+		if (current != last) DebugLog("!Could not parse SaveFileFrames"); //Maybe try backwards?
 		free(current);
 	}
 	DebugLog("SaveFileFrames emptied");
@@ -1414,14 +1398,14 @@ int LoadPort()
 	return 0;
 }
 
-int Send(char* start, int amount)
+int Send(byte* start, int amount)
 {
 	if (dataHandling.handler == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
 	if (start == NULL) {
-		DebugLog("!NULL Pointer passed");
+		DebugLog("!NULL Pointer passed to Send()");
 		return -1;
 	}
 	int number = 0;
@@ -1434,22 +1418,20 @@ int Send(char* start, int amount)
 	if (0)
 #endif
 	{
-		dataHandling.buffer->outgoingBytes -= number;
-		dataHandling.buffer->outgoingPos += number;
 		return number;
 	}
 	DebugLog("!Unable to write to serial Port");
 	return -1;
 }
 
-int Receive(char* buffer, int max)
+int Receive(byte* buffer, int max)
 {
 	if (dataHandling.handler == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
 	if (buffer == NULL) {
-		DebugLog("!NULL Pointer passed");
+		DebugLog("!NULL Pointer passed to Receive()");
 		return -1;
 	}
 	int number = 0;
@@ -1462,8 +1444,6 @@ int Receive(char* buffer, int max)
 	if (0)
 #endif
 	{
-		dataHandling.buffer->incomingPos += number;
-		dataHandling.buffer->incomingBytes -= number;
 		return number;
 	}
 	DebugLog("!Unable to listen to serial Port");

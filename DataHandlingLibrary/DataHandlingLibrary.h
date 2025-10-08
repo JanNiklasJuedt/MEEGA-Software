@@ -63,14 +63,17 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 #endif // NULL
 
 //DataHandling Constants
-#define PACKET_LENGTH (PAYLOAD_LENGTH + CHKSM_LENGTH * 2 + 4)
+#define PACKET_LENGTH sizeof(DataPacket)
 
 #define PATH_LENGTH 100 //Chars
 #define BUFFER_LENGTH 10 //DataPackets & DataFrames
 
 #define DATA_LENGTH 42 //Bytes
 #define PAYLOAD_LENGTH 21 //Bytes
-#define CHKSM_LENGTH 2 //Bytes
+
+#define CHKSM_TYPE uint16_t
+#define SYNC_TYPE uint16_t
+typedef unsigned char byte;
 
 #define SENSOR_AMOUNT Nozzle_Temperature_3 + 1
 #define TELEMETRY_AMOUNT Experiment_State + 1
@@ -92,7 +95,6 @@ DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFER_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int PayloadLength = PAYLOAD_LENGTH;
-DATAHANDLINGLIBRARY_CONSTANT const int ChksmLength = CHKSM_LENGTH;
 
 DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.1f;
 DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFE_NAME[] = "MEEGA_FailSafe.txt";
@@ -132,34 +134,34 @@ enum DATAHANDLINGLIBRARY_API Flag {
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	//Used to chronologically order DataFrames (0 denotes an empty DataFrame)
-	uint16_t sync;
+	SYNC_TYPE sync;
 	//Used to mark DataFrames for faulty or missing data
-	unsigned char flag;
-	unsigned char data[DATA_LENGTH];
-	unsigned char chksm[CHKSM_LENGTH];
+	byte flag;
+	byte data[DATA_LENGTH];
+	CHKSM_TYPE chksm;
 } DataFrame;
 
 //Stores the data contained in one packet of the transmission protocol
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	//Used to stitch together DataFrames (= DataFrame.sync)
-	uint16_t sync;
+	SYNC_TYPE sync;
 	//Used to denote the current program mode
-	unsigned char mode;
+	byte mode;
 	//Used to identify payload data
-	unsigned char id;
-	unsigned char payload[PAYLOAD_LENGTH];
+	byte id;
+	byte payload[PAYLOAD_LENGTH];
 	//Checksum output
-	unsigned char chksm[CHKSM_LENGTH];
+	CHKSM_TYPE chksm;
 	//Cyclic Redundancy Check Output
-	unsigned char crc[CHKSM_LENGTH];
+	CHKSM_TYPE crc;
 } DataPacket;
 
 //This acts as an input/output buffer for transmissions
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
-	unsigned char* incomingPos;
-	unsigned char incomingBytes;
-	unsigned char* outgoingPos;
-	unsigned char outgoingBytes;
+	byte* incomingPos;
+	byte incomingbytes;
+	byte* outgoingPos;
+	byte outgoingbytes;
 	struct DataPacket inPackets[BUFFER_LENGTH];
 	struct DataPacket outPackets[BUFFER_LENGTH];
 	struct DataFrame inFrames[BUFFER_LENGTH];
@@ -173,9 +175,9 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	//path used to look up the newest savefile
 	char saveFilePath[PATH_LENGTH];
 	//if the experiment run of the newest savefile has been completed (Bool)
-	char complete;
+	byte complete;
 	//if the program has exited nominally (Bool)
-	char nominalExit;
+	byte nominalExit;
 	//current operating mode of the program (test: "0" / flight: "")
 	char mode;
 	//connection mode of the groundstation (unused for onboard)
@@ -186,7 +188,7 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	char comPath[PATH_LENGTH];
 	//path used to look up calibration data
 	char calPath[PATH_LENGTH];
-	char changed;
+	byte changed;
 } FailSafe;
 
 //Stores one DataFrame of a savefile, as well as a pointer to the next one
@@ -243,8 +245,8 @@ typedef struct DATAHANDLINGLIBRARY_API CalibrationPoint {
 typedef struct DATAHANDLINGLIBRARY_API SensorCalibration {
 	float version;
 	time_t dateTime;
-	char sorted;
-	char changed;
+	byte sorted;
+	byte changed;
 	struct CalibrationPoint points[SENSOR_AMOUNT][CALIBRATION_POINTS];
 	char calibrationFilePath[PATH_LENGTH];
 } SensorCalibration;
@@ -269,10 +271,10 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
 //Calculates checksum of given DataPacket
-DATAHANDLINGLIBRARY_API int CalculateChecksum(DataPacket data);
+DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataPacket data);
 
 //Calculates cyclic redundancy check of given DataPacket
-DATAHANDLINGLIBRARY_API int CalculateCRC(DataPacket data);
+DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateCRC(DataPacket data);
 
 //Calls necessary functions for saving and transmitting data;
 DATAHANDLINGLIBRARY_API int UpdateAll();
@@ -313,11 +315,11 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 //Initializes Memory and loads Data from files if possible
 DATAHANDLINGLIBRARY_API int Initialize();
 
-//Returns a new empty DataFrame with the specified Sync-Bytes value
-DATAHANDLINGLIBRARY_API DataFrame CreateFrame(uint16_t sync);
+//Returns a new empty DataFrame with the specified Sync-bytes value
+DATAHANDLINGLIBRARY_API DataFrame CreateFrame();
 
-//Returns a new empty TeleCommand-DataFrame with the specified Sync-Bytes value
-DATAHANDLINGLIBRARY_API DataFrame CreateTC(uint16_t sync);
+//Returns a new empty TeleCommand-DataFrame with the specified Sync-bytes value
+DATAHANDLINGLIBRARY_API DataFrame CreateTC();
 
 //Returns an empty DataFrame
 DATAHANDLINGLIBRARY_API DataFrame EmptyFrame();
@@ -362,7 +364,7 @@ DATAHANDLINGLIBRARY_API int ReadFailSafe();
 //returns {0} if successful, {1} if it created a new file and {-1} if there was an error
 DATAHANDLINGLIBRARY_API int WriteFailSafe();
 
-//Writes the frames added since the last save onto the harddrive, returns the number of Bytes written or {-1} if unsuccessful
+//Writes the frames added since the last save onto the harddrive, returns the number of bytes written or {-1} if unsuccessful
 DATAHANDLINGLIBRARY_API int WriteSave();
 
 //Creates a new SaveFile structure and file
@@ -384,7 +386,7 @@ DATAHANDLINGLIBRARY_API DataFrame UpdateTC();
 DATAHANDLINGLIBRARY_API SaveFileFrame* AddSaveFrame(DataFrame data);
 
 //Shortcut to CreateFrame() and AddSaveFrame(), returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame(uint16_t sync);
+DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame();
 
 //Frees allocated Memory of the passed SaveFile's Frames, does not free SaveFile itself
 DATAHANDLINGLIBRARY_API void CloseSave();
@@ -393,9 +395,9 @@ DATAHANDLINGLIBRARY_API void CloseSave();
 DATAHANDLINGLIBRARY_API void CloseAll();
 
 //Tries to send outgoing data via the configured output path, returns the amount of bytes send
-DATAHANDLINGLIBRARY_API int Send(char* start, int amount);
+DATAHANDLINGLIBRARY_API int Send(byte* start, int amount);
 
 //Reads received data via the configured path into the buffer, returns the amount of bytes received
-DATAHANDLINGLIBRARY_API int Receive(char* buffer, int max);
+DATAHANDLINGLIBRARY_API int Receive(byte* buffer, int max);
 
 #endif // DATAHANDLINGLIBRARY_H
