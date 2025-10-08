@@ -80,7 +80,7 @@
           <item>
            <widget class="QDoubleSpinBox" name="servoValueBox">
             <property name="maximum">
-             <double>90.000000000000000</double>
+             <double>360.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -152,25 +152,6 @@
       <string>Test Mode</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>150</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Test Run</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
@@ -205,17 +186,10 @@
         </property>
        </spacer>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Preparation Duration</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
-         <widget class="QTimeEdit" name="prepTimeEdit">
+         <widget class="QTimeEdit" name="valveTimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -232,7 +206,51 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="prepResetButton">
+         <widget class="QLabel" name="label_5">
+          <property name="maximumSize">
+           <size>
+            <width>5</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>,</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="valveMilliEdit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="inputMethodHints">
+           <set>Qt::InputMethodHint::ImhDigitsOnly</set>
+          </property>
+          <property name="text">
+           <string>000</string>
+          </property>
+          <property name="maxLength">
+           <number>3</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="valveResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -243,14 +261,14 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Experiment Duration</string>
+         <string>Servo Cycle Time</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <widget class="QTimeEdit" name="expTimeEdit">
+         <widget class="QTimeEdit" name="servoTimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -267,7 +285,51 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="expResetButton">
+         <widget class="QLabel" name="label_10">
+          <property name="maximumSize">
+           <size>
+            <width>5</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>,</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="servoMilliEdit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="inputMethodHints">
+           <set>Qt::InputMethodHint::ImhDigitsOnly</set>
+          </property>
+          <property name="text">
+           <string>000</string>
+          </property>
+          <property name="maxLength">
+           <number>3</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="servoResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -278,14 +340,14 @@
       <item row="4" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Shutdown Duration</string>
+         <string>Active Experiment Time</string>
         </property>
        </widget>
       </item>
       <item row="4" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <item>
-         <widget class="QTimeEdit" name="shutdTimeEdit">
+         <widget class="QTimeEdit" name="EOETimeEdit">
           <property name="maximumTime">
            <time>
             <hour>0</hour>
@@ -302,7 +364,51 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="shutdResetButton">
+         <widget class="QLabel" name="label_11">
+          <property name="maximumSize">
+           <size>
+            <width>5</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>,</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="EOEMilliEdit">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="inputMethodHints">
+           <set>Qt::InputMethodHint::ImhDigitsOnly</set>
+          </property>
+          <property name="text">
+           <string>000</string>
+          </property>
+          <property name="maxLength">
+           <number>3</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="EOEResetButton">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -324,9 +430,38 @@
           <property name="text">
            <string>On</string>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Test Run</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Valve Open Time</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -17,8 +17,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDateTimeEdit, QDoubleSpinBox, QFormLayout,
     QFrame, QGroupBox, QHBoxLayout, QLabel,
-    QPushButton, QSizePolicy, QSpacerItem, QTimeEdit,
-    QVBoxLayout, QWidget)
+    QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
+    QTimeEdit, QVBoxLayout, QWidget)
 
 class Ui_controlPanel(object):
     def setupUi(self, controlPanel):
@@ -74,7 +74,7 @@ class Ui_controlPanel(object):
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.servoValueBox = QDoubleSpinBox(self.groupBox)
         self.servoValueBox.setObjectName(u"servoValueBox")
-        self.servoValueBox.setMaximum(90.000000000000000)
+        self.servoValueBox.setMaximum(360.000000000000000)
 
         self.horizontalLayout_2.addWidget(self.servoValueBox)
 
@@ -131,14 +131,6 @@ class Ui_controlPanel(object):
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.formLayout_2 = QFormLayout(self.groupBox_2)
         self.formLayout_2.setObjectName(u"formLayout_2")
-        self.label_3 = QLabel(self.groupBox_2)
-        self.label_3.setObjectName(u"label_3")
-        sizePolicy1.setHeightForWidth(self.label_3.sizePolicy().hasHeightForWidth())
-        self.label_3.setSizePolicy(sizePolicy1)
-        self.label_3.setMinimumSize(QSize(150, 0))
-
-        self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_3)
-
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.startTestButton = QPushButton(self.groupBox_2)
@@ -158,24 +150,36 @@ class Ui_controlPanel(object):
 
         self.formLayout_2.setItem(1, QFormLayout.ItemRole.LabelRole, self.verticalSpacer)
 
-        self.label_7 = QLabel(self.groupBox_2)
-        self.label_7.setObjectName(u"label_7")
-
-        self.formLayout_2.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_7)
-
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.prepTimeEdit = QTimeEdit(self.groupBox_2)
-        self.prepTimeEdit.setObjectName(u"prepTimeEdit")
-        self.prepTimeEdit.setMaximumTime(QTime(0, 59, 59))
-        self.prepTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
+        self.valveTimeEdit = QTimeEdit(self.groupBox_2)
+        self.valveTimeEdit.setObjectName(u"valveTimeEdit")
+        self.valveTimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.valveTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_6.addWidget(self.prepTimeEdit)
+        self.horizontalLayout_6.addWidget(self.valveTimeEdit)
 
-        self.prepResetButton = QPushButton(self.groupBox_2)
-        self.prepResetButton.setObjectName(u"prepResetButton")
+        self.label_5 = QLabel(self.groupBox_2)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMaximumSize(QSize(5, 16777215))
 
-        self.horizontalLayout_6.addWidget(self.prepResetButton)
+        self.horizontalLayout_6.addWidget(self.label_5)
+
+        self.valveMilliEdit = QLineEdit(self.groupBox_2)
+        self.valveMilliEdit.setObjectName(u"valveMilliEdit")
+        sizePolicy.setHeightForWidth(self.valveMilliEdit.sizePolicy().hasHeightForWidth())
+        self.valveMilliEdit.setSizePolicy(sizePolicy)
+        self.valveMilliEdit.setMaximumSize(QSize(35, 16777215))
+        self.valveMilliEdit.setBaseSize(QSize(0, 0))
+        self.valveMilliEdit.setInputMethodHints(Qt.InputMethodHint.ImhDigitsOnly)
+        self.valveMilliEdit.setMaxLength(3)
+
+        self.horizontalLayout_6.addWidget(self.valveMilliEdit)
+
+        self.valveResetButton = QPushButton(self.groupBox_2)
+        self.valveResetButton.setObjectName(u"valveResetButton")
+
+        self.horizontalLayout_6.addWidget(self.valveResetButton)
 
 
         self.formLayout_2.setLayout(2, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_6)
@@ -187,17 +191,34 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.expTimeEdit = QTimeEdit(self.groupBox_2)
-        self.expTimeEdit.setObjectName(u"expTimeEdit")
-        self.expTimeEdit.setMaximumTime(QTime(0, 59, 59))
-        self.expTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
+        self.servoTimeEdit = QTimeEdit(self.groupBox_2)
+        self.servoTimeEdit.setObjectName(u"servoTimeEdit")
+        self.servoTimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.servoTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_7.addWidget(self.expTimeEdit)
+        self.horizontalLayout_7.addWidget(self.servoTimeEdit)
 
-        self.expResetButton = QPushButton(self.groupBox_2)
-        self.expResetButton.setObjectName(u"expResetButton")
+        self.label_10 = QLabel(self.groupBox_2)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setMaximumSize(QSize(5, 16777215))
 
-        self.horizontalLayout_7.addWidget(self.expResetButton)
+        self.horizontalLayout_7.addWidget(self.label_10)
+
+        self.servoMilliEdit = QLineEdit(self.groupBox_2)
+        self.servoMilliEdit.setObjectName(u"servoMilliEdit")
+        sizePolicy.setHeightForWidth(self.servoMilliEdit.sizePolicy().hasHeightForWidth())
+        self.servoMilliEdit.setSizePolicy(sizePolicy)
+        self.servoMilliEdit.setMaximumSize(QSize(35, 16777215))
+        self.servoMilliEdit.setBaseSize(QSize(0, 0))
+        self.servoMilliEdit.setInputMethodHints(Qt.InputMethodHint.ImhDigitsOnly)
+        self.servoMilliEdit.setMaxLength(3)
+
+        self.horizontalLayout_7.addWidget(self.servoMilliEdit)
+
+        self.servoResetButton = QPushButton(self.groupBox_2)
+        self.servoResetButton.setObjectName(u"servoResetButton")
+
+        self.horizontalLayout_7.addWidget(self.servoResetButton)
 
 
         self.formLayout_2.setLayout(3, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_7)
@@ -209,17 +230,34 @@ class Ui_controlPanel(object):
 
         self.horizontalLayout_8 = QHBoxLayout()
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.shutdTimeEdit = QTimeEdit(self.groupBox_2)
-        self.shutdTimeEdit.setObjectName(u"shutdTimeEdit")
-        self.shutdTimeEdit.setMaximumTime(QTime(0, 59, 59))
-        self.shutdTimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
+        self.EOETimeEdit = QTimeEdit(self.groupBox_2)
+        self.EOETimeEdit.setObjectName(u"EOETimeEdit")
+        self.EOETimeEdit.setMaximumTime(QTime(0, 59, 59))
+        self.EOETimeEdit.setCurrentSection(QDateTimeEdit.Section.MinuteSection)
 
-        self.horizontalLayout_8.addWidget(self.shutdTimeEdit)
+        self.horizontalLayout_8.addWidget(self.EOETimeEdit)
 
-        self.shutdResetButton = QPushButton(self.groupBox_2)
-        self.shutdResetButton.setObjectName(u"shutdResetButton")
+        self.label_11 = QLabel(self.groupBox_2)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMaximumSize(QSize(5, 16777215))
 
-        self.horizontalLayout_8.addWidget(self.shutdResetButton)
+        self.horizontalLayout_8.addWidget(self.label_11)
+
+        self.EOEMilliEdit = QLineEdit(self.groupBox_2)
+        self.EOEMilliEdit.setObjectName(u"EOEMilliEdit")
+        sizePolicy.setHeightForWidth(self.EOEMilliEdit.sizePolicy().hasHeightForWidth())
+        self.EOEMilliEdit.setSizePolicy(sizePolicy)
+        self.EOEMilliEdit.setMaximumSize(QSize(35, 16777215))
+        self.EOEMilliEdit.setBaseSize(QSize(0, 0))
+        self.EOEMilliEdit.setInputMethodHints(Qt.InputMethodHint.ImhDigitsOnly)
+        self.EOEMilliEdit.setMaxLength(3)
+
+        self.horizontalLayout_8.addWidget(self.EOEMilliEdit)
+
+        self.EOEResetButton = QPushButton(self.groupBox_2)
+        self.EOEResetButton.setObjectName(u"EOEResetButton")
+
+        self.horizontalLayout_8.addWidget(self.EOEResetButton)
 
 
         self.formLayout_2.setLayout(4, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_8)
@@ -233,11 +271,25 @@ class Ui_controlPanel(object):
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
         self.dryRunOnButton = QPushButton(self.groupBox_2)
         self.dryRunOnButton.setObjectName(u"dryRunOnButton")
+        self.dryRunOnButton.setCheckable(True)
 
         self.horizontalLayout_9.addWidget(self.dryRunOnButton)
 
 
         self.formLayout_2.setLayout(5, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_9)
+
+        self.label_3 = QLabel(self.groupBox_2)
+        self.label_3.setObjectName(u"label_3")
+        sizePolicy1.setHeightForWidth(self.label_3.sizePolicy().hasHeightForWidth())
+        self.label_3.setSizePolicy(sizePolicy1)
+        self.label_3.setMinimumSize(QSize(150, 0))
+
+        self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_3)
+
+        self.label_7 = QLabel(self.groupBox_2)
+        self.label_7.setObjectName(u"label_7")
+
+        self.formLayout_2.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_7)
 
 
         self.verticalLayout.addWidget(self.groupBox_2)
@@ -260,19 +312,25 @@ class Ui_controlPanel(object):
         self.ledOnButton.setText(QCoreApplication.translate("controlPanel", u"On", None))
         self.ledOffButton.setText(QCoreApplication.translate("controlPanel", u"Off", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("controlPanel", u"Test Mode", None))
-        self.label_3.setText(QCoreApplication.translate("controlPanel", u"Test Run", None))
         self.startTestButton.setText(QCoreApplication.translate("controlPanel", u"Start", None))
         self.stopTestButton.setText(QCoreApplication.translate("controlPanel", u"Stop", None))
-        self.label_7.setText(QCoreApplication.translate("controlPanel", u"Preparation Duration", None))
-        self.prepTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.prepResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
-        self.label_6.setText(QCoreApplication.translate("controlPanel", u"Experiment Duration", None))
-        self.expTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.expResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
-        self.label_8.setText(QCoreApplication.translate("controlPanel", u"Shutdown Duration", None))
-        self.shutdTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
-        self.shutdResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.valveTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.label_5.setText(QCoreApplication.translate("controlPanel", u",", None))
+        self.valveMilliEdit.setText(QCoreApplication.translate("controlPanel", u"000", None))
+        self.valveResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.label_6.setText(QCoreApplication.translate("controlPanel", u"Servo Cycle Time", None))
+        self.servoTimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.label_10.setText(QCoreApplication.translate("controlPanel", u",", None))
+        self.servoMilliEdit.setText(QCoreApplication.translate("controlPanel", u"000", None))
+        self.servoResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
+        self.label_8.setText(QCoreApplication.translate("controlPanel", u"Active Experiment Time", None))
+        self.EOETimeEdit.setDisplayFormat(QCoreApplication.translate("controlPanel", u"mm:ss", None))
+        self.label_11.setText(QCoreApplication.translate("controlPanel", u",", None))
+        self.EOEMilliEdit.setText(QCoreApplication.translate("controlPanel", u"000", None))
+        self.EOEResetButton.setText(QCoreApplication.translate("controlPanel", u"Reset", None))
         self.label_9.setText(QCoreApplication.translate("controlPanel", u"Dry Run", None))
         self.dryRunOnButton.setText(QCoreApplication.translate("controlPanel", u"On", None))
+        self.label_3.setText(QCoreApplication.translate("controlPanel", u"Test Run", None))
+        self.label_7.setText(QCoreApplication.translate("controlPanel", u"Valve Open Time", None))
     # retranslateUi
 

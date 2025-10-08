@@ -25,8 +25,8 @@ from MEEGA_PyDataHandling import *
 class Settings:
     AUTOMATIC = 0
     MANUAL = 1
-    FLIGHT = 2
-    TEST = 3
+    FLIGHT = 0
+    TEST = 1
     defaultFilePath = "Default.meega"
     defaultLaunchTime = QTime(12,0,0)
     def __init__(self, locale: QLocale = None, mode: int = TEST, connectionMode: int = AUTOMATIC, filePath: str = defaultFilePath, launchTime: QTime = defaultLaunchTime):
@@ -291,17 +291,18 @@ class GSControl(QWidget):
         self.ledState = 0      # False (Off)
         self.servoAngle = 0 # in 1/10 °
         self.dryRunActive = 0
-        self.testRunActive = 0  
+        self.testRunStart = 0
+        self.testRunStop = 0
         # Initialize duration values
-        self.preparationDuration = QTime(0, 0, 0)
-        self.experimentDuration = QTime(0, 0, 0)
-        self.shutdownDuration = QTime(0, 0, 0)
+        self.valveDelay = QTime(0, 0, 0)
+        self.servoDelay = QTime(0, 0, 0)
+        self.EOEDelay = QTime(0, 0, 0)
         # Connect signals to slots
         self.connectSignals()
         
     def connectSignals(self):
         # Valve controls
-        self.ui.openValveButton.clicked.connect(self.openValve)
+        self.ui.openValveButton.clicked.connect(self.openValve, self.sendTC)
         self.ui.closeValveButton.clicked.connect(self.closeValve)
         # Servo controls
         self.ui.setServoButton.clicked.connect(self.setServoAngle)
@@ -312,84 +313,99 @@ class GSControl(QWidget):
         self.ui.startTestButton.clicked.connect(self.startTest)
         self.ui.stopTestButton.clicked.connect(self.stopTest)
         # Dry run control
-        self.ui.dryRunOnButton.clicked.connect(self.dryRunOn)
-        # Duration time edits
-        self.ui.prepTimeEdit.timeChanged.connect(self.setPreparationDuration)
-        self.ui.expTimeEdit.timeChanged.connect(self.setExperimentDuration)
-        self.ui.shutdTimeEdit.timeChanged.connect(self.setShutdownDuration)
+        self.ui.dryRunOnButton.clicked.connect(self.dryRunSwitch)
         # Reset buttons
-        self.ui.prepResetButton.clicked.connect(self.resetPreparationDuration)
-        self.ui.expResetButton.clicked.connect(self.resetExperimentDuration)
-        self.ui.shutdResetButton.clicked.connect(self.resetShutdownDuration)
+        self.ui.valveResetButton.clicked.connect(self.resetValveDelay)
+        self.ui.servoResetButton.clicked.connect(self.resetServoDelay)
+        self.ui.EOEResetButton.clicked.connect(self.resetEOEDelay)
     
+    # external functions for ui controls
     # Valve control slots
     @Slot()
     def openValve(self):
         self.valveControl = 1
-        DataHandling.CreateTC()
+        self.sendTC()
     @Slot()
     def closeValve(self):
         self.valveControl = 0
+        self.sendTC()
     # Servo control slot
     @Slot()
     def setServoAngle(self):
         self.servoAngle = self.ui.servoValueBox.value()
+        self.sendTC()
     # LED control slots
     @Slot()
     def onLED(self):
         self.ledState = 0
+        self.sendTC()
     @Slot()
     def offLED(self):
         self.ledState = 1
+        self.sendTC()
     # Test run control slots
     @Slot()
     def startTest(self):
-        self.testRunActive = 1
+        self.testRunStart = 1
+        self.sendTC()
+        self.testRunStart = 0
     @Slot()
     def stopTest(self):
-        self.testRunActive = 0
+        self.testRunStop = 1
+        self.sendTC()
+        self.testRunStop = 0
     # Dry run control slot
     @Slot()
-    def dryRunOn(self):
-        self.dryRunActive = 1
-    # Duration change slots
-    @Slot()
-    def setPreparationDuration(self, time):
-        self.preparationDuration = time
-    @Slot()
-    def setExperimentDuration(self, time):
-        self.experimentDuration = time
-    @Slot()
-    def setShutdownDuration(self, time):
-        self.shutdownDuration = time
+    def dryRunSwitch(self):
+        if self.ui.dryRunOnButton.isChecked():
+            self.dryRunActive = 1
+        else:
+            self.dryRunActive = 0
     # Reset duration slots
     @Slot()
-    def resetPreparationDuration(self):
-        self.ui.prepTimeEdit.setTime(QTime(0, 0, 0))
-        self.preparationDuration = QTime(0, 0, 0)
+    def resetValveDelay(self):
+        self.ui.valveTimeEdit.setTime(QTime(0, 0, 0))
+        self.ui.valveMilliEdit.setText("000")
+        self.valveDelay = QTime(0, 0, 0)
     @Slot()
-    def resetExperimentDuration(self):
-        self.ui.expTimeEdit.setTime(QTime(0, 0, 0))
-        self.experimentDuration = QTime(0, 0, 0)
+    def resetServoDelay(self):
+        self.ui.servoTimeEdit.setTime(QTime(0, 0, 0))
+        self.ui.servoMilliEdit.setText("000")
+        self.servoDelay = QTime(0, 0, 0)
     @Slot()
-    def resetShutdownDuration(self):
-        self.ui.shutdTimeEdit.setTime(QTime(0, 0, 0))
-        self.shutdownDuration = QTime(0, 0, 0)
+    def resetEOEDelay(self):
+        self.ui.EOETimeEdit.setTime(QTime(0, 0, 0))
+        self.ui.EOEMilliEdit.setText("000")
+        self.EOEDelay = QTime(0, 0, 0)
 
-    @Slot()
-    def fetchSettings(self):
-        # This method can be used to retrieve all current settings if needed
-        return {
-            'valve_state': self.valve_state,
-            'led_state': self.led_state,
-            'camera_state': self.camera_state,                  #!!Umbennen und f�r telecommand benutzen!!
-            'servo_angle': self.servo_angle,                   #!!return funktioniert nicht gut mit Signal&Slots!!
-            'test_run_active': self.test_run_active,
-            'dry_run_active': self.dry_run_active,
-            'preparation_duration': self.preparation_duration,
-            'experiment_duration': self.experiment_duration,
-            'shutdown_duration': self.shutdown_duration
-        }
+    # internal functions
+    # Duration changes
+    def setDelays(self):
+        self.valveDelay = self.ui.valveTimeEdit.time().addMSecs(int(self.ui.valveMilliEdit.text()))
+        self.servoDelay = self.ui.servoTimeEdit.time().addMSecs(int(self.ui.servoMilliEdit.text()))
+        self.EOEDelay = self.ui.EOETimeEdit.time().addMSecs(int(self.ui.EOEMilliEdit.text()))
+    # Update the telecommand frame with current control states and durations
+    def UpdateTCframe(self, tcframe):
+        DataHandling.WriteFrame(tcframe, 0, self.settings.mode)
+        DataHandling.WriteFrame(tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
+        DataHandling.WriteFrame(tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
+        DataHandling.WriteFrame(tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
+        #PowerOffDelay fehlt
+        #NozzleOnDelay fehlt
+        DataHandling.WriteFrame(tcframe, 6, self.dryRunActive)
+        DataHandling.WriteFrame(tcframe, 7, self.ledState)
+        DataHandling.WriteFrame(tcframe, 8, self.servoAngle*10)
+        DataHandling.WriteFrame(tcframe, 9, self.valveControl)
+        #Camera control fehlt
+        DataHandling.WriteFrame(tcframe, 11, self.testRunStop)
+        DataHandling.WriteFrame(tcframe, 12, self.testRunStart)
+        return tcframe
+    # Send the telecommand frame
+    def sendTC(self):
+        self.setDelays()
+        tcframe = DataHandling.CreateTC()
+        tcframe = self.UpdateTCframe(tcframe)
+        DataHandling.AddFrame(tcframe)
 
 class GSConnection(QDialog):
     def __init__(self):
