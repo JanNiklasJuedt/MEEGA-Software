@@ -166,14 +166,14 @@ class GSMain(QMainWindow):
             frame = frame.contents.data
             for i in range(12):
                 self.status[i][0] = DataHandling.ReadFrame(frame, 12+i)
-            self.status[12][0] = DataHandling.ReadFrame(frame, 25)
-            self.status[13][0] = DataHandling.ReadFrame(frame, 26)
-            self.status[14][0] = DataHandling.ReadFrame(frame, 28)
-            self.status[15][0] = DataHandling.ReadFrame(frame, 29)
-            self.status[16][0] = DataHandling.ReadFrame(frame, 30)
-            self.status[17][0] = DataHandling.ReadFrame(frame, 31)
-            self.status[18][0] = DataHandling.ReadFrame(frame, 33)
-            self.status[19][0] = DataHandling.ReadFrame(frame, 34)
+            self.status[12][0] = DataHandling.ReadFrame(frame, 26)
+            self.status[13][0] = DataHandling.ReadFrame(frame, 27)
+            self.status[14][0] = DataHandling.ReadFrame(frame, 29)
+            self.status[15][0] = DataHandling.ReadFrame(frame, 30)
+            self.status[16][0] = DataHandling.ReadFrame(frame, 31)
+            self.status[17][0] = DataHandling.ReadFrame(frame, 32)
+            self.status[18][0] = DataHandling.ReadFrame(frame, 34)
+            self.status[19][0] = DataHandling.ReadFrame(frame, 35)
         #update the displayed status pixmaps
         for i in range(20):
             match self.status[i][0]:
