@@ -1,5 +1,4 @@
 #imports
-from asyncio.windows_events import NULL
 import sys
 import time
 from tkinter import SEL
