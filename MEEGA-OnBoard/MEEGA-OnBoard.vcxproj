@@ -135,6 +135,9 @@
   <ItemGroup>
     <ClCompile Include="MEEGA_OnBoard.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MEEGA_OnBoard.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
