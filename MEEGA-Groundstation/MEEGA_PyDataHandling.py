@@ -33,8 +33,6 @@ DataHandling.ReadCalibration.argtypes = [c_char_p]
 
 DataHandling.CreateCalibration.argtypes = [c_char_p]
 
-DataHandling.Initialize.argtypes = [c_char_p]
-
 DataHandling.CreateFrame.argtypes = [c_uint16]
 DataHandling.CreateFrame.restype = DataFrame
 
