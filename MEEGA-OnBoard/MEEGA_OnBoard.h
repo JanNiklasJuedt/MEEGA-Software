@@ -8,14 +8,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef MEEGA_ONBOARD_H
-#define MEEGA_ONBOARD_H
 
 #define WINDOWS 0
 #define LINUX 1
 
 #define DEBUG 0
 #define RELEASE 1
+
+#define TEST 0
+#define RUN 1
 
 #define SERVO_v1 0
 #define SERVO_v2 1
@@ -24,10 +25,24 @@
 #define SPIDEV 1
 
 //OnBoard Settings
-#define MODE DEBUG
 #define ONBOARD_OS WINDOWS
+#define MODE DEBUG
+#define EXPERIMENT TEST
 #define SERVO_VERSION SERVO_v1
 #define SENSORS_SPI_VERSION WIRINGPISPI
+
+
+//PinOut for CM5
+#define LEDs_Pin 4	//pin
+#define Valve_Pin 16	//pin
+#define ValveSwitch 01	//pin
+#define Servo_Pin 12	//pin
+#define Servo_On 5	//pin
+#define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
+
+#define RPi_SOE 25	//pin
+#define RPi_LO 23	//pin
 
 
 #if (ONBOARD_OS == WINDOWS)
@@ -143,7 +158,6 @@ float temperatureRead[TEMPERATURE_SENSORS];
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
-#include "MEEGA_OnBoard.h"
 
 #define SPI_PRESSURE "/dev/spidev0.1"
 #define SPI_TEMPERATURE "/dev/spidev0.0"
@@ -153,7 +167,8 @@ float temperatureRead[TEMPERATURE_SENSORS];
 
 //Global Variables Declaration
 #if (MODE == DEBUG)
-int NozzlePos = 0;
+int NozzlePos = 0,
+	SoE = 0;
 #endif
 int ValveOpen = 1,
 	ValveClose = 0,
@@ -167,11 +182,13 @@ int ValveOpen = 1,
 	NozzleStuck = 3,
 	NozzleOpen = 1,
 	NozzleOpened = 0,
-	EoE = 0,
-	SoE = 0,
-	LO = 0,
+	
 	ExperimentStatus,
-	SoEReceived = 0;
+	TestStatus = 0,
+	LOSignal,
+	SoEReceived = 0,
+	EoE = 0,
+	modeSel;
 
 //Parameters Declaration
 struct parameter {
@@ -223,6 +240,3 @@ void FailSafeRecovery();
 void ReadPressureSensors(float* Sensors);
 //Read Temperature sensors from SPI
 void ReadTemperatureSensors(float* Sensors);
-
-
-#endif //MEEGA_ONBOARD_H
