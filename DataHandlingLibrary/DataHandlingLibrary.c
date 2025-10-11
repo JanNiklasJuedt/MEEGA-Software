@@ -3,6 +3,7 @@
 
 //Core initialization
 static struct DataHandlingHub dataHandling = { NULL, NULL, NULL, NULL, NULL, NULL };
+static SaveFrame* currentFrame = NULL;
 
 //INTERNAL
 static int _SetPositions_();
@@ -1121,11 +1122,12 @@ int CreateSave(const char path[])
 
 int CheckSave()
 {
+	/* -----------------------------------------------------REWRITE DUE
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
 		return 0;
 	}
-	SaveFileFrame* overhead = GetSaveFrame(dataHandling.saveFile->savedAmount);
+	SaveFrame* overhead = GetSaveFrame(dataHandling.saveFile->savedAmount);
 	if (overhead != NULL) {
 		if (overhead->previousFrame != NULL) overhead->previousFrame->nextFrame = NULL;
 		dataHandling.saveFile->lastFrame = overhead->previousFrame;
@@ -1149,6 +1151,7 @@ int CheckSave()
 		while (overhead->nextFrame != NULL) overhead = overhead->nextFrame, dataHandling.saveFile->frameAmount++;
 		dataHandling.saveFile->lastFrame = overhead;
 	}
+	*/
 	return 1;
 }
 
@@ -1203,7 +1206,8 @@ int WriteSave()
 	if (dataHandling.saveFile->saveFilePath[0] != '\0') {
 		file = fopen(dataHandling.saveFile->saveFilePath, "ab");
 		if (file != NULL) {
-			SaveFileFrame* current = GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount);
+			GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount);
+			SaveFrame* current = currentFrame;
 			byte* bytePtr = NULL;
 			int number = 0;
 			while (current != NULL) {
@@ -1223,21 +1227,44 @@ int WriteSave()
 	return 0;
 }
 
-SaveFileFrame* GetSaveFrame(int index)
+DataFrame GetSaveFrame(int index)
 {
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!SaveFile could not be found");
-		return NULL;
+		return EmptyFrame();
 	}
-	if (index >= dataHandling.saveFile->frameAmount || index < 0) return dataHandling.saveFile->lastFrame;
-	if (index == 0) return dataHandling.saveFile->firstFrame;
-	SaveFileFrame* frame = dataHandling.saveFile->firstFrame;
-	for (int i = 0; i < index; i++) {
-		if (frame == NULL) return NULL;
-		if (frame->nextFrame == NULL) return frame;
+	if (dataHandling.saveFile->lastFrame == NULL) {
+		DebugLog("!SaveFile is empty");
+		return EmptyFrame();
+	}
+	SaveFrame* frame = NULL;
+	if (index >= dataHandling.saveFile->frameAmount || index < 0) frame = dataHandling.saveFile->lastFrame;
+	else frame = dataHandling.saveFile->firstFrame;
+	for (int i = 0; i < index;) {
+		if (frame == NULL) return EmptyFrame();
+		if (frame->nextFrame == NULL) break;
 		frame = frame->nextFrame;
+		if (!FrameIsTC(frame->data)) i++;
 	}
-	return frame;
+	while (FrameIsTC(frame->data)) {
+		if (frame->previousFrame != NULL) frame = frame->previousFrame;
+		else return EmptyFrame();
+	}
+	currentFrame = frame;
+	return frame->data;
+}
+
+DataFrame GetNextFrame()
+{
+	if (dataHandling.saveFile == NULL) {
+		DebugLog("!SaveFile could not be found");
+		return EmptyFrame();
+	}
+	if (currentFrame->nextFrame != NULL) {
+		currentFrame = currentFrame->nextFrame;
+		return currentFrame->data;
+	}
+	else return EmptyFrame();
 }
 
 DataFrame UpdateTC()
@@ -1252,25 +1279,26 @@ DataFrame UpdateTC()
 		dataHandling.saveFile->currentTC = newestTC;
 		return newestTC;
 	}
-	SaveFileFrame* currentFrame = dataHandling.saveFile->lastFrame;
+	SaveFrame* currentFrame = dataHandling.saveFile->lastFrame;
 	for (; currentFrame->previousFrame != NULL; currentFrame = currentFrame->previousFrame) {
 		if (FrameIsTC(currentFrame->data)) {
-			if (FrameIsEmpty(newestTC)) newestTC = currentFrame->data;
-			else if (currentFrame->data.sync < newestTC.sync) break;
-			else if (currentFrame->data.sync > newestTC.sync) newestTC = currentFrame->data;
+			if (!FrameIsEmpty(currentFrame->data) & FrameHasFlag(currentFrame->data, OK)) {
+				newestTC = currentFrame->data;
+				break;
+			}
 		}
 	}
 	if (!FrameIsEmpty(newestTC)) dataHandling.saveFile->currentTC = newestTC;
 	return dataHandling.saveFile->currentTC;
 }
 
-SaveFileFrame* AddSaveFrame(DataFrame data)
+void AddSaveFrame(DataFrame data)
 {
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!SaveFile could not be found");
 		return NULL;
 	}
-	SaveFileFrame* newFrame = malloc(sizeof(SaveFileFrame));
+	SaveFrame* newFrame = malloc(sizeof(SaveFrame));
 	if (newFrame == NULL) {
 		DebugLog("!Memory allocation failed");
 		return NULL;
@@ -1289,16 +1317,7 @@ SaveFileFrame* AddSaveFrame(DataFrame data)
 		dataHandling.saveFile->lastFrame = newFrame;
 		dataHandling.saveFile->frameAmount++;
 	}
-	return dataHandling.saveFile->lastFrame;
-}
-
-SaveFileFrame* CreateSaveFrame()
-{
-	if (dataHandling.saveFile == NULL) {
-		DebugLog("!SaveFile could not be found");
-		return NULL;
-	}
-	return AddSaveFrame(CreateFrame());
+	return;
 }
 
 void CloseSave()
@@ -1310,7 +1329,7 @@ void CloseSave()
 	}
 	DebugLog("Savefile found@", dataHandling.saveFile);
 	DebugLog("Emptying SaveFileFrames?");
-	SaveFileFrame *current = dataHandling.saveFile->lastFrame, *last = dataHandling.saveFile->firstFrame, *next;
+	SaveFrame *current = dataHandling.saveFile->lastFrame, *last = dataHandling.saveFile->firstFrame, *next;
 	if (current != NULL) {
 		next = current->previousFrame;
 		while (next != NULL) {
