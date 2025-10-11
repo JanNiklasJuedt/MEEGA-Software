@@ -41,7 +41,7 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
-#define DEFAULTCOMPATH "COM1"
+#define DEFAULTCOMPATH "COM3"
 
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 
@@ -52,7 +52,7 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 
 #define DATAHANDLINGLIBRARY_CONSTANT
 #define DATAHANDLINGLIBRARY_API
-#define DEFAULTCOMPATH "/dev/tty1"
+#define DEFAULTCOMPATH "/dev/serial0"
 #define INVALID_HANDLE_VALUE -1
 
 #endif // DATAHANDLINGLIBRARY_OS
@@ -91,7 +91,7 @@ typedef unsigned char byte;
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 6 //Bits
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 38400
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFER_LENGTH;
@@ -192,19 +192,19 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 } FailSafe;
 
 //Stores one DataFrame of a savefile, as well as a pointer to the next one
-typedef struct DATAHANDLINGLIBRARY_API SaveFileFrame {
+typedef struct DATAHANDLINGLIBRARY_API SaveFrame {
 	struct DataFrame data;
-	struct SaveFileFrame* nextFrame;
-	struct SaveFileFrame* previousFrame;
-} SaveFileFrame;
+	struct SaveFrame* nextFrame;
+	struct SaveFrame* previousFrame;
+} SaveFrame;
 
 //Stores all data collected/received during the mission
 typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	float version;
 	time_t dateTime;
 	//pointer towards the first "DataFrame", subsequent frames are pointed to by themselves
-	struct SaveFileFrame* firstFrame;
-	struct SaveFileFrame* lastFrame;
+	struct SaveFrame* firstFrame;
+	struct SaveFrame* lastFrame;
 	//total amount of frames added to the SaveFile
 	int frameAmount;
 	//total amount of frames already written to the harddrive
@@ -213,7 +213,7 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	int loadedAmount;
 	//amount of frames unloaded from memory
 	int unloadedAmount;
-	//pointer towards a collection of all newest TeleCommands
+	//the newest TeleCommand
 	struct DataFrame currentTC;
 	//path to the associated file
 	char saveFilePath[PATH_LENGTH];
@@ -376,17 +376,17 @@ DATAHANDLINGLIBRARY_API int CheckSave();
 //Reads a SaveFile-file into a Savefile-structure, discarding current memory
 DATAHANDLINGLIBRARY_API int ReadSave(const char path[]);
 
-//Returns the Frame of the SaveFile at the corresponding index, defaults to the last one
-DATAHANDLINGLIBRARY_API SaveFileFrame* GetSaveFrame(int index);
+//Returns the Frame of the SaveFile at the corresponding index, defaults to the last one and ignores TC Frames!
+DATAHANDLINGLIBRARY_API DataFrame GetSaveFrame(int index);
 
-//Updates {currentTC} to represent all saved TeleCommand-DataFrames, returns the updated {currentTC}
+//Returns the next Frame, counting from the last successful call to GetSaveFrame()
+DATAHANDLINGLIBRARY_API DataFrame GetNextFrame();
+
+//Returns the newest TC Frame
 DATAHANDLINGLIBRARY_API DataFrame UpdateTC();
 
-//Adds a new frame to the end of the SaveFile, returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* AddSaveFrame(DataFrame data);
-
-//Shortcut to CreateFrame() and AddSaveFrame(), returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame();
+//Adds a new frame to the end of the SaveFile
+DATAHANDLINGLIBRARY_API void AddSaveFrame(DataFrame data);
 
 //Frees allocated Memory of the passed SaveFile's Frames, does not free SaveFile itself
 DATAHANDLINGLIBRARY_API void CloseSave();
