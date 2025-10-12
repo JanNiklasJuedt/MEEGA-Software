@@ -24,9 +24,10 @@
 #define CUBIC 2
 
 //DataHandling Settings
-const int DATAHANDLINGLIBRARY_OS = WINDOWS_OS;
-const int CALIBRATION_METHOD = LINEAR;
-const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
+#define DATAHANDLINGLIBRARY_OS WINDOWS_OS
+#define CALIBRATION_METHOD LINEAR
+#define DEBUG_OUTPUT LOGFILE + TERMINAL
+#define USE_DEFAULT_VALUES 1
 //-
 
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -41,7 +42,7 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
-#define DEFAULTCOMPATH "COM3"
+#define DEFAULTCOMPATH "COM1"
 
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 
@@ -135,11 +136,13 @@ enum DATAHANDLINGLIBRARY_API Flag {
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
-	//Used to chronologically order DataFrames (0 denotes an empty DataFrame)
+	//Used to form DataPackets (0 denotes an empty DataFrame)
 	SYNC_TYPE sync;
-	//Used to mark DataFrames for faulty or missing data
+	//Used to mark DataFrames for faulty or missing data and TeleCommand
 	byte flag;
+	//Byte Array for saving data
 	byte data[DATA_LENGTH];
+	//Checksum to check for complete Frames
 	CHKSM_TYPE chksm;
 } DataFrame;
 
@@ -149,8 +152,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	SYNC_TYPE sync;
 	//Used to identify payload data
 	byte msg;
+	//Byte Array containing a part of the Frame.data
 	byte payload[PAYLOAD_LENGTH];
-	//Checksum output
+	//Checksum of the corresponding Frame
 	CHKSM_TYPE chksm;
 	//Cyclic Redundancy Check Output
 	CHKSM_TYPE crc;
@@ -211,7 +215,7 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	int savedAmount;
 	//amount of frames currently loaded into memory
 	int loadedAmount;
-	//amount of frames unloaded from memory
+	//amount of frames unloaded from memory (unimplemented)
 	int unloadedAmount;
 	//the newest TeleCommand
 	struct DataFrame currentTC;
@@ -360,8 +364,7 @@ DATAHANDLINGLIBRARY_API int CreateFailSafe();
 //Reads the current Failsafe-file into a structure
 DATAHANDLINGLIBRARY_API int ReadFailSafe();
 
-//Updates the current Failsafe-file to match the structure or creates a new one if none was found,
-//returns {0} if successful, {1} if it created a new file and {-1} if there was an error
+//Updates the current Failsafe-file to match the structure, returns whether successful
 DATAHANDLINGLIBRARY_API int WriteFailSafe();
 
 //Writes the frames added since the last save onto the harddrive, returns the number of bytes written or {-1} if unsuccessful
@@ -370,7 +373,7 @@ DATAHANDLINGLIBRARY_API int WriteSave();
 //Creates a new SaveFile structure and file
 DATAHANDLINGLIBRARY_API int CreateSave(const char path[]);
 
-//Reloads all frames from the SaveFile-file into the SaveFile-structure, appending excess from memory
+//Rewrite Due
 DATAHANDLINGLIBRARY_API int CheckSave();
 
 //Reads a SaveFile-file into a Savefile-structure, discarding current memory
@@ -399,5 +402,8 @@ DATAHANDLINGLIBRARY_API int Send(byte* start, int amount);
 
 //Reads received data via the configured path into the buffer, returns the amount of bytes received
 DATAHANDLINGLIBRARY_API int Receive(byte* buffer, int max);
+
+//Tries to open the comm Port with the specified name
+DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
 
 #endif // DATAHANDLINGLIBRARY_H
