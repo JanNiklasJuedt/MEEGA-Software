@@ -136,6 +136,8 @@ enum DATAHANDLINGLIBRARY_API Flag {
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
+	//Signals the beginning of a new Frame (= -1)
+	byte start;
 	//Used to form DataPackets (0 denotes an empty DataFrame)
 	SYNC_TYPE sync;
 	//Used to mark DataFrames for faulty or missing data and TeleCommand
@@ -148,6 +150,8 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 
 //Stores the data contained in one packet of the transmission protocol
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
+	//Signals the beginning of a new Packet (= -1)
+	byte start;
 	//Used to stitch together DataFrames (= DataFrame.sync)
 	SYNC_TYPE sync;
 	//Used to identify payload data
@@ -271,14 +275,14 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 	struct FrameLookUpTable* frameLookUp;
 } DataHandlingHub;
 
-//Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,$,@)
+//Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,§,@)
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
 //Calculates checksum of given DataFrame
 DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataFrame data);
 
-//Calculates cyclic redundancy check of given DataPacket
-DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateCRC(DataPacket data);
+//Calculates cyclic redundancy check with given DataPacket, returns whether there are uncorrected errors
+DATAHANDLINGLIBRARY_API int CalculateCRC(DataPacket* data);
 
 //Calls necessary functions for saving and transmitting data;
 DATAHANDLINGLIBRARY_API int UpdateAll();
@@ -319,10 +323,10 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 //Initializes Memory and loads Data from files if possible
 DATAHANDLINGLIBRARY_API int Initialize();
 
-//Returns a new empty DataFrame with the specified Sync-bytes value
+//Returns a new DataFrame
 DATAHANDLINGLIBRARY_API DataFrame CreateFrame();
 
-//Returns a new empty TeleCommand-DataFrame with the specified Sync-bytes value
+//Returns a new empty TeleCommand-DataFrame
 DATAHANDLINGLIBRARY_API DataFrame CreateTC();
 
 //Returns an empty DataFrame
@@ -347,7 +351,10 @@ DATAHANDLINGLIBRARY_API int FrameIsTC(DataFrame frame);
 DATAHANDLINGLIBRARY_API int FrameHasFlag(DataFrame frame, int id);
 
 //Sets the given flag-ID (enum Flags) for the given frame
-DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id);
+DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id); 
+
+//Removes the given flag-ID (enum Flags) for the given frame
+DATAHANDLINGLIBRARY_API void FrameRemoveFlag(DataFrame* frame, int id);
 
 //Adds an outgoing DataFrame to the Buffer, returns the corresponding index
 DATAHANDLINGLIBRARY_API int AddOutFrame(DataFrame frame);

@@ -33,12 +33,28 @@ int LoadPort(); //Configures and opens the communication port
 CHKSM_TYPE CalculateChecksum(DataFrame data)
 {
 	//WIP
-	return 42;
+	CHKSM_TYPE chksm = 42;
+	//.... calculate
+	if (chksm == -1) chksm--;
+	return chksm;
 }
-CHKSM_TYPE CalculateCRC(DataPacket data)
+int CalculateCRC(DataPacket* data)
 {
 	//WIP
-	return 0;
+	CHKSM_TYPE crc = 1;
+	if (data->crc == 0) {
+		//.... calculate
+		if (crc == 0 || crc == -1) return 1;
+		data->crc = crc;
+		return 0;
+	}
+	else {
+		//.... calculate
+		crc = 0;
+		if (crc == 0) return 0;
+		//.... calculate
+		return 1;
+	}
 }
 
 int UpdateAll()
@@ -87,7 +103,6 @@ int UpdateFiles()
 		out -= 1;
 	}
 	else if (WriteSave() == -1) {
-		DebugLog("!Could not write SaveFile file");
 		out -= 1;
 	}
 	if (dataHandling.failSafe == NULL) {
@@ -95,7 +110,6 @@ int UpdateFiles()
 		out -= 1;
 	}
 	else if (!WriteFailSafe()) {
-		DebugLog("!Could not write FailSafe file");
 		out -= 1;
 	}
 	if (dataHandling.calibration == NULL) {
@@ -105,7 +119,6 @@ int UpdateFiles()
 		}
 	}
 	else if (!WriteCalibration()) {
-		DebugLog("!Could not write Calibration file");
 		out -= 1;
 	}
 	return out;
@@ -215,6 +228,7 @@ int WriteCalibration()
 		DebugLog("!Could not find Calibration_");
 		return 0;
 	}
+	DebugLog("Calibration found@", dataHandling.calibration);
 	SensorCalibration calibration = *dataHandling.calibration;
 	if (calibration.changed) {
 		FILE* file = fopen(calibration.calibrationFilePath, "w");
@@ -230,7 +244,7 @@ int WriteCalibration()
 				fprintf(file, "}\n");
 			}
 			fclose(file);
-			DebugLog("Calibration written at§_");
+			DebugLog("Calibration written at§_", calibration.calibrationFilePath);
 			return 1;
 		}
 		else {
@@ -273,6 +287,7 @@ void _SortCalibration_()
 static SYNC_TYPE _GetSync_()
 {
 	static SYNC_TYPE current = 0;
+	if (current == -2) current = 0;
 	return current++;
 }
 
@@ -453,20 +468,20 @@ int Initialize()
 			}
 		}
 		if ((dataHandling.calibration == NULL) & USE_DEFAULT_VALUES) {
-			DebugLog("Creating new Calibration?");
-			if (CreateCalibration(CALIBRATION_NAME)) DebugLog("Calibration created");
+			DebugLog("Creating new Calibration:");
+			if (CreateCalibration(CALIBRATION_NAME)) DebugLog("Calibration created_");
 		}
 	}
 	else DebugLog("Skipping Calibration");
 
-	DebugLog("Executing Misc tasks?");
+	DebugLog("Executing Misc tasks:");
 	_CreateFrameLookUp_();
 	_SetPositions_();
 	_CreateHandler_();
 	DebugLog("Creating Buffer?");
 	if (CreateBuffer()) DebugLog("Buffer created");
 	if (USE_DEFAULT_VALUES)	LoadPort();
-	DebugLog("Misc tasks completed");
+	DebugLog("Misc tasks completed_");
 	DebugLog("Setup done_");
 	return 1;
 }
@@ -491,12 +506,16 @@ DataFrame EmptyFrame()
 	DataFrame temp = { 0 };
 	byte* bytePtr = (byte*)&temp;
 	for (int i = 0; i < sizeof(DataFrame); i++) bytePtr[i] = 0;
+	temp.start = -1;
+	FrameSetFlag(&temp, Source);
 	return temp;
 }
 
 DataFrame EmptyTC() 
 {
-	return CreateTC(0);
+	DataFrame temp = EmptyFrame();
+	FrameSetFlag(&temp, TeleCommand);
+	return temp;
 }
 
 int _SetPositions_()
@@ -569,8 +588,9 @@ int _CreateHandler_()
 		strcpy(dataHandling.handler->comPath, dataHandling.failSafe->comPath);
 	else {
 		DebugLog("!Could not find FailSafe");
-		strcpy(dataHandling.handler->comPath, DEFAULTCOMPATH);
 	}
+	if ((dataHandling.handler->comPath[0] == '\0') & USE_DEFAULT_VALUES)
+		strcpy(dataHandling.handler->comPath, DEFAULTCOMPATH);
 	return 1;
 }
 
@@ -649,6 +669,7 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 		if (index / 8 + i == DATA_LENGTH) break;
 		frame->data[index / 8 + i] = bytePtr[i];
 	}
+	frame->chksm = CalculateChecksum(*frame);
 	return return_value;
 }
 
@@ -716,8 +737,20 @@ int FrameHasFlag(DataFrame frame, int id)
 void FrameSetFlag(DataFrame* frame, int id)
 {
 	if (frame == NULL || id >= 8 || id < 0) return;
+	if ((frame->flag >> id) % (1 << (id + 1)));
+	else frame->flag += 1 << id;
+	if (id == Partial || id == Biterror) {
+		FrameRemoveFlag(frame, OK);
+		FrameRemoveFlag(frame, Source);
+	}
+	else if (id == OK) FrameRemoveFlag(frame, Source);
+	return;
+}
+
+void FrameRemoveFlag(DataFrame* frame, int id)
+{
+	if (frame == NULL || id >= 8 || id < 0) return;
 	if ((frame->flag >> id) % (1 << (id + 1))) frame->flag -= 1 << id;
-	else frame->flag += + 1 << id;
 	return;
 }
 
@@ -728,6 +761,7 @@ DataPacket CreatePacket(SYNC_TYPE sync)
 	for (int i = 0; i < sizeof(out); i++)
 		bytePtr[i] = 0;
 	out.sync = sync;
+	out.start = -1;
 	return out;
 }
 
@@ -743,13 +777,13 @@ int PacketIsEmpty(DataPacket packet)
 
 int EncodePackets()
 {
-	//WIP
+	//Deprecated
 	return 1;
 }
 
 int DecodePackets()
 {
-	//WIP
+	//Deprecated
 	return 0;
 }
 
@@ -775,7 +809,7 @@ int FormPackets()
 				else currentPacket.payload[payloadIndex] = 0;
 			}
 			currentPacket.chksm = currentFrame.chksm;
-			currentPacket.crc = CalculateCRC(currentPacket);
+			CalculateCRC(&currentPacket);
 			AddOutPacket(currentPacket);
 			if (dataIndex >= DATA_LENGTH) break;
 		}
@@ -796,7 +830,7 @@ int FormFrames()
 	byte id, type, foundMatch, faulty;
 	for (; !PacketIsEmpty(currentPacket); currentPacket = GetInPacket(), number++) {
 		faulty = 0, foundMatch = 0;
-		if (CalculateCRC(currentPacket) != 0) faulty = 1;
+		if (CalculateCRC(&currentPacket)) faulty = 1;
 		_FromMSG_(currentPacket.msg, &type, &id);
 		if (framePtr->sync != currentPacket.sync) {
 			for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames; framePtr++) {
@@ -806,8 +840,10 @@ int FormFrames()
 				}
 			}
 			if (!foundMatch) {
-				framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame(currentPacket.sync));
+				framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
+				framePtr->sync = currentPacket.sync;
 				if (type) FrameSetFlag(framePtr, TeleCommand);
+				FrameSetFlag(framePtr, OK);
 				framePtr->chksm = currentPacket.chksm;
 			}
 		}
@@ -1012,10 +1048,8 @@ int ReadFailSafe()
 	for (int i = 0; i < sizeof(FailSafe); i++) bytePtr[i] = 0;
 	float ReadVersion = 0.0f;
 	this->version = FAILSAFE_VERSION;
-	DebugLog("Memory initialized");
 	file = fopen(FAILSAFE_NAME, "r");
 	if (file != NULL) {
-		DebugLog("File opened");
 		if (fscanf(file, "MEEGA FailSafe\n\nVersion: %f;", &ReadVersion) != EOF) {
 			if (ReadVersion == this->version) {
 				//Newest FileReader here:
@@ -1082,12 +1116,13 @@ int ReadFailSafe()
 
 int WriteFailSafe()
 {
+	DebugLog("Writing FailSafe to file:");
 	if (dataHandling.failSafe == NULL) {
-		DebugLog("!Could not find FailSafe");
+		DebugLog("!Could not find FailSafe_");
 		return 0;
 	}
+	DebugLog("FailSafe found@", dataHandling.failSafe);
 	FailSafe* failsafe = dataHandling.failSafe;
-	if (!failsafe->changed) return 0;
 	FILE* file;
 	file = fopen(FAILSAFE_NAME, "w");
 	if (file != NULL) {
@@ -1100,10 +1135,10 @@ int WriteFailSafe()
 		fprintf(file, "Nominal Exit: %c;\n", (failsafe->nominalExit) ? 'y' : 'n');
 		fprintf(file, "Mode: %c;\n", (failsafe->mode) ? 'f' : 't');
 		fclose(file);
-		failsafe->changed = 0;
+		DebugLog("FailSafe written at§_", FAILSAFE_NAME);
 		return 1;
 	}
-	else DebugLog("!Could not open FailSafe file");
+	else DebugLog("!Could not open FailSafe file_");
 	return 0;
 }
 
@@ -1497,10 +1532,10 @@ int LoadPort()
 #else
 			if (0);
 #endif
-			else DebugLog("!Could not set CommState of serial Port, Error:#_", errno);
+			else DebugLog("!Could not set CommState of serial Port, Error#_", errno);
 		}
 	}
-	else DebugLog("!Could not open serial Port, Error:#_", errno);
+	else DebugLog("!Could not open serial Port, Error#_", errno);
 	return 0;
 }
 
