@@ -9,6 +9,7 @@
 #ifndef DATAHANDLINGLIBRARY_H
 #define DATAHANDLINGLIBRARY_H
 
+//DataHandling Constants for Settings
 #define WINDOWS_OS 0
 #define LINUX_OS 1
 #define MAC_OS 2
@@ -28,8 +29,8 @@
 #define CALIBRATION_METHOD LINEAR
 #define DEBUG_OUTPUT LOGFILE + TERMINAL
 #define USE_DEFAULT_VALUES 1
-//-
 
+//OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 
 #define WIN32_LEAN_AND_MEAN
@@ -58,7 +59,7 @@
 
 #endif // DATAHANDLINGLIBRARY_OS
 
-
+//Unneccessary null define
 #ifndef NULL
 #define NULL (void*)0
 #endif // NULL
@@ -110,7 +111,8 @@ DATAHANDLINGLIBRARY_CONSTANT const char SAVEFILE_NAME[] = "MEEGA_SaveFile.meega"
 
 DATAHANDLINGLIBRARY_CONSTANT const float VERSION = 0.5f;
 DATAHANDLINGLIBRARY_CONSTANT const char DEBUGLOG_NAME[] = "MEEGA_DataHandlingLog.txt";
-//-
+
+//Enums and Structs
 
 //Telemetry data identifier
 enum DATAHANDLINGLIBRARY_API TMID{
@@ -275,6 +277,8 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 	struct FrameLookUpTable* frameLookUp;
 } DataHandlingHub;
 
+//Function Delcarations
+
 //Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,§,@)
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
@@ -393,7 +397,7 @@ DATAHANDLINGLIBRARY_API DataFrame GetSaveFrame(int index);
 DATAHANDLINGLIBRARY_API DataFrame GetNextFrame();
 
 //Returns the newest TC Frame
-DATAHANDLINGLIBRARY_API DataFrame UpdateTC();
+DATAHANDLINGLIBRARY_API DataFrame GetTC();
 
 //Adds a new frame to the end of the SaveFile
 DATAHANDLINGLIBRARY_API void AddSaveFrame(DataFrame data);

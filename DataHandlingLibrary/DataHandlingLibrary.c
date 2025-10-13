@@ -1,13 +1,12 @@
 //Source File of DataHandlingLibrary
 #include "DataHandlingLibrary.h"
 
-//Core initialization
+//Core initialization:
 static struct DataHandlingHub dataHandling = { NULL, NULL, NULL, NULL, NULL, NULL };
 static SaveFrame* currentFrame = NULL;
 
-//INTERNAL
+//INTERNAL Declarations:
 static int _SetPositions_();
-static int _SetPortConfig_();
 static int _CreateHandler_();
 static int _CreateFrameLookUp_();
 static void _SortCalibration_();
@@ -15,8 +14,9 @@ static SYNC_TYPE _GetSync_();
 static byte _ToMSG_(byte type, byte id);
 static void _FromMSG_(byte msg, byte* type_out, byte* id_out);
 static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount);
+static int _SetPortConfig_();
 
-//EX-EXPORT (INTERNAL)
+//EX-EXPORT (INTERNAL) Declarations:
 DataPacket GetInPacket();
 int AddOutPacket(DataPacket data);
 int VirtualSave();
@@ -29,32 +29,206 @@ int AddInFrame(DataFrame frame); //Adds an incoming DataFrame to the Buffer, ret
 DataFrame GetInFrame(); //Returns the latest buffered incoming DataFrame and removes it from the buffer
 int LoadPort(); //Configures and opens the communication port
 
-//Implementations:
-CHKSM_TYPE CalculateChecksum(DataFrame data)
+//Internal Implementations:
+int _SetPositions_()
 {
-	//WIP
-	CHKSM_TYPE chksm = 42;
-	//.... calculate
-	if (chksm == -1) chksm--;
-	return chksm;
-}
-int CalculateCRC(DataPacket* data)
-{
-	//WIP
-	CHKSM_TYPE crc = 1;
-	if (data->crc == 0) {
-		//.... calculate
-		if (crc == 0 || crc == -1) return 1;
-		data->crc = crc;
+	if (dataHandling.frameLookUp == NULL) {
+		DebugLog("!Uninitialized DataHandling");
+		return -1;
+	}
+	int pos = 0;
+	int length = 0;
+	int id = 0;
+	for (; id < TELEMETRY_AMOUNT; id++) {
+		if (id < SENSOR_AMOUNT) length = HIGH_RES;
+		else length = BASE_LEN;
+		switch (id) {
+		case Camera: length = 0; break;
+		case Tank_Pressure:
+		case Ambient_Pressure: length = LOW_RES; break;
+		case Experiment_State: length = EXP_LEN; break;
+		case Sensorboard_P:
+		case Sensorboard_T: length = STM_LEN; break;
+		case Mainboard: length = MAIN_LEN; break;
+		case System_Time: length = TIME_LEN; break;
+		}
+		dataHandling.frameLookUp->telemetry_Pos_Len[id][0] = pos;
+		dataHandling.frameLookUp->telemetry_Pos_Len[id][1] = length;
+		pos += length;
+
+	}
+	if (pos > DATA_LENGTH * 8) {
+		DebugLog("!Unsufficient (Data) Real Estate");
 		return 0;
 	}
-	else {
-		//.... calculate
-		crc = 0;
-		if (crc == 0) return 0;
-		//.... calculate
-		return 1;
+	for (id = 0, pos = 0; id < TELECOMMAND_AMOUNT; id++) {
+		length = BASE_LEN + 1;
+		switch (id) {
+		case Power_Off_Delay:
+		case Nozzle_On_Delay: length = 0; break;
+		case Valve_Delay:
+		case Servo_Delay:
+		case EoE_Delay:
+		case Servo_Control: length = DELAY_LEN + 1; break;
+		}
+		dataHandling.frameLookUp->telecommand_Pos_Len[id][0] = pos;
+		dataHandling.frameLookUp->telecommand_Pos_Len[id][1] = length;
+		pos += length;
+
 	}
+	if (pos > DATA_LENGTH * 8) {
+		DebugLog("!Unsufficient (Data) Real Estate");
+		return 0;
+	}
+	return 1;
+}
+
+int _CreateHandler_()
+{
+	if (dataHandling.handler != NULL) free(dataHandling.handler);
+	dataHandling.handler = malloc(sizeof(PortHandler));
+	if (dataHandling.handler == NULL) {
+		DebugLog("!Memory allocation failed");
+		return 0;
+	}
+	byte* bytePtr = (byte*)dataHandling.handler;
+	for (int i = 0; i < sizeof(PortHandler); i++) {
+		bytePtr[i] = 0;
+	}
+	dataHandling.handler->comHandle = INVALID_HANDLE_VALUE;
+	if (dataHandling.failSafe != NULL)
+		strcpy(dataHandling.handler->comPath, dataHandling.failSafe->comPath);
+	else {
+		DebugLog("!Could not find FailSafe");
+	}
+	if ((dataHandling.handler->comPath[0] == '\0') & USE_DEFAULT_VALUES)
+		strcpy(dataHandling.handler->comPath, DEFAULTCOMPATH);
+	return 1;
+}
+
+int _CreateFrameLookUp_()
+{
+	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
+	dataHandling.frameLookUp = malloc(sizeof(FrameLookUpTable));
+	if (dataHandling.frameLookUp == NULL) {
+		DebugLog("!Memory allocation failed");
+		return 0;
+	}
+	byte* bytePtr = (byte*)dataHandling.frameLookUp;
+	for (int i = 0; i < sizeof(FrameLookUpTable); i++)
+		bytePtr[i] = 0;
+	return 1;
+}
+
+void _SortCalibration_()
+{
+	if (dataHandling.calibration == NULL) {
+		DebugLog("!Could not find Calibration");
+		return;
+	}
+	if (dataHandling.calibration->sorted) return;
+	int i, j, k;
+	CalibrationPoint cpy, * upper, * lower;
+	//Iterate through all Sensors
+	for (i = 0; i < SENSOR_AMOUNT; i++) {
+		//Bubble-Sort for each Sensor
+		for (j = CALIBRATION_POINTS - 1; j > 0; j--) {
+			for (k = 1; k <= j; k++) {
+				upper = dataHandling.calibration->points[i] + k, lower = dataHandling.calibration->points[i] + k - 1;
+				//Sort by ascending digital value and validness (valid Points at lower indexes)
+				if ((upper->digital < lower->digital) || (upper->valid & !(lower->valid))) {
+					cpy = *upper;
+					*upper = *lower;
+					*lower = cpy;
+				}
+			}
+		}
+	}
+	dataHandling.calibration->sorted = 1;
+	dataHandling.calibration->changed = 1;
+}
+
+static SYNC_TYPE _GetSync_()
+{
+	static SYNC_TYPE current = 0;
+	if (current == -2) current = 0;
+	return current++;
+}
+
+static byte _ToMSG_(byte type, byte id)
+{
+	if ((id < (1 << MSG_ID_LEN)) & (type < (1 << (8 - MSG_ID_LEN)))) return (type << MSG_ID_LEN) + id;
+	return 0;
+}
+
+void _FromMSG_(byte msg, byte* type_out, byte* id_out)
+{
+	*id_out = msg % (1 << MSG_ID_LEN);
+	*type_out = msg >> MSG_ID_LEN;
+	return;
+}
+
+void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
+{
+	if (elementSize < 0 || arraySize < 0 || array == NULL) return;
+	int i;
+	byte* byteArray = array;
+	if (offsetAmount < 0) {
+		for (i = 0; i < (arraySize * elementSize); i++) {
+			if (i < ((arraySize + offsetAmount) * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
+			else byteArray[i] = 0;
+		}
+	}
+	else if (offsetAmount > 0) {
+		for (i = (arraySize * elementSize) - 1; i >= 0; i--) {
+			if (i >= (offsetAmount * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
+			else byteArray[i] = 0;
+		}
+	}
+	return;
+}
+
+//External functions:
+int Initialize()
+{
+	DebugLog("Setting up DataHandling:");
+	if (!ReadFailSafe()) {
+		CreateFailSafe();
+	}
+	int readExisting = 1;
+	if (dataHandling.failSafe == NULL) readExisting = 0;
+	else readExisting = !(dataHandling.failSafe->nominalExit) & (dataHandling.failSafe->saveFilePath[0] != '\0');
+	if (readExisting) {
+		DebugLog("Existing SaveFile found at§", dataHandling.failSafe->saveFilePath);
+		ReadSave(dataHandling.failSafe->saveFilePath);
+	}
+	if (USE_DEFAULT_VALUES & (dataHandling.saveFile == NULL)) {
+		CreateSave(SAVEFILE_NAME);
+	}
+	if (CALIBRATION_METHOD != NONE) {
+		if (dataHandling.failSafe != NULL) {
+			if (dataHandling.failSafe->calPath[0] != '\0') {
+				DebugLog("Reading Calibration?");
+				if (ReadCalibration(dataHandling.failSafe->calPath)) DebugLog("Calibration read");
+			}
+		}
+		if ((dataHandling.calibration == NULL) & USE_DEFAULT_VALUES) {
+			DebugLog("Creating new Calibration:");
+			if (CreateCalibration(CALIBRATION_NAME)) DebugLog("Calibration created_");
+		}
+	}
+	else DebugLog("Skipping Calibration");
+
+	DebugLog("Executing Misc tasks:");
+	_CreateFrameLookUp_();
+	_SetPositions_();
+	_CreateHandler_();
+	DebugLog("Creating Buffer?");
+	if (CreateBuffer()) DebugLog("Buffer created");
+	if (USE_DEFAULT_VALUES)	LoadPort();
+	DebugLog("Misc tasks completed_");
+	DebugLog("Setup done_");
+	return 1;
 }
 
 int UpdateAll()
@@ -180,25 +354,6 @@ float MapSensorValue(int id, long long value)
 	return 0.0f;
 }
 
-void WritePoint(int id, int number, long long digitalValue, float analogValue)
-{
-	CalibrationPoint point = { digitalValue, analogValue , 1};
-	AddPoint(id, number, point);
-}
-
-void AddPoint(int id, int number, CalibrationPoint point)
-{
-	if (dataHandling.calibration != NULL) {
-		if ((id >= 0) & (id < SENSOR_AMOUNT) & (number >= 0) & (number < CALIBRATION_POINTS)) {
-			dataHandling.calibration->points[id][number] = point;
-			dataHandling.calibration->sorted = 0;
-			dataHandling.calibration->changed = 1;
-		}
-		else DebugLog("!ID# or number# out of range", id, number);
-	}
-	else DebugLog("!Calibration not found");
-}
-
 CalibrationPoint ReadPoint(int id, int number)
 {
 	static CalibrationPoint invalidPoint = { 0, 0.0f, 0 };
@@ -215,217 +370,30 @@ CalibrationPoint ReadPoint(int id, int number)
 	}
 }
 
-int ReadCalibration(const char* path)
+void WritePoint(int id, int number, long long digitalValue, float analogValue)
 {
-	//WIP
-	return CreateCalibration(path);;
+	CalibrationPoint point = { digitalValue, analogValue , 1 };
+	AddPoint(id, number, point);
 }
 
-int WriteCalibration()
+void AddPoint(int id, int number, CalibrationPoint point)
 {
-	DebugLog("Writing Calibration to file:");
-	if (dataHandling.calibration == NULL) {
-		DebugLog("!Could not find Calibration_");
-		return 0;
-	}
-	DebugLog("Calibration found@", dataHandling.calibration);
-	SensorCalibration calibration = *dataHandling.calibration;
-	if (calibration.changed) {
-		FILE* file = fopen(calibration.calibrationFilePath, "w");
-		if (file != NULL) {
-			fprintf(file, "Version: %f;\n", calibration.version);
-			fprintf(file, "Datetime: %lli;\n", calibration.dateTime);
-			fprintf(file, "CalibrationPoints:\n");
-			for (int i = 0; i < SENSOR_AMOUNT; i++) {
-				fprintf(file, "%02i: {", i);
-				for (int j = 0; j < CALIBRATION_POINTS; j++) {
-					fprintf(file, "{%lli,%f}", calibration.points[i][j].digital, calibration.points[i][j].analog);
-				}
-				fprintf(file, "}\n");
-			}
-			fclose(file);
-			DebugLog("Calibration written at§_", calibration.calibrationFilePath);
-			return 1;
+	if (dataHandling.calibration != NULL) {
+		if ((id >= 0) & (id < SENSOR_AMOUNT) & (number >= 0) & (number < CALIBRATION_POINTS)) {
+			dataHandling.calibration->points[id][number] = point;
+			dataHandling.calibration->sorted = 0;
+			dataHandling.calibration->changed = 1;
 		}
-		else {
-			DebugLog("!Could not open Calibration file_");
-			return 0;
-		}
+		else DebugLog("!ID# or number# out of range", id, number);
 	}
-	DebugLog("Write unneccessary_");
-	return 1;
-}
-
-void _SortCalibration_()
-{
-	if (dataHandling.calibration == NULL) {
-		DebugLog("!Could not find Calibration");
-		return;
-	}
-	if (dataHandling.calibration->sorted) return;
-	int i, j, k;
-	CalibrationPoint cpy, *upper, *lower;
-	//Iterate through all Sensors
-	for (i = 0; i < SENSOR_AMOUNT; i++) {
-		//Bubble-Sort for each Sensor
-		for (j = CALIBRATION_POINTS - 1; j > 0; j--) {
-			for (k = 1; k <= j; k++) {
-				upper = dataHandling.calibration->points[i] + k, lower = dataHandling.calibration->points[i] + k - 1;
-				//Sort by ascending digital value and validness (valid Points at lower indexes)
-				if ((upper->digital < lower->digital) || (upper->valid & !(lower->valid))) {
-					cpy = *upper;
-					*upper = *lower;
-					*lower = cpy;
-				}
-			}
-		}
-	}
-	dataHandling.calibration->sorted = 1;
-	dataHandling.calibration->changed = 1;
-}
-
-static SYNC_TYPE _GetSync_()
-{
-	static SYNC_TYPE current = 0;
-	if (current == -2) current = 0;
-	return current++;
-}
-
-static byte _ToMSG_(byte type, byte id)
-{
-	if ((id < (1 << MSG_ID_LEN)) & (type < (1 << (8 - MSG_ID_LEN)))) return (type << MSG_ID_LEN) + id;
-	return 0;
-}
-
-void _FromMSG_(byte msg, byte* type_out, byte* id_out)
-{
-	*id_out = msg % (1 << MSG_ID_LEN);
-	*type_out = msg >> MSG_ID_LEN;
-	return;
-}
-
-void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
-{
-	if (elementSize < 0 || arraySize < 0 || array == NULL) return;
-	int i;
-	byte* byteArray = array;
-	if (offsetAmount < 0) {
-		for (i = 0; i < (arraySize * elementSize); i++) {
-			if (i < ((arraySize + offsetAmount) * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
-			else byteArray[i] = 0;
-		}
-	}
-	else if (offsetAmount > 0) {
-		for (i = (arraySize * elementSize) - 1; i >= 0; i--) {
-			if (i >= (offsetAmount * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
-			else byteArray[i] = 0;
-		}
-	}
-	return;
-}
-
-void DebugLog(const char* message, ...)
-{
-	static int lineCounter = -1, depth = 0;
-	static FILE* output = NULL;
-	static char *error = "Error: ", *numeric = " {%i}", *pointer = " at 0x%p", *string = " %s", *test = " ...", *counter = "[%02i] ";
-	if (DEBUG_OUTPUT == NONE) return;
-	va_list args;
-	va_start(args, message);
-	if (output == NULL) {
-		if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) {
-			output = fopen(DEBUGLOG_NAME, "w");
-			if (output == NULL) {
-				output = stdout;
-				DebugLog("!Could not open Debug logging file");
-			}
-		}
-	}
-	if (lineCounter == -1) {
-		fprintf(output, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
-		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-			fprintf(stdout, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
-		lineCounter++;
-	}
-	int inputIndex = 0, makroIndex = 0, outputIndex = 0;
-	char* makro = counter, outputString[PATH_LENGTH];
-	for (; outputIndex < PATH_LENGTH; outputIndex++) {
-		outputString[outputIndex] = '\0';
-	}
-	for (; makroIndex < depth; makroIndex++) {
-		fprintf(output, "    ");
-		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-			fprintf(stdout, "    ");
-	}
-	fprintf(output, counter, lineCounter);
-	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-		fprintf(stdout, counter, lineCounter);
-	for (inputIndex = 0, outputIndex = 0; message[inputIndex] != '\0'; inputIndex++) {
-		makro = NULL;
-		switch (message[inputIndex]) {
-			case '-': {
-				fprintf(output, "\nEnd of Debug Log: %s", message + inputIndex);
-				if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-					fprintf(stdout, "\nEnd of Debug Log: %s", message + inputIndex);
-				fclose(output);
-				output = NULL;
-				lineCounter = -1;
-				depth = 0;
-				va_end(args);
-				return;
-			}
-			case ':': {
-				outputString[outputIndex] = ':';
-				outputIndex++;
-				depth++;
-				break;
-			}
-			case '_': {
-				if (depth > 0) depth--;
-				break;
-			}
-			case '!': {
-				makro = error;
-				break;
-			}
-			case '#': {
-				makro = numeric;
-				break;
-			}
-			case '?': {
-				makro = test;
-				break;
-			}
-			case '@': {
-				makro = pointer;
-				break;
-			}
-			case '§': {
-				makro = string;
-				break;
-			}
-			default: {
-				outputString[outputIndex] = message[inputIndex];
-				outputIndex++;
-			}
-		}
-		if (outputIndex >= PATH_LENGTH - 10) break;
-		if (makro != NULL)
-			for (makroIndex = 0; makro[makroIndex] != '\0'; makroIndex++, outputIndex++) outputString[outputIndex] = makro[makroIndex];
-	}
-	outputString[outputIndex] = '\n';
-	vfprintf(output, outputString, args);
-	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-		vfprintf(stdout, outputString, args);
-	lineCounter++;
-	va_end(args);
+	else DebugLog("!Calibration not found");
 }
 
 int CreateCalibration(const char* path)
 {
-	if (dataHandling.handler != NULL) {
-		free(dataHandling.handler);
-		dataHandling.handler = NULL;
+	if (dataHandling.calibration != NULL) {
+		free(dataHandling.calibration);
+		dataHandling.calibration = NULL;
 	}
 	SensorCalibration* new = malloc(sizeof(SensorCalibration));
 	if (new == NULL) {
@@ -440,49 +408,118 @@ int CreateCalibration(const char* path)
 	strcpy(new->calibrationFilePath, path);
 	if (dataHandling.failSafe != NULL) strcpy(dataHandling.failSafe->calPath, path);
 	dataHandling.calibration = new;
-	WriteCalibration();
 	return 1;
 }
 
-int Initialize()
+#define CALIBRATION_HEADER_STRING "MEEGA Sensor-Calibration\n"
+#define CALIBRATION_VERSION_STRING "Version: %f;\n"
+#define CALIBRATION_TIME_STRING "Datetime: %lli;\n"
+#define CALIBRATION_POINT_HEADER_STRING "CalibrationPoints:\n"
+#define CALIBRATION_SENSOR_START_STRING "%02i: {"
+#define CALIBRATION_SENSOR_END_STRING "}\n"
+#define CALIBRATION_POINT_STRING "{%lli,%f,%c}"
+
+int ReadCalibration(const char* path)
 {
-	DebugLog("Setting up DataHandling:");
-	if (!ReadFailSafe()) {
-		CreateFailSafe();
+	DebugLog("Reading Calibration:");
+	FILE* file;
+	int i, j, sensor, default = 0, error = 0;
+	if (path == NULL || path[0] == '\0')
+		if (USE_DEFAULT_VALUES) {
+			file = fopen(CALIBRATION_NAME, "rb");
+			default = 1;
+		}
+		else {
+			DebugLog("!Invalid path passed to ReadCalibration()");
+			return 0;
+		}
+	else {
+		file = fopen(path, "rb");
 	}
-	int readExisting = 1;
-	if (dataHandling.failSafe == NULL) readExisting = 0;
-	else readExisting = !(dataHandling.failSafe->nominalExit) & (dataHandling.failSafe->saveFilePath[0] != '\0');
-	if (readExisting) {
-		DebugLog("Existing SaveFile found at§", dataHandling.failSafe->saveFilePath);
-		ReadSave(dataHandling.failSafe->saveFilePath);
+	if (file == NULL) {
+		DebugLog("!Calibration could not be opened_");
+		return 0;
 	}
-	if (USE_DEFAULT_VALUES & (dataHandling.saveFile == NULL)) {
-		CreateSave(SAVEFILE_NAME);
+	if (default) CreateCalibration(CALIBRATION_NAME);
+	else CreateCalibration(path);
+	if (dataHandling.calibration == NULL) {
+		DebugLog("!Calibration could not be created_");
+		return 0;
 	}
-	if (CALIBRATION_METHOD != NONE) {
-		if (dataHandling.failSafe != NULL) {
-			if (dataHandling.failSafe->calPath[0] != '\0') {
-				DebugLog("Reading Calibration?");
-				if (ReadCalibration(dataHandling.failSafe->calPath)) DebugLog("Calibration read");
+	DebugLog("Calibration found@", dataHandling.calibration);
+	SensorCalibration* calibration = dataHandling.calibration;
+	if (fscanf(file, CALIBRATION_HEADER_STRING) != EOF) {
+		if (fscanf(file, CALIBRATION_VERSION_STRING, &calibration->version) != EOF) {
+			if (calibration->version == CALIBRATION_VERSION) {
+				if (fscanf(file, CALIBRATION_TIME_STRING, &calibration->dateTime) != EOF) {
+					if (fscanf(file, CALIBRATION_POINT_HEADER_STRING) != EOF) {
+						for (i = 0; i < SENSOR_AMOUNT; i++) {
+							if (fscanf(file, CALIBRATION_SENSOR_START_STRING, &sensor) != EOF) {
+								if (sensor != i) {
+									error = 1;
+									break;
+								}
+								for (j = 0; j < CALIBRATION_POINTS; j++) {
+									if (fscanf(file, CALIBRATION_POINT_STRING, &calibration->points[sensor][j].digital, &calibration->points[sensor][j].analog, &calibration->points[sensor][j].valid) == EOF) {
+										error = 1;
+										break;
+									}
+								}
+								if (fscanf(file, CALIBRATION_SENSOR_END_STRING) == EOF) {
+									error = 1;
+									break;
+								}
+							}
+							else {
+								error = 1;
+								break;
+							}
+						}
+						if (!error) {
+							DebugLog("Calibration read from§_", path);
+							return 1;
+						}
+					}
+				}
 			}
 		}
-		if ((dataHandling.calibration == NULL) & USE_DEFAULT_VALUES) {
-			DebugLog("Creating new Calibration:");
-			if (CreateCalibration(CALIBRATION_NAME)) DebugLog("Calibration created_");
+	}
+	DebugLog("!Calibration File could not be parsed_");
+	return 0;
+}
+
+int WriteCalibration()
+{
+	DebugLog("Writing Calibration to file:");
+	if (dataHandling.calibration == NULL) {
+		DebugLog("!Could not find Calibration_");
+		return 0;
+	}
+	DebugLog("Calibration found@", dataHandling.calibration);
+	SensorCalibration calibration = *dataHandling.calibration;
+	if (calibration.changed) {
+		FILE* file = fopen(calibration.calibrationFilePath, "w");
+		if (file != NULL) {
+			fprintf(file, CALIBRATION_VERSION_STRING, calibration.version);
+			fprintf(file, CALIBRATION_TIME_STRING, calibration.dateTime);
+			fprintf(file, CALIBRATION_POINT_HEADER_STRING);
+			for (int i = 0; i < SENSOR_AMOUNT; i++) {
+				fprintf(file, CALIBRATION_SENSOR_START_STRING, i);
+				for (int j = 0; j < CALIBRATION_POINTS; j++) {
+					fprintf(file, CALIBRATION_POINT_STRING, calibration.points[i][j].digital, calibration.points[i][j].analog, calibration.points[i][j].valid);
+				}
+				fprintf(file, CALIBRATION_SENSOR_END_STRING);
+			}
+			fclose(file);
+			DebugLog("Calibration written at§_", calibration.calibrationFilePath);
+			return 1;
+		}
+		else {
+			DebugLog("!Could not open Calibration file_");
+			return 0;
 		}
 	}
-	else DebugLog("Skipping Calibration");
-
-	DebugLog("Executing Misc tasks:");
-	_CreateFrameLookUp_();
-	_SetPositions_();
-	_CreateHandler_();
-	DebugLog("Creating Buffer?");
-	if (CreateBuffer()) DebugLog("Buffer created");
-	if (USE_DEFAULT_VALUES)	LoadPort();
-	DebugLog("Misc tasks completed_");
-	DebugLog("Setup done_");
+	DebugLog("Write unneccessary_");
 	return 1;
 }
 
@@ -516,96 +553,6 @@ DataFrame EmptyTC()
 	DataFrame temp = EmptyFrame();
 	FrameSetFlag(&temp, TeleCommand);
 	return temp;
-}
-
-int _SetPositions_()
-{
-	if (dataHandling.frameLookUp == NULL) {
-		DebugLog("!Uninitialized DataHandling");
-		return -1;
-	}
-	int pos = 0;
-	int length = 0;
-	int id = 0;
-	for (; id < TELEMETRY_AMOUNT; id++) {
-		if (id < SENSOR_AMOUNT) length = HIGH_RES;
-		else length = BASE_LEN;
-		switch (id) {
-			case Camera: length = 0; break;
-			case Tank_Pressure:
-			case Ambient_Pressure: length = LOW_RES; break;
-			case Experiment_State: length = EXP_LEN; break;
-			case Sensorboard_P:
-			case Sensorboard_T: length = STM_LEN; break;
-			case Mainboard: length = MAIN_LEN; break;
-			case System_Time: length = TIME_LEN; break;
-		}
-		dataHandling.frameLookUp->telemetry_Pos_Len[id][0] = pos;
-		dataHandling.frameLookUp->telemetry_Pos_Len[id][1] = length;
-		pos += length;
-
-	}		
-	if (pos > DATA_LENGTH * 8) {
-		DebugLog("!Unsufficient (Data) Real Estate");
-		return 0;
-	}
-	for (id = 0, pos = 0; id < TELECOMMAND_AMOUNT; id++) {
-		length = BASE_LEN + 1;
-		switch (id) {
-			case Power_Off_Delay:
-			case Nozzle_On_Delay: length = 0; break;
-			case Valve_Delay:
-			case Servo_Delay:
-			case EoE_Delay:
-			case Servo_Control: length = DELAY_LEN + 1; break;
-		}
-		dataHandling.frameLookUp->telecommand_Pos_Len[id][0] = pos;
-		dataHandling.frameLookUp->telecommand_Pos_Len[id][1] = length;
-		pos += length;
-		
-	}
-	if (pos > DATA_LENGTH * 8) {
-		DebugLog("!Unsufficient (Data) Real Estate");
-		return 0;
-	}
-	return 1;
-}
-
-int _CreateHandler_()
-{
-	if (dataHandling.handler != NULL) free(dataHandling.handler);
-	dataHandling.handler = malloc(sizeof(PortHandler));
-	if (dataHandling.handler == NULL) {
-		DebugLog("!Memory allocation failed");
-		return 0;
-	}
-	byte* bytePtr = (byte*) dataHandling.handler;
-	for (int i = 0; i < sizeof(PortHandler); i++) {
-		bytePtr[i] = 0;
-	}
-	dataHandling.handler->comHandle = INVALID_HANDLE_VALUE;
-	if (dataHandling.failSafe != NULL) 
-		strcpy(dataHandling.handler->comPath, dataHandling.failSafe->comPath);
-	else {
-		DebugLog("!Could not find FailSafe");
-	}
-	if ((dataHandling.handler->comPath[0] == '\0') & USE_DEFAULT_VALUES)
-		strcpy(dataHandling.handler->comPath, DEFAULTCOMPATH);
-	return 1;
-}
-
-int _CreateFrameLookUp_()
-{
-	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
-	dataHandling.frameLookUp = malloc(sizeof(FrameLookUpTable));
-	if (dataHandling.frameLookUp == NULL) {
-		DebugLog("!Memory allocation failed");
-		return 0;
-	}
-	byte* bytePtr = (byte*)dataHandling.frameLookUp;
-	for (int i = 0; i < sizeof(FrameLookUpTable); i++)
-		bytePtr[i] = 0;
-	return 1;
 }
 
 long long WriteFrame(DataFrame* frame, int id, long long value)
@@ -773,6 +720,25 @@ DataPacket EmptyPacket()
 int PacketIsEmpty(DataPacket packet)
 {
 	return packet.sync == 0;
+}
+
+int CreateBuffer()
+{
+	if (dataHandling.buffer != NULL) {
+		free(dataHandling.buffer);
+		dataHandling.buffer = NULL;
+	}
+	DataBuffer* new = malloc(sizeof(DataBuffer));
+	if (new == NULL) {
+		DebugLog("!Memory allocation failed");
+		return 0;
+	}
+	byte* bytePtr = (byte*) new;
+	for (int i = 0; i < sizeof(DataBuffer); i++) bytePtr[i] = 0;
+	dataHandling.buffer = new;
+	new->incomingPos = (byte*) new->inPackets;
+	new->outgoingPos = (byte*) new->outPackets;
+	return 1;
 }
 
 int EncodePackets()
@@ -958,32 +924,6 @@ int AddInFrame(DataFrame frame)
 		}
 	}
 	return i;
-}
-
-void AddFrame(DataFrame frame)
-{
-	AddSaveFrame(frame);
-	AddOutFrame(frame);
-	return;
-}
-
-int CreateBuffer()
-{
-	if (dataHandling.buffer != NULL) {
-		free(dataHandling.buffer);
-		dataHandling.buffer = NULL;
-	}
-	DataBuffer* new = malloc(sizeof(DataBuffer));
-	if (new == NULL) {
-		DebugLog("!Memory allocation failed");
-		return 0;
-	}
-	byte* bytePtr = (byte*) new;
-	for (int i = 0; i < sizeof(DataBuffer); i++) bytePtr[i] = 0;
-	dataHandling.buffer = new;
-	new->incomingPos = (byte*) new->inPackets;
-	new->outgoingPos = (byte*) new->outPackets;
-	return 1;
 }
 
 int CreateFailSafe() 
@@ -1235,7 +1175,14 @@ int CheckSave()
 int ReadSave(const char path[])
 {
 	DebugLog("Reading SaveFile:");
-	FILE* file = fopen(path, "rb");
+	FILE* file;
+	if (path == NULL || path[0] == '\0')
+		if (USE_DEFAULT_VALUES) file = fopen(SAVEFILE_NAME, "rb");
+		else {
+			DebugLog("!Invalid path passed to ReadSave()");
+			return 0;
+		}
+	else file = fopen(path, "rb");
 	if (file == NULL) {
 		DebugLog("!SaveFile could not be opened_");
 		return 0;
@@ -1348,7 +1295,7 @@ DataFrame GetNextFrame()
 	else return EmptyFrame();
 }
 
-DataFrame UpdateTC()
+DataFrame GetTC()
 {
 	DataFrame newestTC = EmptyTC();
 	if (dataHandling.saveFile == NULL) {
@@ -1398,6 +1345,13 @@ void AddSaveFrame(DataFrame data)
 		dataHandling.saveFile->lastFrame = newFrame;
 		dataHandling.saveFile->frameAmount++;
 	}
+	return;
+}
+
+void AddFrame(DataFrame frame)
+{
+	AddSaveFrame(frame);
+	AddOutFrame(frame);
 	return;
 }
 
@@ -1472,7 +1426,6 @@ void CloseAll()
 }
 
 //Communication Functions:
-
 int _SetPortConfig_()
 {
 	if ((dataHandling.handler == NULL) || (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE)) {
@@ -1604,3 +1557,130 @@ int SetPort(const char name[])
 	else DebugLog("!Could not find FailSafe");
 	return LoadPort();
 }
+
+//Error Detection / Correction functions:
+CHKSM_TYPE CalculateChecksum(DataFrame data)
+{
+	//WIP
+	CHKSM_TYPE chksm = 42;
+	//.... calculate
+	if (chksm == -1) chksm--;
+	return chksm;
+}
+int CalculateCRC(DataPacket* data)
+{
+	//WIP
+	CHKSM_TYPE crc = 1;
+	if (data->crc == 0) {
+		//.... calculate
+		if (crc == 0 || crc == -1) return 1;
+		data->crc = crc;
+		return 0;
+	}
+	else {
+		//.... calculate
+		crc = 0;
+		if (crc == 0) return 0;
+		//.... calculate
+		return 1;
+	}
+}
+
+//Debug functions:
+void DebugLog(const char* message, ...)
+{
+	static int lineCounter = -1, depth = 0;
+	static FILE* output = NULL;
+	static char* error = "Error: ", * numeric = " {%i}", * pointer = " at 0x%p", * string = " %s", * test = " ...", * counter = "[%02i] ";
+	if (DEBUG_OUTPUT == NONE) return;
+	va_list args;
+	va_start(args, message);
+	if (output == NULL) {
+		if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) {
+			output = fopen(DEBUGLOG_NAME, "w");
+			if (output == NULL) {
+				output = stdout;
+				DebugLog("!Could not open Debug logging file");
+			}
+		}
+	}
+	if (lineCounter == -1) {
+		fprintf(output, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
+		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
+			fprintf(stdout, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
+		lineCounter++;
+	}
+	int inputIndex = 0, makroIndex = 0, outputIndex = 0;
+	char* makro = counter, outputString[PATH_LENGTH];
+	for (; outputIndex < PATH_LENGTH; outputIndex++) {
+		outputString[outputIndex] = '\0';
+	}
+	for (; makroIndex < depth; makroIndex++) {
+		fprintf(output, "    ");
+		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
+			fprintf(stdout, "    ");
+	}
+	fprintf(output, counter, lineCounter);
+	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
+		fprintf(stdout, counter, lineCounter);
+	for (inputIndex = 0, outputIndex = 0; message[inputIndex] != '\0'; inputIndex++) {
+		makro = NULL;
+		switch (message[inputIndex]) {
+		case '-': {
+			fprintf(output, "\nEnd of Debug Log: %s", message + inputIndex);
+			if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
+				fprintf(stdout, "\nEnd of Debug Log: %s", message + inputIndex);
+			fclose(output);
+			output = NULL;
+			lineCounter = -1;
+			depth = 0;
+			va_end(args);
+			return;
+		}
+		case ':': {
+			outputString[outputIndex] = ':';
+			outputIndex++;
+			depth++;
+			break;
+		}
+		case '_': {
+			if (depth > 0) depth--;
+			break;
+		}
+		case '!': {
+			makro = error;
+			break;
+		}
+		case '#': {
+			makro = numeric;
+			break;
+		}
+		case '?': {
+			makro = test;
+			break;
+		}
+		case '@': {
+			makro = pointer;
+			break;
+		}
+		case '§': {
+			makro = string;
+			break;
+		}
+		default: {
+			outputString[outputIndex] = message[inputIndex];
+			outputIndex++;
+		}
+		}
+		if (outputIndex >= PATH_LENGTH - 10) break;
+		if (makro != NULL)
+			for (makroIndex = 0; makro[makroIndex] != '\0'; makroIndex++, outputIndex++) outputString[outputIndex] = makro[makroIndex];
+	}
+	outputString[outputIndex] = '\n';
+	vfprintf(output, outputString, args);
+	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
+		vfprintf(stdout, outputString, args);
+	lineCounter++;
+	va_end(args);
+}
+//End of DataHandlingLibrary
