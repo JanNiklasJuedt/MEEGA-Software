@@ -1,7 +1,9 @@
 #imports
+from __future__ import annotations
+from math import floor
 import sys
 import time
-from tkinter import SEL
+from tkinter import SE, SEL
 
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
@@ -38,9 +40,27 @@ class Settings:
         self.filePath = filePath
         self.launchTime = launchTime
 
+#class to handle telecommands
+class Telecommand:
+    def __init__(self):
+        self.tcframe = DataHandling.CreateTC()
+        self.sendCounter = 0
+
+    def newTCFrame(self):
+        self.tcframe = DataHandling.CreateTC()
+        DataHandling.WriteFrame(self.tcframe, 0, self.collection.settings.mode)
+
+    def sendInit(self):
+        self.sendCounter = 10
+
+    def sendStep(self):
+        if self.sendCounter > 0:
+            DataHandling.AddFrame(self.tcframe)
+            self.sendCounter -= 1
+
 #class to define the Main Window
 class GSMain(QMainWindow):
-    def __init__(self, settings: Settings):
+    def __init__(self, collection: Collection):
         super().__init__()
 
         #importing visuals from the ui-file
@@ -51,6 +71,7 @@ class GSMain(QMainWindow):
         self.ACTIVE = 0
         self.ISSUES = 1
         self.INACTIVE = 2
+        self.collection = collection
 
         #creating local status list
         self.status = [[self.ACTIVE, ""] for _ in range(20)]
@@ -83,8 +104,7 @@ class GSMain(QMainWindow):
         self.scalePixmaps()        
         self.fetchStatus()
 
-        self.settings = settings
-        self.setLocale(settings.locale)
+        self.setLocale(self.collection.settings.locale)
 
         #creating the big logo
         self.logo = QPixmap("Ressources\\meega_logo_small.png")
@@ -110,9 +130,9 @@ class GSMain(QMainWindow):
         self.languageGroup.triggered.connect(self.languageChanges)
         self.ui.actionManual.triggered.connect(self.fetchSettings)
         self.ui.actionAutomatic.triggered.connect(self.fetchSettings)
-        self.ui.actionFlight_Mode.triggered.connect(self.fetchSettings)
-        self.ui.actionTest_Mode.triggered.connect(self.fetchSettings)
-        self.ui.actionQuit.triggered.connect(self.app.quit)
+        self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
+        self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
+        self.ui.actionQuit.triggered.connect(self.app.quit) 
 
     #internal functions
     def scalePixmaps(self):
@@ -123,13 +143,13 @@ class GSMain(QMainWindow):
             self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.inactivepix_scaled = self.inactivepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     def resizeEvent(self, event):
-            self.scalePixmaps(event)
+            self.scalePixmaps()
             super().resizeEvent(event)
     def retranslateUi(self):
         self.ui.retranslateUi()
     def languageChanges(self):
         translator = QTranslator()
-        locale = self.settings.locale
+        locale = self.collection.settings.locale
         language = QLocale.languageToCode(locale.language())
         for i in self.languageGroup.actions():
             if i.property("data") == language:
@@ -139,15 +159,8 @@ class GSMain(QMainWindow):
             self.app.removeTranslator(translator)
             self.app.installTranslator(translator)
             self.retranslateUi(self)
-    def modeChanges(self):
-        if settings.mode == Settings.TEST:
-            self.ui.label_mode.setText("Test Mode")
-            self.ui.actionControl_Panel.setEnabled(True)
-        else:
-            self.ui.label_mode.setText("Flight Mode")
-            self.ui.actionControl_Panel.setEnabled(False)
     def connectionModeChanges(self):
-        if settings.connectionMode == Settings.AUTOMATIC:
+        if self.collection.settings.connectionMode == Settings.AUTOMATIC:
             self.ui.actionConnect.setEnabled(False)
             self.ui.actionRetry.setEnabled(False)
             self.ui.actionDisconnect.setEnabled(False)
@@ -162,6 +175,7 @@ class GSMain(QMainWindow):
     def fetchStatus(self):
         #update the local status list from DataHandling
         frame = DataHandling.GetSaveFrame(-1)
+        #if not DataHandling.FrameIsEmpty(frame):
         if not bool(frame) == False:
             frame = frame.contents.data
             for i in range(12):
@@ -186,30 +200,38 @@ class GSMain(QMainWindow):
     
     #external functions (slots)
     @Slot()
+    def modeSwitched(self):
+        if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
+            self.collection.settings.mode = Settings.FLIGHT
+            self.ui.label_mode.setText("Flight Mode")
+            self.ui.actionControl_Panel.setEnabled(False)
+            self.collection.controlPanel.clearPanel()
+            self.collection.controlPanel.hide()
+        else:
+            self.collection.settings.mode = Settings.TEST
+            self.ui.label_mode.setText("Test Mode")
+            self.ui.actionControl_Panel.setEnabled(True)
+        self.collection.telecommand.newTCFrame()
+        self.collection.telecommand.sendInit()
+    @Slot()
     def fetchSettings(self):
         if self.connectionModeGroup.checkedAction() == self.ui.actionAutomatic:
             connectionMode = Settings.AUTOMATIC
         else:
             connectionMode = Settings.MANUAL
-        if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
-            mode = Settings.FLIGHT
-        else:
-            mode = Settings.TEST
-        self.settings.mode = mode
         self.settings.connectionMode = connectionMode
-        self.modeChanges()
         self.connectionModeChanges()
     @Slot()
     def applySettings(self):
-        if self.settings.connectionMode == Settings.AUTOMATIC:
+        if self.collection.settings.connectionMode == Settings.AUTOMATIC:
             self.ui.actionAutomatic.setChecked(True)
         else:
             self.ui.actionManual.setChecked(True)
-        if self.settings.mode == Settings.FLIGHT:
+        if self.collection.settings.mode == Settings.FLIGHT:
             self.ui.actionFlight_Mode.setChecked(True)
         else:
             self.ui.actionTest_Mode.setChecked(True)
-        self.setLocale(self.settings.locale)
+        self.setLocale(self.collection.settings.locale)
         self.languageChanges()
         self.modeChanges()
         self.connectionModeChanges()
@@ -217,11 +239,11 @@ class GSMain(QMainWindow):
 
 #class to define the startup dialog window
 class GSStart(QDialog):
-    def __init__(self, settings: Settings):
+    def __init__(self, collection: Collection):
         super().__init__()
-        self.settings = settings
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
+        self.collection = collection
         self.ui.languageComboBox.setItemData(0, "en")
         self.ui.languageComboBox.setItemData(1, "de")
         self.ui.connectionComboBox.setItemData(0,Settings.AUTOMATIC)
@@ -234,44 +256,47 @@ class GSStart(QDialog):
 
     @Slot()
     def fetchSettings(self):
-        self.settings.language = self.ui.languageComboBox.currentData()
-        self.settings.connectionMode = self.ui.connectionComboBox.currentData()
-        self.settings.mode = self.ui.modeComboBox.currentData()
-        self.settings.filepath = self.ui.saveFileEdit.text()
-        self.settings.launchTime = self.ui.launchTimeTimeEdit.time()
+        self.collection.settings.language = self.ui.languageComboBox.currentData()
+        self.collection.settings.connectionMode = self.ui.connectionComboBox.currentData()
+        self.collection.settings.mode = self.ui.modeComboBox.currentData()
+        self.collection.settings.filepath = self.ui.saveFileEdit.text()
+        self.collection.settings.launchTime = self.ui.launchTimeTimeEdit.time()
 
 class GSLaunchTime(QDialog):
-    def __init__(self, settings: Settings):
+    def __init__(self, collection: Collection):
         super().__init__()
-        self.settings = settings
         self.ui = Ui_LaunchTimeDialog()
         self.ui.setupUi(self)
+        self.collection = collection
 
         self.accepted.connect(self.fetchSettings)
     
     @Slot()
     def fetchSettings(self):
-        self.settings.launchTime = self.ui.launchTimeEdit.time()
+        self.collection.settings.launchTime = self.ui.launchTimeEdit.time()
 
 class GSResults(QWidget):
-    def __init__(self):
+    def __init__(self, collection: Collection):
         super().__init__()
         self.ui = Ui_ResultsWidget()
         self.ui.setupUi(self)
+        self.collection = collection
 
         self.ui.buttonBox.clicked.connect(self.hide)
 
 class GSDocumentation(QWidget):
-    def __init__(self):
+    def __init__(self, collection: Collection):
         super().__init__()
         self.ui = Ui_Documentation()
         self.ui.setupUi(self)
+        self.collection = collection
 
 class GSError(QDialog):
-    def __init__(self):
+    def __init__(self, collection: Collection):
         super().__init__()
         self.ui = Ui_ErrorDialog()
         self.ui.setupUi(self)
+        self.collection = collection
 
  ###Baustelle:
         
@@ -279,11 +304,11 @@ class GSError(QDialog):
         # Kn�pfe per enable ausschalten
   
 class GSControl(QWidget):
-    def __init__(self, settings: Settings):
+    def __init__(self, collection: Collection):
         super().__init__()
-        self.settings = settings
         self.ui = Ui_controlPanel()
         self.ui.setupUi(self)
+        self.collection = collection
 
         # Initialize control states
         self.valveControl = 0  # closed
@@ -301,7 +326,7 @@ class GSControl(QWidget):
         
     def connectSignals(self):
         # Valve controls
-        self.ui.openValveButton.clicked.connect(self.openValve, self.sendTC)
+        self.ui.openValveButton.clicked.connect(self.openValve)
         self.ui.closeValveButton.clicked.connect(self.closeValve)
         # Servo controls
         self.ui.setServoButton.clicked.connect(self.setServoAngle)
@@ -323,35 +348,50 @@ class GSControl(QWidget):
     @Slot()
     def openValve(self):
         self.valveControl = 1
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
     @Slot()
     def closeValve(self):
         self.valveControl = 0
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
     # Servo control slot
     @Slot()
     def setServoAngle(self):
         self.servoAngle = self.ui.servoValueBox.value()
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
     # LED control slots
     @Slot()
     def onLED(self):
         self.ledState = 0
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
     @Slot()
     def offLED(self):
         self.ledState = 1
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
     # Test run control slots
     @Slot()
     def startTest(self):
+        self.setDelays()
         self.testRunStart = 1
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
         self.testRunStart = 0
     @Slot()
     def stopTest(self):
         self.testRunStop = 1
-        self.sendTC()
+        self.collection.telecommand.newTCFrame()
+        self.updateTCFrame()
+        self.collection.telecommand.sendInit()
         self.testRunStop = 0
     # Dry run control slot
     @Slot()
@@ -384,43 +424,51 @@ class GSControl(QWidget):
         self.servoDelay = self.ui.servoTimeEdit.time().addMSecs(int(self.ui.servoMilliEdit.text()))
         self.EOEDelay = self.ui.EOETimeEdit.time().addMSecs(int(self.ui.EOEMilliEdit.text()))
     # Update the telecommand frame with current control states and durations
-    def UpdateTCframe(self, tcframe):
-        DataHandling.WriteFrame(tcframe, 0, self.settings.mode)
-        DataHandling.WriteFrame(tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
-        DataHandling.WriteFrame(tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
-        DataHandling.WriteFrame(tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
+    def updateTCFrame(self):
+        DataHandling.WriteFrame(self.collection.tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
+        DataHandling.WriteFrame(self.collection.tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
+        DataHandling.WriteFrame(self.collection.tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
         #PowerOffDelay fehlt
         #NozzleOnDelay fehlt
-        DataHandling.WriteFrame(tcframe, 6, self.dryRunActive)
-        DataHandling.WriteFrame(tcframe, 7, self.ledState)
-        DataHandling.WriteFrame(tcframe, 8, self.servoAngle*10)
-        DataHandling.WriteFrame(tcframe, 9, self.valveControl)
+        DataHandling.WriteFrame(self.collection.tcframe, 6, self.dryRunActive)
+        DataHandling.WriteFrame(self.collection.tcframe, 7, self.ledState)
+        DataHandling.WriteFrame(self.collection.tcframe, 8, floor(self.servoAngle*10))
+        DataHandling.WriteFrame(self.collection.tcframe, 9, self.valveControl)
         #Camera control fehlt
-        DataHandling.WriteFrame(tcframe, 11, self.testRunStop)
-        DataHandling.WriteFrame(tcframe, 12, self.testRunStart)
-        return tcframe
-    # Send the telecommand frame
-    def sendTC(self):
-        self.setDelays()
-        tcframe = DataHandling.CreateTC()
-        tcframe = self.UpdateTCframe(tcframe)
-        DataHandling.AddFrame(tcframe)
+        DataHandling.WriteFrame(self.collection.tcframe, 11, self.testRunStop)
+        DataHandling.WriteFrame(self.collection.tcframe, 12, self.testRunStart)
+    def clearPanel(self):
+        self.valveControl = 0
+        self.ledState = 0
+        self.servoAngle = 0
+        self.ui.servoValueBox.setValue(0)
+        self.dryRunActive = 0
+        self.ui.dryRunOnButton.setChecked(False)
+        self.testRunStart = 0
+        self.testRunStop = 0
+        self.resetValveDelay()
+        self.resetServoDelay()
+        self.resetEOEDelay()
 
 class GSConnection(QDialog):
-    def __init__(self):
+    def __init__(self, collection: Collection):
         super().__init__()
         self.ui = Ui_ConnectionDialog()
         self.ui.setupUi(self)
+        self.collection = collection
 
 class GSCalibration(QDialog):
-    selectedSensor = 0
-    selectedEntry = 0
-    currentUnit = ""
-    calibrationPoints = [[0] * 3 for x in range(12)]
-    def __init__(self):
+    def __init__(self, collection: Collection):
         super().__init__()
         self.ui = Ui_Sensor_Calibration()
         self.ui.setupUi(self)
+        self.collection = collection
+
+        #initialize variables
+        self.selectedSensor = 0
+        self.selectedEntry = 0
+        self.currentUnit = ""
+        self.calibrationPoints = [[0] * 3 for x in range(12)]
 
         #create exclusive button group for radio buttons and add automatic disabling/enabling of lineEdits
         self.buttonGroup = QButtonGroup(self)
@@ -444,7 +492,7 @@ class GSCalibration(QDialog):
         if not bool(frame) == False:
             frame = frame.contents.data
             digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
-            mappedValue = DataHandling.MapSensorValue(self.selectedSensor, digitalValue)
+            mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, digitalValue))
             self.ui.label.setText(mappedValue + " " + self.currentUnit)
     
     #select sensor and display already existing calibration points, according Units
@@ -501,20 +549,47 @@ class GSCalibration(QDialog):
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
 class DataHandlingThread(QThread):
-    def __init__(self, mainWindow, calibrationWindow):
+    def __init__(self, collection: Collection):
         super().__init__()
-        self.mainWindow = mainWindow
-        self.calibrationWindow = calibrationWindow
+        self.collection = collection
     def run(self):
         period_ms = 1000 / 20
         while True:
             clock = time.monotonic_ns()
+            self.collection.mainWindow.fetchStatus()
+            self.collection.calibrationWindow.updateValue()
+            self.collection.telecommand.sendStep()
             DataHandling.UpdateAll()
-            self.mainWindow.fetchStatus()
-            self.calibrationWindow.updateValue()
             if self.isInterruptionRequested():
                break
             self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
+
+class Collection:
+    def __init__(self):
+        self.settings = Settings()
+        self.telecommand = Telecommand()
+        self.mainWindow = GSMain(self)
+        self.startWindow = GSStart(self)
+        self.controlPanel = GSControl(self)
+        self.timeWindow = GSLaunchTime(self)
+        self.documentationWindow = GSDocumentation(self)
+        self.errorWindow = GSError(self)
+        self.resultsWindow = GSResults(self)
+        self.connectionWindow = GSConnection(self)
+        self.calibrationWindow = GSCalibration(self)
+    
+    def interWindowConnection(self):
+        self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
+        self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
+        self.mainWindow.ui.actionControl_Panel.triggered.connect(self.controlPanel.show)
+        self.mainWindow.ui.actionDocumentation.triggered.connect(self.documentationWindow.show)
+        self.mainWindow.ui.actionConnect.triggered.connect(self.connectionWindow.show)
+        self.mainWindow.ui.actionResults.triggered.connect(self.resultsWindow.show)
+        self.mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(self.timeWindow.show)
+        self.startWindow.accepted.connect(self.mainWindow.applySettings)
+        self.startWindow.accepted.connect(self.mainWindow.show)
+        self.timeWindow.accepted.connect(self.mainWindow.applySettings)
+        self.mainWindow.ui.actionCalibration.triggered.connect(self.calibrationWindow.show)
 
 #Main
 if __name__ == "__main__":
@@ -523,45 +598,24 @@ if __name__ == "__main__":
     GS.setWindowIcon(icon)
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
-    settings = Settings()
+    collection = Collection()
 
     #Hier Datahandling (Data Storage Variable)
 
-    if translator.load(settings.locale, "MEEGA_Language"):
+    if translator.load(collection.settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
-
-    #window objects creation
-    GSmain = GSMain(settings)
-    GSstart = GSStart(settings)
-    GScontrol = GSControl(settings)
-    GStime = GSLaunchTime(settings)
-    GSdocument = GSDocumentation()
-    GSerror = GSError()
-    GSresults = GSResults()
-    GSconnection = GSConnection()
-    GScalibration = GSCalibration()
 
     #DataHandling setup
     DataHandling.Initialize(b"")
-    dataHandlingThread = DataHandlingThread(GSmain, GScalibration)
+    dataHandlingThread = DataHandlingThread(collection)
     GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
     dataHandlingThread.start()
 
     #inter-window connections
-    GSmain.ui.actionRestart.triggered.connect(GSstart.show)
-    GSmain.ui.actionRestart.triggered.connect(GSmain.hide)
-    GSmain.ui.actionControl_Panel.triggered.connect(GScontrol.show)
-    GSmain.ui.actionDocumentation.triggered.connect(GSdocument.show)
-    GSmain.ui.actionConnect.triggered.connect(GSconnection.show)
-    GSmain.ui.actionResults.triggered.connect(GSresults.show)
-    GSmain.ui.actionEstimated_Launch_Time.triggered.connect(GStime.show)
-    GSstart.accepted.connect(GSmain.applySettings)
-    GSstart.accepted.connect(GSmain.show)
-    GStime.accepted.connect(GSmain.applySettings)
-    GSmain.ui.actionCalibration.triggered.connect(GScalibration.show)
+    collection.interWindowConnection()
     
     #showing the startup screen
-    GSstart.show()
+    collection.startWindow.show()
 
     #starting the PyQt Application Loop (everything has to be defined prior to this)
     sys.exit(GS.exec())
