@@ -172,9 +172,12 @@ cython_debug/
 
 # VisualStudio 
 /.vs
-/MEEGA-OnBoard/x64/Debug
-/DataHandlingLibrary/x64/Debug
 *.filters
 *.user
+MEEGA-OnBoard/x64/Debug
+DataHandlingLibrary/x64/Debug
+x64/Debug
 
-/x64/Debug
+# Output files
+*.txt
+*.meega
