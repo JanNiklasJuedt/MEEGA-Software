@@ -8,14 +8,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef MEEGA_ONBOARD_H
-#define MEEGA_ONBOARD_H
 
 #define WINDOWS 0
 #define LINUX 1
 
 #define DEBUG 0
 #define RELEASE 1
+
+#define TEST 0
+#define RUN 1
 
 #define SERVO_v1 0
 #define SERVO_v2 1
@@ -24,10 +25,24 @@
 #define SPIDEV 1
 
 //OnBoard Settings
-#define MODE DEBUG
 #define ONBOARD_OS WINDOWS
+#define MODE DEBUG
+#define EXPERIMENT TEST
 #define SERVO_VERSION SERVO_v1
 #define SENSORS_SPI_VERSION WIRINGPISPI
+
+
+//PinOut for CM5
+#define LEDs_Pin 4	//pin
+#define Valve_Pin 16	//pin
+#define ValveSwitch 01	//pin
+#define Servo_Pin 12	//pin
+#define Servo_On 5	//pin
+#define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
+
+#define RPi_SOE 25	//pin
+#define RPi_LO 23	//pin
 
 
 #if (ONBOARD_OS == WINDOWS)
@@ -128,14 +143,20 @@ int delay(int millisecond) {	//1000x Second
 
 #include <wiringPiSPI.h>	//Include wiringPiSPI library for SPI control
 
-#define SPI_PRESSURE 1	//SPI Channel 0
+//SETUP for Sensors Reading
+#define SPI_SPEED 1000000	//1MHz - Test with 500kHz, 1MHz, 2MHz, 4MHz, 8MHz Max spec 32MHz
+#define CMD_READ 0xA1 //Command to read data from the sensors
+
+#define P_TxPACKET_LENGTH 16
+#define SPI_PRESSURE 1	//SPI Channel 1
 #define PRESSURE_SENSORS 6
 
-#define SPI_TEMPERATURE 0	//SPI Channel 1
+#define T_TxPACKET_LENGTH 18
+#define SPI_TEMPERATURE 0	//SPI Channel 0
 #define TEMPERATURE_SENSORS 6
 
-float pressureRead[PRESSURE_SENSORS];
-float temperatureRead[TEMPERATURE_SENSORS];
+uint32_t pressureRead[PRESSURE_SENSORS];
+uint32_t temperatureRead[TEMPERATURE_SENSORS];
 
 #elif (SENSORS_SPI_VERSION == SPIDEV)
 
@@ -143,7 +164,6 @@ float temperatureRead[TEMPERATURE_SENSORS];
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
-#include "MEEGA_OnBoard.h"
 
 #define SPI_PRESSURE "/dev/spidev0.1"
 #define SPI_TEMPERATURE "/dev/spidev0.0"
@@ -153,48 +173,55 @@ float temperatureRead[TEMPERATURE_SENSORS];
 
 //Global Variables Declaration
 #if (MODE == DEBUG)
-int NozzlePos = 0;
+int NozzlePos = 0,
+SoE = 0;
 #endif
-int ValveOpen = 1,
-	ValveClose = 0,
-	ValveStuck = 3,
-	valveStatus = 0,
-	ValvePos = 0,
-	ValveCompleted = 0,
-	ServoStuck = 3,
-	servoStatus = 0,
-	nozzleStatus = 0,
-	NozzleStuck = 3,
-	NozzleOpen = 1,
-	NozzleOpened = 0,
-	EoE = 0,
-	SoE = 0,
-	LO = 0,
-	ExperimentStatus,
-	SoEReceived = 0;
+const int ValveOpen = 1,
+ValveClose = 0,
+ValveStuck = 3,
+ServoStuck = 3,
+NozzleStuck = 3,
+NozzleOpen = 1,
+flight = 1,
+test = 0;
+
+int ExperimentStatus,
+valveStatus = 0,
+ValvePos = 0,
+ValveCompleted = 0,
+servoStatus = 0,
+ServoRunning = 0;
+nozzleStatus = 0,
+NozzleOpened = 0,
+TestStatus = 0,
+LOSignal,
+SoEReceived = 0,
+EoE = 0,
+modeSel,
+dryRun,
+testRun;
 
 //Parameters Declaration
 struct parameter {
-	int Mode, ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, FDA20, BDA2, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset, ServoRetryDelay;
+	int ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset, ServoRetryDelay;
 };
 #define DEFAULT_PARAMETER \
 	.ValveDelay = 5000, \
 	.ServoDelay = 6000, \
-	.EoEDelay = 30000, \
-	.PoweroffDelay = 1000, \
-	.NozzleOnCDelay = 1500, \
-	.ServoAngleReset = 0, \
-	.ServoRetryDelay = 3000
+	.EoEDelay = 30000
+//Unchangeable Parameters
+#define PoweroffDelay 1000
+#define NozzleOnCDelay 1500
+#define ServoAngleReset 0
+#define ServoRetryDelay 3000
+
 //Default Parameters
-struct parameter flightstandard = { .Mode = 1, DEFAULT_PARAMETER, .NoseConeSeparation = 10000, .AfterLO = 55000, .ServoAngle = 90 };
-struct parameter dryrunstandard = { .Mode = 2, DEFAULT_PARAMETER, .ServoAngle = 30 };
-struct parameter testrun = { .Mode = 2, .ServoAngle = 30 };
-struct parameter DEBUGstandard = { .Mode = 3, .AfterLO = 5000, .EoEDelay = 3000 };
+struct parameter Standard = { DEFAULT_PARAMETER, .NoseConeSeparation = 10000, .AfterLO = 55000, .ServoAngle = 90 };
+struct parameter DEBUGstandard = { .AfterLO = 5000, .EoEDelay = 3000 }; //For Debug Mode only
 
 //FailSafe Experiment Status
-typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, EXPERIMENT_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
+typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
 ExperimentState currentState = WAIT_LO;
-int experimentRunning = 0;
 
 
 //EXPERIMENT
@@ -203,9 +230,9 @@ int SoESignal();
 //Function to SetUp the Servo
 void ServoRotation(int degree);
 //Function in Experiment controlling the Valve operation
-int ValveRun(struct parameter parameter);
+int ValveRun(struct parameter parameter, int modeSel);
 //Function in Experiment controlling the Servo operation
-int ServoRun(struct parameter parameter);
+int ServoRun(struct parameter parameter, int modeSel);
 //Functiong in Test Mode manually controlling the Experiment from the Ground Station
 int ExperimentControl();
 
@@ -223,6 +250,3 @@ void FailSafeRecovery();
 void ReadPressureSensors(float* Sensors);
 //Read Temperature sensors from SPI
 void ReadTemperatureSensors(float* Sensors);
-
-
-#endif //MEEGA_ONBOARD_H
