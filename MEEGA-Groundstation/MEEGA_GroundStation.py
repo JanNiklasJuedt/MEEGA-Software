@@ -60,7 +60,7 @@ class Telecommand:
 
 #class to define the Main Window
 class GSMain(QMainWindow):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
 
         #importing visuals from the ui-file
@@ -74,27 +74,27 @@ class GSMain(QMainWindow):
         self.collection = collection
 
         #creating local status list
-        self.status = [[self.ACTIVE, ""] for _ in range(20)]
-        self.status[0][1] = self.ui.statusLabelPAmbient
-        self.status[1][1] = self.ui.statusLabelTCompare
-        self.status[2][1] = self.ui.statusLabelPReservoir
-        self.status[3][1] = self.ui.statusLabelTReservoir
-        self.status[4][1] = self.ui.statusLabelPAccumulator
-        self.status[5][1] = self.ui.statusLabelTAccumulator
-        self.status[6][1] = self.ui.statusLabelPNozzle1
-        self.status[7][1] = self.ui.statusLabelTNozzle1
-        self.status[8][1] = self.ui.statusLabelPNozzle2
-        self.status[9][1] = self.ui.statusLabelTNozzle2
-        self.status[10][1] = self.ui.statusLabelPNozzle3
-        self.status[11][1] = self.ui.statusLabelTNozzle3
-        self.status[12][1] = self.ui.statusLabelServo
-        self.status[13][1] = self.ui.statusLabelValve
-        self.status[14][1] = self.ui.statusLabelLED
-        self.status[15][1] = self.ui.statusLabelPChip
-        self.status[16][1] = self.ui.statusLabelTChip
-        self.status[17][1] = self.ui.statusLabelMainboard
-        self.status[18][1] = self.ui.statusLabelLiftOff
-        self.status[19][1] = self.ui.statusLabelSOE
+        self.statusDisplay = ["" for _ in range(20)]
+        self.statusDisplay[0] = self.ui.statusLabelPAmbient
+        self.statusDisplay[1] = self.ui.statusLabelTCompare
+        self.statusDisplay[2] = self.ui.statusLabelPReservoir
+        self.statusDisplay[3] = self.ui.statusLabelTReservoir
+        self.statusDisplay[4] = self.ui.statusLabelPAccumulator
+        self.statusDisplay[5] = self.ui.statusLabelTAccumulator
+        self.statusDisplay[6] = self.ui.statusLabelPNozzle1
+        self.statusDisplay[7] = self.ui.statusLabelTNozzle1
+        self.statusDisplay[8] = self.ui.statusLabelPNozzle2
+        self.statusDisplay[9] = self.ui.statusLabelTNozzle2
+        self.statusDisplay[10] = self.ui.statusLabelPNozzle3
+        self.statusDisplay[11] = self.ui.statusLabelTNozzle3
+        self.statusDisplay[12] = self.ui.statusLabelServo
+        self.statusDisplay[13] = self.ui.statusLabelValve
+        self.statusDisplay[14] = self.ui.statusLabelLED
+        self.statusDisplay[15] = self.ui.statusLabelPChip
+        self.statusDisplay[16] = self.ui.statusLabelTChip
+        self.statusDisplay[17] = self.ui.statusLabelMainboard
+        self.statusDisplay[18] = self.ui.statusLabelLiftOff
+        self.statusDisplay[19] = self.ui.statusLabelSOE
 
         #creating status pixmaps
         self.activepix = QPixmap("Ressources\\active.png")
@@ -102,7 +102,7 @@ class GSMain(QMainWindow):
         self.inactivepix = QPixmap("Ressources\\inactive.png")
 
         self.scalePixmaps()        
-        self.fetchStatus()
+        self.displayStatus()
 
         self.setLocale(self.collection.settings.locale)
 
@@ -172,31 +172,15 @@ class GSMain(QMainWindow):
             self.ui.menuConnection.popup(self.ui.menuConnection.pos())
     def filePathChanges(self):
         pass
-    def fetchStatus(self):
-        #update the local status list from DataHandling
-        frame = DataHandling.GetSaveFrame(-1)
-        #if not DataHandling.FrameIsEmpty(frame):
-        if not bool(frame) == False:
-            frame = frame.contents.data
-            for i in range(12):
-                self.status[i][0] = DataHandling.ReadFrame(frame, 12+i)
-            self.status[12][0] = DataHandling.ReadFrame(frame, 26)
-            self.status[13][0] = DataHandling.ReadFrame(frame, 27)
-            self.status[14][0] = DataHandling.ReadFrame(frame, 29)
-            self.status[15][0] = DataHandling.ReadFrame(frame, 30)
-            self.status[16][0] = DataHandling.ReadFrame(frame, 31)
-            self.status[17][0] = DataHandling.ReadFrame(frame, 32)
-            self.status[18][0] = DataHandling.ReadFrame(frame, 34)
-            self.status[19][0] = DataHandling.ReadFrame(frame, 35)
-        #update the displayed status pixmaps
+    def displayStatus(self):
         for i in range(20):
-            match self.status[i][0]:
+            match self.collection.dataAccumulation.household[i]:
                 case self.ACTIVE:
-                    self.status[i][1].setPixmap(self.activepix_scaled)
+                    self.statusDisplay[i].setPixmap(self.activepix_scaled)
                 case self.ISSUES:
-                    self.status[i][1].setPixmap(self.issuespix_scaled)
+                    self.statusDisplay[i].setPixmap(self.issuespix_scaled)
                 case self.INACTIVE:
-                    self.status[i][1].setPixmap(self.inactivepix_scaled)
+                    self.statusDisplay[i].setPixmap(self.inactivepix_scaled)
     
     #external functions (slots)
     @Slot()
@@ -239,7 +223,7 @@ class GSMain(QMainWindow):
 
 #class to define the startup dialog window
 class GSStart(QDialog):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
@@ -263,7 +247,7 @@ class GSStart(QDialog):
         self.collection.settings.launchTime = self.ui.launchTimeTimeEdit.time()
 
 class GSLaunchTime(QDialog):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_LaunchTimeDialog()
         self.ui.setupUi(self)
@@ -276,7 +260,7 @@ class GSLaunchTime(QDialog):
         self.collection.settings.launchTime = self.ui.launchTimeEdit.time()
 
 class GSResults(QWidget):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_ResultsWidget()
         self.ui.setupUi(self)
@@ -285,14 +269,14 @@ class GSResults(QWidget):
         self.ui.buttonBox.clicked.connect(self.hide)
 
 class GSDocumentation(QWidget):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_Documentation()
         self.ui.setupUi(self)
         self.collection = collection
 
 class GSError(QDialog):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_ErrorDialog()
         self.ui.setupUi(self)
@@ -304,7 +288,7 @@ class GSError(QDialog):
         # Kn�pfe per enable ausschalten
   
 class GSControl(QWidget):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_controlPanel()
         self.ui.setupUi(self)
@@ -451,14 +435,14 @@ class GSControl(QWidget):
         self.resetEOEDelay()
 
 class GSConnection(QDialog):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_ConnectionDialog()
         self.ui.setupUi(self)
         self.collection = collection
 
 class GSCalibration(QDialog):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_Sensor_Calibration()
         self.ui.setupUi(self)
@@ -488,12 +472,9 @@ class GSCalibration(QDialog):
 
     #update the displayed sensor value
     def updateValue(self):
-        frame = DataHandling.GetSaveFrame(-1)
-        if not bool(frame) == False:
-            frame = frame.contents.data
-            digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
-            mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, digitalValue))
-            self.ui.label.setText(mappedValue + " " + self.currentUnit)
+        digitalValue = self.collection.dataAccumulation.sensorData(self.selectedSensor)
+        mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, digitalValue))
+        self.ui.label.setText(mappedValue + " " + self.currentUnit)
     
     #select sensor and display already existing calibration points, according Units
     @Slot()
@@ -548,15 +529,45 @@ class GSCalibration(QDialog):
             DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
+class DataAccumulation:
+    def __init__(self):
+        self.gatherIndex = 0
+        self.allocationSize = 5000
+        self.sensorData = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
+        self.household = [0 for _ in range(27)]
+    def accumulate(self):
+        while True:
+            frame = DataHandling.GetNextFrame()
+            if DataHandling.FrameIsEmpty(frame):
+                break
+            else:
+                if self.gatherIndex%self.allocationSize == 0:
+                    extension = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
+                    self.sensorData.extend(extension)
+                for i in range(12):
+                    self.sensorData[self.gatherIndex][i] = DataHandling.ReadFrame(frame, i)
+                for i in range(12):
+                    self.household[i] = DataHandling.ReadFrame(frame, 12+i)
+                self.household[12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                self.household[13] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                self.household[14] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                self.household[15] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                self.household[16] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                self.household[17] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+                self.household[18] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                self.household[19] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                self.gatherIndex += 1
+
 class DataHandlingThread(QThread):
-    def __init__(self, collection: Collection):
+    def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
     def run(self):
         period_ms = 1000 / 20
         while True:
             clock = time.monotonic_ns()
-            self.collection.mainWindow.fetchStatus()
+            self.collection.dataAccumulation.accumulate()
+            self.collection.mainWindow.displayStatus()
             self.collection.calibrationWindow.updateValue()
             self.collection.telecommand.sendStep()
             DataHandling.UpdateAll()
@@ -564,7 +575,7 @@ class DataHandlingThread(QThread):
                break
             self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
 
-class Collection:
+class ClassCollection:
     def __init__(self):
         self.settings = Settings()
         self.telecommand = Telecommand()
@@ -577,7 +588,7 @@ class Collection:
         self.resultsWindow = GSResults(self)
         self.connectionWindow = GSConnection(self)
         self.calibrationWindow = GSCalibration(self)
-    
+        self.dataAccumulation = DataAccumulation()  
     def interWindowConnection(self):
         self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
@@ -598,7 +609,7 @@ if __name__ == "__main__":
     GS.setWindowIcon(icon)
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
-    collection = Collection()
+    collection = ClassCollection()
 
     #Hier Datahandling (Data Storage Variable)
 
