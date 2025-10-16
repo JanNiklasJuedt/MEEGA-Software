@@ -1288,12 +1288,15 @@ DataFrame GetNextFrame()
 		DebugLog("!SaveFile could not be found");
 		return EmptyFrame();
 	}
-	if (currentFrame->nextFrame != NULL) {
-		currentFrame = currentFrame->nextFrame;
-		return currentFrame->data;
+	if (currentFrame == NULL) {
+		if (dataHandling.saveFile->firstFrame != NULL) {
+			currentFrame = dataHandling.saveFile->firstFrame;
+			return currentFrame->data;
+		}
+		else return EmptyFrame();
 	}
-	else if (dataHandling.saveFile->firstFrame != NULL) {
-		currentFrame = dataHandling.saveFile->firstFrame;
+	else if (currentFrame->nextFrame != NULL) {
+		currentFrame = currentFrame->nextFrame;
 		return currentFrame->data;
 	}
 	else return EmptyFrame();
