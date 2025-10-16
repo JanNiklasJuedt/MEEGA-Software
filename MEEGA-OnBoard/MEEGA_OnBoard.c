@@ -62,7 +62,7 @@ int main() {
 		int modeSel;
 		printf("*Mode selection 1 for Flight, 0 for Test: "); scanf_s("%d", &modeSel);
 #elif (MODE == RELEASE)
-		DataFrame modeFrame = UpdateTC(); //Update the Tele Command frame from the Telemetry buffer
+		DataFrame modeFrame = GetTC(); //Update the Tele Command frame from the Telemetry buffer
 		modeSel = ReadFrame(modeFrame, Mode_Change);	//Read the mode change from the Tele Command
 #endif
 		// Test Mode = 0, Flight Mode = 1
@@ -191,7 +191,7 @@ int main() {
 				continue; //abort test
 			}
 #elif (MODE == RELEASE)
-			DataFrame FrameTC = UpdateTC();
+			DataFrame FrameTC = GetTC();
 			dryRun = ReadFrame(FrameTC, Dry_Run);
 			testRun = ReadFrame(FrameTC, Test_Run);
 			
@@ -244,7 +244,7 @@ int main() {
 //Valve Control Function
 int ValveRun(struct parameter parameter, int modeSel) {
 #if (MODE == RELEASE)
-	DataFrame FrameTC = UpdateTC();
+	DataFrame FrameTC = GetTC();
 #endif
 	digitalWrite(Valve_Pin, ValveOpen);	//command open valve
 #if (MODE == DEBUG)
@@ -275,7 +275,7 @@ int ValveRun(struct parameter parameter, int modeSel) {
 			printf("Valve Error Code 1, Return ...\n");
 			return -1;
 #elif (MODE == RELEASE)
-			FrameTC = UpdateTC();
+			FrameTC = GetTC();
 			if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 #endif
 		}
@@ -314,7 +314,7 @@ int ValveRun(struct parameter parameter, int modeSel) {
 			printf("Valve Error Code 2, Return ...\n");
 			return -1;
 #elif (MODE == RELEASE)
-			FrameTC = UpdateTC();
+			FrameTC = GetTC();
 			if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 #endif
 		}
@@ -325,7 +325,7 @@ int ValveRun(struct parameter parameter, int modeSel) {
 //Servo Control Function
 int ServoRun(struct parameter parameter, int modeSel) {
 #if (MODE == RELEASE)
-	DataFrame FrameTC = UpdateTC();
+	DataFrame FrameTC = GetTC();
 #endif
 	if (modeSel == flight) {
 		ServoRotation(parameter.ServoAngle); //command rotate the serve 90° first attempt*
@@ -451,14 +451,14 @@ int ServoRun(struct parameter parameter, int modeSel) {
 #elif (MODE == RELEASE)
 		ServoRotation(parameter.ServoAngle);
 		delay(NozzleOnCDelay);
-		FrameTC = UpdateTC();
+		FrameTC = GetTC();
 		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 		if (dryRun && parameter.ServoAngle <= 10) {
 #if (MODE == DEBUG)
 			printf("End of Experiment: Test Mode Error\n");
 #endif
 			//TestStatus = 99;
-			FrameTC = UpdateTC();
+			FrameTC = GetTC();
 			return -1; //abort test
 		}
 		else if (dryRun && parameter.ServoAngle >= 30) {
@@ -473,17 +473,17 @@ int ServoRun(struct parameter parameter, int modeSel) {
 		}
 		else if (testRun && digitalRead(Nozzle_Cover_S1)) {
 			//TestStatus = 99;
-			FrameTC = UpdateTC();
+			FrameTC = GetTC();
 			return -1; //abort test
 		}
-		FrameTC = UpdateTC();
+		FrameTC = GetTC();
 		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 		
 #endif
 #if (MODE == DEBUG)
 		delay(DEBUGstandard.EoEDelay);
 #elif (MODE == RELEASE)
-		FrameTC = UpdateTC();
+		FrameTC = GetTC();
 		if (ReadFrame(FrameTC, Test_Abort) == 1) return -1; //abort test
 		delay(parameter.EoEDelay);
 #endif
@@ -497,7 +497,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 //Control Panel Function
 int ExperimentControl() {
 	while (1) {
-		DataFrame FrameTC = UpdateTC();
+		DataFrame FrameTC = GetTC();
 		//Valve Control
 		if (!FrameIsEmpty(FrameTC)) {
 
@@ -646,7 +646,7 @@ void Log() {
 #if (MODE == DEBUG)
 			if (Abort == 1) SoEReceived = 0;
 #elif (MODE == RELEASE)
-			if (ReadFrame(UpdateTC(), Test_Abort)) SoEReceived = 0;
+			if (ReadFrame(GetTC(), Test_Abort)) SoEReceived = 0;
 #endif
 		}
 		else if (TestStatus == 70) SoEReceived = 0;
@@ -749,7 +749,7 @@ static void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length)
 void ReadPressureSensors(uint32_t* Sensors) {
 	uint8_t txBuf = CMD_READ; // Request data from channel 1
 	uint8_t rxBuf[P_TxPACKET_LENGTH];
-	wiringPiSPIDataRW(SPI_PRESSURE, txBuf, 1);
+	wiringPiSPIDataRW(SPI_PRESSURE, &txBuf, 1);
 	wiringPiSPIDataRW(SPI_PRESSURE, rxBuf, P_TxPACKET_LENGTH);
 
 	Sensors[0] = (rxBuf[0] << 8) | rxBuf[1];						//TPR280 Ambient Pressure
@@ -763,7 +763,7 @@ void ReadPressureSensors(uint32_t* Sensors) {
 void ReadTemperatureSensors(uint32_t* Sensors) {
 	uint8_t txBuf = CMD_READ; // Request data from channel 0
 	uint8_t rxBuf[T_TxPACKET_LENGTH];
-	wiringPiSPIDataRW(SPI_TEMPERATURE, txBuf, 1);
+	wiringPiSPIDataRW(SPI_TEMPERATURE, &txBuf, 1);
 	wiringPiSPIDataRW(SPI_TEMPERATURE, rxBuf, T_TxPACKET_LENGTH);
 
 	Sensors[0] = (rxBuf[0] << 16) | (rxBuf[1] << 8) | rxBuf[2];		//TPR280 Ambient Pressure

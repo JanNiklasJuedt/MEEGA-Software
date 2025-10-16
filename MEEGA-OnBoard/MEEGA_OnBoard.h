@@ -144,14 +144,14 @@ int delay(int millisecond) {	//1000x Second
 #include <wiringPiSPI.h>	//Include wiringPiSPI library for SPI control
 
 //SETUP for Sensors Reading
-#define SPI_SPEED 1000000	//1MHz - Test with 500kHz, 1MHz, 2MHz, 4MHz, 8MHz Max spec 32MHz
+#define SPI_SPEED 1000000	//1MHz - MPR_P_SPI max 800kHz; AD7793_ADC max 4MHz; LTC2450_ADC max 2MHz  - Test with 500kHz, 1MHz
 #define CMD_READ 0xA1 //Command to read data from the sensors
 
-#define P_TxPACKET_LENGTH 16
+#define P_TxPACKET_LENGTH 16 //bytes
 #define SPI_PRESSURE 1	//SPI Channel 1
 #define PRESSURE_SENSORS 6
 
-#define T_TxPACKET_LENGTH 18
+#define T_TxPACKET_LENGTH 18 //bytes
 #define SPI_TEMPERATURE 0	//SPI Channel 0
 #define TEMPERATURE_SENSORS 6
 
@@ -190,7 +190,7 @@ valveStatus = 0,
 ValvePos = 0,
 ValveCompleted = 0,
 servoStatus = 0,
-ServoRunning = 0;
+ServoRunning = 0,
 nozzleStatus = 0,
 NozzleOpened = 0,
 TestStatus = 0,
@@ -247,6 +247,6 @@ void* LogThread(void* arg);
 void FailSafeRecovery();
 
 //Read Pressure sensors from SPI
-void ReadPressureSensors(float* Sensors);
+void ReadPressureSensors(uint32_t* Sensors);
 //Read Temperature sensors from SPI
-void ReadTemperatureSensors(float* Sensors);
+void ReadTemperatureSensors(uint32_t* Sensors);
