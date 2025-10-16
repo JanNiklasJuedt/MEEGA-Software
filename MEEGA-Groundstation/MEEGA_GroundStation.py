@@ -8,6 +8,7 @@ from tkinter import SE, SEL
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread)
+from PySide6.QtCharts import (QChart, QChartView, QLineSeries)
 
 from MEEGA_mainWindow import *
 from MEEGA_calibration import *
@@ -42,7 +43,8 @@ class Settings:
 
 #class to handle telecommands
 class Telecommand:
-    def __init__(self):
+    def __init__(self, collection):
+        self.collection = collection
         self.tcframe = DataHandling.CreateTC()
         self.sendCounter = 0
 
@@ -217,7 +219,7 @@ class GSMain(QMainWindow):
             self.ui.actionTest_Mode.setChecked(True)
         self.setLocale(self.collection.settings.locale)
         self.languageChanges()
-        self.modeChanges()
+        self.modeSwitched()
         self.connectionModeChanges()
         self.filePathChanges()
 
@@ -409,18 +411,18 @@ class GSControl(QWidget):
         self.EOEDelay = self.ui.EOETimeEdit.time().addMSecs(int(self.ui.EOEMilliEdit.text()))
     # Update the telecommand frame with current control states and durations
     def updateTCFrame(self):
-        DataHandling.WriteFrame(self.collection.tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
-        DataHandling.WriteFrame(self.collection.tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
-        DataHandling.WriteFrame(self.collection.tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
         #PowerOffDelay fehlt
         #NozzleOnDelay fehlt
-        DataHandling.WriteFrame(self.collection.tcframe, 6, self.dryRunActive)
-        DataHandling.WriteFrame(self.collection.tcframe, 7, self.ledState)
-        DataHandling.WriteFrame(self.collection.tcframe, 8, floor(self.servoAngle*10))
-        DataHandling.WriteFrame(self.collection.tcframe, 9, self.valveControl)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 6, self.dryRunActive)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 7, self.ledState)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 8, floor(self.servoAngle*10))
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 9, self.valveControl)
         #Camera control fehlt
-        DataHandling.WriteFrame(self.collection.tcframe, 11, self.testRunStop)
-        DataHandling.WriteFrame(self.collection.tcframe, 12, self.testRunStart)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 11, self.testRunStop)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 12, self.testRunStart)
     def clearPanel(self):
         self.valveControl = 0
         self.ledState = 0
@@ -472,7 +474,7 @@ class GSCalibration(QDialog):
 
     #update the displayed sensor value
     def updateValue(self):
-        digitalValue = self.collection.dataAccumulation.sensorData(self.selectedSensor)
+        digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
         mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, digitalValue))
         self.ui.label.setText(mappedValue + " " + self.currentUnit)
     
@@ -522,11 +524,8 @@ class GSCalibration(QDialog):
                 currentEntry = self.ui.lineEdit_2.text()
             case 2:
                 currentEntry = self.ui.lineEdit_3.text()
-        frame = DataHandling.GetSaveFrame(-1)
-        if not bool(frame) == False:
-            frame = frame.contents.data
-            digitalValue = DataHandling.ReadFrame(frame, self.selectedSensor)
-            DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
+        digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
+        DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
 class DataAccumulation:
@@ -562,8 +561,9 @@ class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
+        self.frequency = 2
     def run(self):
-        period_ms = 1000 / 20
+        period_ms = 1000 / self.frequency
         while True:
             clock = time.monotonic_ns()
             self.collection.dataAccumulation.accumulate()
@@ -573,12 +573,15 @@ class DataHandlingThread(QThread):
             DataHandling.UpdateAll()
             if self.isInterruptionRequested():
                break
-            self.msleep(period_ms - (time.monotonic_ns() - clock) / 1000000)
+            endTime = time.monotonic_ns()
+            if endTime - clock < period_ms:
+                self.msleep(period_ms - (endTime - clock) / 1000000)
 
 class ClassCollection:
     def __init__(self):
         self.settings = Settings()
-        self.telecommand = Telecommand()
+        self.telecommand = Telecommand(self)
+        self.dataAccumulation = DataAccumulation()
         self.mainWindow = GSMain(self)
         self.startWindow = GSStart(self)
         self.controlPanel = GSControl(self)
@@ -588,7 +591,6 @@ class ClassCollection:
         self.resultsWindow = GSResults(self)
         self.connectionWindow = GSConnection(self)
         self.calibrationWindow = GSCalibration(self)
-        self.dataAccumulation = DataAccumulation()  
     def interWindowConnection(self):
         self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
