@@ -1382,6 +1382,7 @@ void CloseSave()
 	DebugLog("SaveFileFrames emptied");
 	dataHandling.saveFile->lastFrame = NULL;
 	dataHandling.saveFile->firstFrame = NULL;
+	currentFrame = NULL;
 	dataHandling.saveFile->frameAmount = dataHandling.saveFile->savedAmount;
 	dataHandling.saveFile->loadedAmount = 0;
 	dataHandling.saveFile->currentTC = EmptyTC();
