@@ -130,6 +130,8 @@ DataHandling.ReadSave.argtypes = [c_char_p]
 DataHandling.GetSaveFrame.argtypes = [c_int]
 DataHandling.GetSaveFrame.restype = DataFrame
 
+DataHandling.GetNextFrame.restype = DataFrame
+
 DataHandling.GetTC.restype = DataFrame
 
 DataHandling.AddSaveFrame.argtypes = [DataFrame]
