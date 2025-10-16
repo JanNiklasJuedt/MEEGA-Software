@@ -9,6 +9,7 @@
 #ifndef DATAHANDLINGLIBRARY_H
 #define DATAHANDLINGLIBRARY_H
 
+//DataHandling Constants for Settings
 #define WINDOWS_OS 0
 #define LINUX_OS 1
 #define MAC_OS 2
@@ -24,11 +25,12 @@
 #define CUBIC 2
 
 //DataHandling Settings
-const int DATAHANDLINGLIBRARY_OS = WINDOWS_OS;
-const int CALIBRATION_METHOD = LINEAR;
-const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
-//-
+#define DATAHANDLINGLIBRARY_OS WINDOWS_OS
+#define CALIBRATION_METHOD LINEAR
+#define DEBUG_OUTPUT LOGFILE + TERMINAL
+#define USE_DEFAULT_VALUES 1
 
+//OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 
 #define WIN32_LEAN_AND_MEAN
@@ -41,7 +43,7 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
-#define DEFAULTCOMPATH "COM1"
+#define DEFAULTCOMPATH "COM3"
 
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 
@@ -52,12 +54,12 @@ const int DEBUG_OUTPUT = LOGFILE + TERMINAL;
 
 #define DATAHANDLINGLIBRARY_CONSTANT
 #define DATAHANDLINGLIBRARY_API
-#define DEFAULTCOMPATH "/dev/tty1"
+#define DEFAULTCOMPATH "/dev/serial0"
 #define INVALID_HANDLE_VALUE -1
 
 #endif // DATAHANDLINGLIBRARY_OS
 
-
+//Unneccessary null define
 #ifndef NULL
 #define NULL (void*)0
 #endif // NULL
@@ -91,7 +93,7 @@ typedef unsigned char byte;
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 6 //Bits
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 38400
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFER_LENGTH;
@@ -109,7 +111,8 @@ DATAHANDLINGLIBRARY_CONSTANT const char SAVEFILE_NAME[] = "MEEGA_SaveFile.meega"
 
 DATAHANDLINGLIBRARY_CONSTANT const float VERSION = 0.5f;
 DATAHANDLINGLIBRARY_CONSTANT const char DEBUGLOG_NAME[] = "MEEGA_DataHandlingLog.txt";
-//-
+
+//Enums and Structs
 
 //Telemetry data identifier
 enum DATAHANDLINGLIBRARY_API TMID{
@@ -135,22 +138,29 @@ enum DATAHANDLINGLIBRARY_API Flag {
 
 //Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
-	//Used to chronologically order DataFrames (0 denotes an empty DataFrame)
+	//Signals the beginning of a new Frame (= -1)
+	byte start;
+	//Used to form DataPackets (0 denotes an empty DataFrame)
 	SYNC_TYPE sync;
-	//Used to mark DataFrames for faulty or missing data
+	//Used to mark DataFrames for faulty or missing data and TeleCommand
 	byte flag;
+	//Byte Array for saving data
 	byte data[DATA_LENGTH];
+	//Checksum to check for complete Frames
 	CHKSM_TYPE chksm;
 } DataFrame;
 
 //Stores the data contained in one packet of the transmission protocol
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
+	//Signals the beginning of a new Packet (= -1)
+	byte start;
 	//Used to stitch together DataFrames (= DataFrame.sync)
 	SYNC_TYPE sync;
 	//Used to identify payload data
 	byte msg;
+	//Byte Array containing a part of the Frame.data
 	byte payload[PAYLOAD_LENGTH];
-	//Checksum output
+	//Checksum of the corresponding Frame
 	CHKSM_TYPE chksm;
 	//Cyclic Redundancy Check Output
 	CHKSM_TYPE crc;
@@ -192,28 +202,28 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 } FailSafe;
 
 //Stores one DataFrame of a savefile, as well as a pointer to the next one
-typedef struct DATAHANDLINGLIBRARY_API SaveFileFrame {
+typedef struct DATAHANDLINGLIBRARY_API SaveFrame {
 	struct DataFrame data;
-	struct SaveFileFrame* nextFrame;
-	struct SaveFileFrame* previousFrame;
-} SaveFileFrame;
+	struct SaveFrame* nextFrame;
+	struct SaveFrame* previousFrame;
+} SaveFrame;
 
 //Stores all data collected/received during the mission
 typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	float version;
 	time_t dateTime;
 	//pointer towards the first "DataFrame", subsequent frames are pointed to by themselves
-	struct SaveFileFrame* firstFrame;
-	struct SaveFileFrame* lastFrame;
+	struct SaveFrame* firstFrame;
+	struct SaveFrame* lastFrame;
 	//total amount of frames added to the SaveFile
 	int frameAmount;
 	//total amount of frames already written to the harddrive
 	int savedAmount;
 	//amount of frames currently loaded into memory
 	int loadedAmount;
-	//amount of frames unloaded from memory
+	//amount of frames unloaded from memory (unimplemented)
 	int unloadedAmount;
-	//pointer towards a collection of all newest TeleCommands
+	//the newest TeleCommand
 	struct DataFrame currentTC;
 	//path to the associated file
 	char saveFilePath[PATH_LENGTH];
@@ -267,14 +277,16 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 	struct FrameLookUpTable* frameLookUp;
 } DataHandlingHub;
 
-//Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,$,@)
+//Function Delcarations
+
+//Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,§,@)
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
 //Calculates checksum of given DataFrame
 DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataFrame data);
 
-//Calculates cyclic redundancy check of given DataPacket
-DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateCRC(DataPacket data);
+//Calculates cyclic redundancy check with given DataPacket, returns whether there are uncorrected errors
+DATAHANDLINGLIBRARY_API int CalculateCRC(DataPacket* data);
 
 //Calls necessary functions for saving and transmitting data;
 DATAHANDLINGLIBRARY_API int UpdateAll();
@@ -315,10 +327,10 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 //Initializes Memory and loads Data from files if possible
 DATAHANDLINGLIBRARY_API int Initialize();
 
-//Returns a new empty DataFrame with the specified Sync-bytes value
+//Returns a new DataFrame
 DATAHANDLINGLIBRARY_API DataFrame CreateFrame();
 
-//Returns a new empty TeleCommand-DataFrame with the specified Sync-bytes value
+//Returns a new empty TeleCommand-DataFrame
 DATAHANDLINGLIBRARY_API DataFrame CreateTC();
 
 //Returns an empty DataFrame
@@ -343,7 +355,10 @@ DATAHANDLINGLIBRARY_API int FrameIsTC(DataFrame frame);
 DATAHANDLINGLIBRARY_API int FrameHasFlag(DataFrame frame, int id);
 
 //Sets the given flag-ID (enum Flags) for the given frame
-DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id);
+DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id); 
+
+//Removes the given flag-ID (enum Flags) for the given frame
+DATAHANDLINGLIBRARY_API void FrameRemoveFlag(DataFrame* frame, int id);
 
 //Adds an outgoing DataFrame to the Buffer, returns the corresponding index
 DATAHANDLINGLIBRARY_API int AddOutFrame(DataFrame frame);
@@ -360,8 +375,7 @@ DATAHANDLINGLIBRARY_API int CreateFailSafe();
 //Reads the current Failsafe-file into a structure
 DATAHANDLINGLIBRARY_API int ReadFailSafe();
 
-//Updates the current Failsafe-file to match the structure or creates a new one if none was found,
-//returns {0} if successful, {1} if it created a new file and {-1} if there was an error
+//Updates the current Failsafe-file to match the structure, returns whether successful
 DATAHANDLINGLIBRARY_API int WriteFailSafe();
 
 //Writes the frames added since the last save onto the harddrive, returns the number of bytes written or {-1} if unsuccessful
@@ -370,23 +384,23 @@ DATAHANDLINGLIBRARY_API int WriteSave();
 //Creates a new SaveFile structure and file
 DATAHANDLINGLIBRARY_API int CreateSave(const char path[]);
 
-//Reloads all frames from the SaveFile-file into the SaveFile-structure, appending excess from memory
+//Rewrite Due
 DATAHANDLINGLIBRARY_API int CheckSave();
 
 //Reads a SaveFile-file into a Savefile-structure, discarding current memory
 DATAHANDLINGLIBRARY_API int ReadSave(const char path[]);
 
-//Returns the Frame of the SaveFile at the corresponding index, defaults to the last one
-DATAHANDLINGLIBRARY_API SaveFileFrame* GetSaveFrame(int index);
+//Returns the Frame of the SaveFile at the corresponding index, defaults to the last one and ignores TC Frames!
+DATAHANDLINGLIBRARY_API DataFrame GetSaveFrame(int index);
 
-//Updates {currentTC} to represent all saved TeleCommand-DataFrames, returns the updated {currentTC}
-DATAHANDLINGLIBRARY_API DataFrame UpdateTC();
+//Returns the next Frame, counting from the last successful call to GetSaveFrame()
+DATAHANDLINGLIBRARY_API DataFrame GetNextFrame();
 
-//Adds a new frame to the end of the SaveFile, returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* AddSaveFrame(DataFrame data);
+//Returns the newest TC Frame
+DATAHANDLINGLIBRARY_API DataFrame GetTC();
 
-//Shortcut to CreateFrame() and AddSaveFrame(), returns a pointer to the newly created Frame
-DATAHANDLINGLIBRARY_API SaveFileFrame* CreateSaveFrame();
+//Adds a new frame to the end of the SaveFile
+DATAHANDLINGLIBRARY_API void AddSaveFrame(DataFrame data);
 
 //Frees allocated Memory of the passed SaveFile's Frames, does not free SaveFile itself
 DATAHANDLINGLIBRARY_API void CloseSave();
@@ -399,5 +413,8 @@ DATAHANDLINGLIBRARY_API int Send(byte* start, int amount);
 
 //Reads received data via the configured path into the buffer, returns the amount of bytes received
 DATAHANDLINGLIBRARY_API int Receive(byte* buffer, int max);
+
+//Tries to open the comm Port with the specified name
+DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
 
 #endif // DATAHANDLINGLIBRARY_H
