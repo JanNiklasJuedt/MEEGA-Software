@@ -423,11 +423,11 @@ int ReadCalibration(const char* path)
 {
 	DebugLog("Reading Calibration:");
 	FILE* file;
-	int i, j, sensor, default = 0, error = 0;
+	int i, j, sensor, defaultpath = 0, error = 0;
 	if (path == NULL || path[0] == '\0')
 		if (USE_DEFAULT_VALUES) {
 			file = fopen(CALIBRATION_NAME, "rb");
-			default = 1;
+			defaultpath = 1;
 		}
 		else {
 			DebugLog("!Invalid path passed to ReadCalibration()");
@@ -440,7 +440,7 @@ int ReadCalibration(const char* path)
 		DebugLog("!Calibration could not be opened_");
 		return 0;
 	}
-	if (default) CreateCalibration(CALIBRATION_NAME);
+	if (defaultpath) CreateCalibration(CALIBRATION_NAME);
 	else CreateCalibration(path);
 	if (dataHandling.calibration == NULL) {
 		DebugLog("!Calibration could not be created_");
@@ -1292,6 +1292,10 @@ DataFrame GetNextFrame()
 		currentFrame = currentFrame->nextFrame;
 		return currentFrame->data;
 	}
+	else if (dataHandling.saveFile->firstFrame != NULL) {
+		currentFrame = dataHandling.saveFile->firstFrame;
+		return currentFrame->data;
+	}
 	else return EmptyFrame();
 }
 
@@ -1378,6 +1382,7 @@ void CloseSave()
 	DebugLog("SaveFileFrames emptied");
 	dataHandling.saveFile->lastFrame = NULL;
 	dataHandling.saveFile->firstFrame = NULL;
+	currentFrame = NULL;
 	dataHandling.saveFile->frameAmount = dataHandling.saveFile->savedAmount;
 	dataHandling.saveFile->loadedAmount = 0;
 	dataHandling.saveFile->currentTC = EmptyTC();
