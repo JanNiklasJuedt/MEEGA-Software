@@ -119,7 +119,7 @@ DataHandling.FrameIsTC.argtypes = [DataFrame]
 
 DataHandling.FrameHasFlag.argtypes = [DataFrame, Flag]
 
-DataHandling.FrameAddFlag.argtypes = [POINTER(DataFrame), Flag]
+DataHandling.FrameSetFlag.argtypes = [POINTER(DataFrame), Flag]
 
 DataHandling.AddOutFrame.argtypes = [DataFrame]
 
@@ -130,8 +130,10 @@ DataHandling.ReadSave.argtypes = [c_char_p]
 DataHandling.GetSaveFrame.argtypes = [c_int]
 DataHandling.GetSaveFrame.restype = DataFrame
 
-DataHandling.UpdateTC.restype = DataFrame
+DataHandling.GetTC.restype = DataFrame
 
 DataHandling.AddSaveFrame.argtypes = [DataFrame]
 
 DataHandling.AddFrame.argtypes = [DataFrame]
+
+DataHandling.SetPort.argtypes = [c_char_p]
