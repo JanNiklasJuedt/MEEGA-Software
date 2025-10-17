@@ -107,6 +107,9 @@
        <property name="enabled">
         <bool>true</bool>
        </property>
+       <property name="inputMethodHints">
+        <set>Qt::InputMethodHint::ImhFormattedNumbersOnly</set>
+       </property>
       </widget>
      </item>
      <item row="2" column="0">
@@ -138,7 +141,11 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QLineEdit" name="lineEdit_2"/>
+      <widget class="QLineEdit" name="lineEdit_2">
+       <property name="inputMethodHints">
+        <set>Qt::InputMethodHint::ImhFormattedNumbersOnly</set>
+       </property>
+      </widget>
      </item>
      <item row="0" column="3">
       <widget class="QLabel" name="label_2">
@@ -148,7 +155,11 @@
       </widget>
      </item>
      <item row="2" column="2">
-      <widget class="QLineEdit" name="lineEdit_3"/>
+      <widget class="QLineEdit" name="lineEdit_3">
+       <property name="inputMethodHints">
+        <set>Qt::InputMethodHint::ImhFormattedNumbersOnly</set>
+       </property>
+      </widget>
      </item>
      <item row="0" column="0">
       <widget class="QRadioButton" name="radioButton">

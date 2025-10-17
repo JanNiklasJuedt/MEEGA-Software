@@ -65,6 +65,7 @@ class Ui_Sensor_Calibration(object):
         self.lineEdit = QLineEdit(Sensor_Calibration)
         self.lineEdit.setObjectName(u"lineEdit")
         self.lineEdit.setEnabled(True)
+        self.lineEdit.setInputMethodHints(Qt.InputMethodHint.ImhFormattedNumbersOnly)
 
         self.gridLayout.addWidget(self.lineEdit, 0, 2, 1, 1)
 
@@ -90,6 +91,7 @@ class Ui_Sensor_Calibration(object):
 
         self.lineEdit_2 = QLineEdit(Sensor_Calibration)
         self.lineEdit_2.setObjectName(u"lineEdit_2")
+        self.lineEdit_2.setInputMethodHints(Qt.InputMethodHint.ImhFormattedNumbersOnly)
 
         self.gridLayout.addWidget(self.lineEdit_2, 1, 2, 1, 1)
 
@@ -100,6 +102,7 @@ class Ui_Sensor_Calibration(object):
 
         self.lineEdit_3 = QLineEdit(Sensor_Calibration)
         self.lineEdit_3.setObjectName(u"lineEdit_3")
+        self.lineEdit_3.setInputMethodHints(Qt.InputMethodHint.ImhFormattedNumbersOnly)
 
         self.gridLayout.addWidget(self.lineEdit_3, 2, 2, 1, 1)
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from math import floor
 import sys
 import time
-from tkinter import SE, SEL
 
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
@@ -127,16 +126,20 @@ class GSMain(QMainWindow):
         
         #reference to the application object
         self.app = QApplication.instance()
-        
+    #internal functions
+    def connect(self):
         #connection of signals and slots
         self.languageGroup.triggered.connect(self.languageChanges)
         self.ui.actionManual.triggered.connect(self.fetchSettings)
         self.ui.actionAutomatic.triggered.connect(self.fetchSettings)
         self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
         self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
-        self.ui.actionQuit.triggered.connect(self.app.quit) 
-
-    #internal functions
+        self.ui.actionQuit.triggered.connect(self.collection.shutdown)
+    #override closeEvent to ensure proper thread termination and application exit
+    def closeEvent(self, event):
+        self.collection.shutdown()
+        event.accept()
+        super().closeEvent(event)
     def scalePixmaps(self):
             #Pixmaps an die aktuelle Label-Groesse anpassen
             label_size = self.ui.statusLabelMainboard.size()
@@ -144,6 +147,7 @@ class GSMain(QMainWindow):
             self.activepix_scaled = self.activepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.inactivepix_scaled = self.inactivepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    #override resizeEvent to rescale pixmaps when window size changes
     def resizeEvent(self, event):
             self.scalePixmaps()
             super().resizeEvent(event)
@@ -237,8 +241,14 @@ class GSStart(QDialog):
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
-        self.rejected.connect(QApplication.instance().quit)
+        self.rejected.connect(self.collection.shutdown)
         self.accepted.connect(self.fetchSettings)
+
+    #override closeEvent to ensure proper thread termination and application exit
+    def closeEvent(self, event):
+        self.collection.shutdown()
+        event.accept()
+        super().closeEvent(event)
 
     @Slot()
     def fetchSettings(self):
@@ -525,7 +535,7 @@ class GSCalibration(QDialog):
             case 2:
                 currentEntry = self.ui.lineEdit_3.text()
         digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
-        DataHandling.writePoint(self.selectedSensor, self.selectedEntry, digitalValue, currentEntry)
+        DataHandling.WritePoint(self.selectedSensor, self.selectedEntry, digitalValue, float(currentEntry))
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
 class DataAccumulation:
@@ -572,7 +582,8 @@ class DataHandlingThread(QThread):
             self.collection.telecommand.sendStep()
             DataHandling.UpdateAll()
             if self.isInterruptionRequested():
-               break
+                DataHandling.CloseAll()
+                break
             endTime = time.monotonic_ns()
             if endTime - clock < period_ms:
                 self.msleep(period_ms - (endTime - clock) / 1000000)
@@ -591,6 +602,12 @@ class ClassCollection:
         self.resultsWindow = GSResults(self)
         self.connectionWindow = GSConnection(self)
         self.calibrationWindow = GSCalibration(self)
+        #DataHandling setup
+        DataHandling.Initialize(b"")
+        self.dataHandlingThread = DataHandlingThread(self)
+        self.dataHandlingThread.start()
+        #lateInit
+        self.mainWindow.connect()
     def interWindowConnection(self):
         self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
@@ -603,6 +620,18 @@ class ClassCollection:
         self.startWindow.accepted.connect(self.mainWindow.show)
         self.timeWindow.accepted.connect(self.mainWindow.applySettings)
         self.mainWindow.ui.actionCalibration.triggered.connect(self.calibrationWindow.show)
+    def shutdown(self):
+        thread = self.dataHandlingThread
+        thread.requestInterruption()
+        app = QApplication.instance()
+        timeout_ms = 5000
+        interval_ms = 50
+        waited = 0
+        while thread.isRunning() and waited < timeout_ms:
+            app.processEvents()
+            time.sleep(interval_ms/1000)
+            waited += interval_ms
+        app.quit()
 
 #Main
 if __name__ == "__main__":
@@ -614,15 +643,8 @@ if __name__ == "__main__":
     collection = ClassCollection()
 
     #Hier Datahandling (Data Storage Variable)
-
     if translator.load(collection.settings.locale, "MEEGA_Language"):
         GS.installTranslator(translator)
-
-    #DataHandling setup
-    DataHandling.Initialize(b"")
-    dataHandlingThread = DataHandlingThread(collection)
-    GS.aboutToQuit.connect(dataHandlingThread.requestInterruption)
-    dataHandlingThread.start()
 
     #inter-window connections
     collection.interWindowConnection()

@@ -1,8 +1,7 @@
-Version: 1.000000;
-Datetime: 1758039722;
+Version: 1.100000;
+Datetime: 0;
 Savefile: MEEGA_SaveFile.meega;
-Complete: n;
+Calibrationfile: MEEGA_Calibration.txt;
+Complete: y;
 Nominal Exit: y;
-Mode: f;
-Connection: a;
-Language: e;
+Mode: t;
