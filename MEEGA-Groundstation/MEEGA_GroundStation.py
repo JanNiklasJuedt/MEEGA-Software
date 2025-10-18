@@ -4,8 +4,8 @@ from math import floor
 import sys
 import time
 
-from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap,)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget)
+from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries)
 
@@ -103,7 +103,8 @@ class GSMain(QMainWindow):
         self.inactivepix = QPixmap("Ressources\\inactive.png")
 
         self.scalePixmaps()        
-        self.displayStatus()
+
+        self.createPlots()
 
         self.setLocale(self.collection.settings.locale)
 
@@ -178,17 +179,90 @@ class GSMain(QMainWindow):
             self.ui.menuConnection.popup(self.ui.menuConnection.pos())
     def filePathChanges(self):
         pass
-    def displayStatus(self):
+    def displayStatus(self, index: int):
+        statusList = self.collection.dataAccumulation.household[index][0:12] + self.collection.dataAccumulation.household[index][14:20] + self.collection.dataAccumulation.household[index][21:23]
         for i in range(20):
-            match self.collection.dataAccumulation.household[i]:
+            match statusList[i]:
                 case self.ACTIVE:
                     self.statusDisplay[i].setPixmap(self.activepix_scaled)
                 case self.ISSUES:
                     self.statusDisplay[i].setPixmap(self.issuespix_scaled)
                 case self.INACTIVE:
                     self.statusDisplay[i].setPixmap(self.inactivepix_scaled)
-    
+    def createPlots(self):
+        #time plot
+        self.ambientPSeries = QLineSeries()
+        self.compareTSeries = QLineSeries()
+        self.reservoirPSeries = QLineSeries()
+        self.reservoirTSeries = QLineSeries()
+        self.accumulatorPSeries = QLineSeries()
+        self.accumulatorTSeries = QLineSeries()
+        self.nozzle1PSeries = QLineSeries()
+        self.nozzle1TSeries = QLineSeries()
+        self.nozzle2PSeries = QLineSeries()
+        self.nozzle2TSeries = QLineSeries()
+        self.nozzle3PSeries = QLineSeries()
+        self.nozzle3TSeries = QLineSeries()
+        self.timeChart = QChart()
+        self.timeChart.addSeries(self.ambientPSeries)
+        self.timeChart.addSeries(self.compareTSeries)
+        self.timeChart.addSeries(self.reservoirPSeries)
+        self.timeChart.addSeries(self.reservoirTSeries)
+        self.timeChart.addSeries(self.accumulatorPSeries)
+        self.timeChart.addSeries(self.accumulatorTSeries)
+        self.timeChart.addSeries(self.nozzle1PSeries)
+        self.timeChart.addSeries(self.nozzle1TSeries)
+        self.timeChart.addSeries(self.nozzle2PSeries)
+        self.timeChart.addSeries(self.nozzle2TSeries)
+        self.timeChart.addSeries(self.nozzle3PSeries)
+        self.timeChart.addSeries(self.nozzle3TSeries)
+        self.timeChart.createDefaultAxes()
+        self.timeChart.setTitle("Sensor Values Over Time")
+        self.timeChartView = QChartView(self.timeChart)
+        self.timeLayout = QVBoxLayout(self.ui.timePlotGroupBox)
+        #distance plot
+        self.distancePSeries = QLineSeries()
+        self.distanceTSeries = QLineSeries()
+        self.distanceChart = QChart()
+        self.distanceChart.addSeries(self.distancePSeries)
+        self.distanceChart.addSeries(self.distanceTSeries)
+        self.distanceChart.createDefaultAxes()
+        self.distanceChart.setTitle("Sensor Values Over Distance")
+        self.distanceChartView = QChartView(self.distanceChart)
+        self.distanceLayout = QVBoxLayout(self.ui.distancePlotGroupBox)
+    def buildPlots(self, index: int):
+        #time plot
+        self.ambientPSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][0])
+        self.compareTSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][1])
+        self.reservoirPSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][2])
+        self.reservoirTSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][3])
+        self.accumulatorPSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][4])
+        self.accumulatorTSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][5])
+        self.nozzle1PSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][6])
+        self.nozzle1TSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][7])
+        self.nozzle2PSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][8])
+        self.nozzle2TSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][9])
+        self.nozzle3PSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][10])
+        self.nozzle3TSeries.append(self.collection.dataAccumulation.household[index][20], self.collection.dataAccumulation.sensorData[index][11])
+        #distance plot
+        self.distancePSeries.clear()
+        self.distanceTSeries.clear()
+        self.distancePSeries.append(0, self.collection.dataAccumulation.sensorData[index][2])
+        self.distancePSeries.append(0, self.collection.dataAccumulation.sensorData[index][4])
+        self.distancePSeries.append(0, self.collection.dataAccumulation.sensorData[index][6])
+        self.distancePSeries.append(0, self.collection.dataAccumulation.sensorData[index][8])
+        self.distancePSeries.append(0, self.collection.dataAccumulation.sensorData[index][10])
+        self.distanceTSeries.append(0, self.collection.dataAccumulation.sensorData[index][3])
+        self.distanceTSeries.append(0, self.collection.dataAccumulation.sensorData[index][5])
+        self.distanceTSeries.append(0, self.collection.dataAccumulation.sensorData[index][7])
+        self.distanceTSeries.append(0, self.collection.dataAccumulation.sensorData[index][9])
+        self.distanceTSeries.append(0, self.collection.dataAccumulation.sensorData[index][11])
+
     #external functions (slots)
+    @Slot(int)
+    def onNewFrame(self, index: int):
+        self.buildPlots(index)
+        self.displayStatus(index)
     @Slot()
     def modeSwitched(self):
         if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
@@ -483,8 +557,8 @@ class GSCalibration(QDialog):
     
 
     #update the displayed sensor value
-    def updateValue(self):
-        digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
+    def updateValue(self, index: int):
+        digitalValue = self.collection.dataAccumulation.sensorData[index][self.selectedSensor]
         mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, digitalValue))
         self.ui.label.setText(mappedValue + " " + self.currentUnit)
     
@@ -538,12 +612,17 @@ class GSCalibration(QDialog):
         DataHandling.WritePoint(self.selectedSensor, self.selectedEntry, digitalValue, float(currentEntry))
         self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
 
+    @Slot(int)
+    def onNewFrame(self, index:int):
+        self.updateValue(index)
+
 class DataAccumulation:
-    def __init__(self):
-        self.gatherIndex = 0
+    def __init__(self, collection: ClassCollection):
+        self.collection = collection
+        self.gatherIndex = -1
         self.allocationSize = 5000
         self.sensorData = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
-        self.household = [0 for _ in range(27)]
+        self.household = [[0 for _ in range(27)] for __ in range(self.allocationSize)]
     def accumulate(self):
         while True:
             frame = DataHandling.GetNextFrame()
@@ -551,23 +630,33 @@ class DataAccumulation:
                 break
             else:
                 if self.gatherIndex%self.allocationSize == 0:
-                    extension = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
-                    self.sensorData.extend(extension)
+                    dataExtension = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
+                    householdExtension = [[0 for _ in range(27)] for __ in range(self.allocationSize)]
+                    self.sensorData.extend(dataExtension)
+                    self.household.extend(householdExtension)
                 for i in range(12):
-                    self.sensorData[self.gatherIndex][i] = DataHandling.ReadFrame(frame, i)
+                    self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
                 for i in range(12):
-                    self.household[i] = DataHandling.ReadFrame(frame, 12+i)
-                self.household[12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-                self.household[13] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-                self.household[14] = DataHandling.ReadFrame(frame, TMID.LEDs)
-                self.household[15] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-                self.household[16] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-                self.household[17] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-                self.household[18] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-                self.household[19] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                    self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 12+i)
+                self.household[self.gatherIndex][12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+                self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+                self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+                self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+                self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
+                self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
                 self.gatherIndex += 1
 
 class DataHandlingThread(QThread):
+    newFrameSignal = Signal(int)
+
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
@@ -577,9 +666,8 @@ class DataHandlingThread(QThread):
         while True:
             clock = time.monotonic_ns()
             self.collection.dataAccumulation.accumulate()
-            self.collection.mainWindow.displayStatus()
-            self.collection.calibrationWindow.updateValue()
             self.collection.telecommand.sendStep()
+            self.newFrameSignal.emit(int(self.collection.dataAccumulation.gatherIndex))
             DataHandling.UpdateAll()
             if self.isInterruptionRequested():
                 DataHandling.CloseAll()
@@ -592,7 +680,7 @@ class ClassCollection:
     def __init__(self):
         self.settings = Settings()
         self.telecommand = Telecommand(self)
-        self.dataAccumulation = DataAccumulation()
+        self.dataAccumulation = DataAccumulation(self)
         self.mainWindow = GSMain(self)
         self.startWindow = GSStart(self)
         self.controlPanel = GSControl(self)
@@ -605,6 +693,8 @@ class ClassCollection:
         #DataHandling setup
         DataHandling.Initialize(b"")
         self.dataHandlingThread = DataHandlingThread(self)
+        self.dataHandlingThread.newFrameSignal.connect(self.mainWindow.onNewFrame)
+        self.dataHandlingThread.newFrameSignal.connect(self.calibrationWindow.onNewFrame)
         self.dataHandlingThread.start()
         #lateInit
         self.mainWindow.connect()
