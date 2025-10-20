@@ -1291,15 +1291,19 @@ DataFrame GetNextFrame()
 	if (currentFrame == NULL) {
 		if (dataHandling.saveFile->firstFrame != NULL) {
 			currentFrame = dataHandling.saveFile->firstFrame;
-			return currentFrame->data;
 		}
 		else return EmptyFrame();
 	}
 	else if (currentFrame->nextFrame != NULL) {
 		currentFrame = currentFrame->nextFrame;
-		return currentFrame->data;
 	}
 	else return EmptyFrame();
+	while (FrameIsTC(currentFrame->data)) {
+		if (currentFrame->nextFrame == NULL) break;
+		else currentFrame = currentFrame->nextFrame;
+	}
+	if (!FrameIsTC(currentFrame->data))	return currentFrame->data;
+	return EmptyFrame();
 }
 
 DataFrame GetTC()
