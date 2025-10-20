@@ -151,8 +151,9 @@ void _SortCalibration_()
 static SYNC_TYPE _GetSync_()
 {
 	static SYNC_TYPE current = 0;
-	if (current == -2) current = 0;
-	return current++;
+	current++;
+	if (current == -1) current = 1;
+	return current;
 }
 
 static byte _ToMSG_(byte type, byte id)
@@ -260,7 +261,8 @@ int UpdateBuffer()
 	if (amount > 0)
 	{
 		dataHandling.buffer->incomingPos += amount;
-		dataHandling.buffer->incomingbytes += (DATA_LENGTH / PAYLOAD_LENGTH * PACKET_LENGTH) - amount;
+		dataHandling.buffer->incomingbytes += 2 * RECEIVE_LENGTH - amount;
+		if (dataHandling.buffer->incomingbytes > PACKET_LENGTH * BUFFER_LENGTH) dataHandling.buffer->incomingbytes = RECEIVE_LENGTH;
 		if (FormFrames() > 0)
 			for (DataFrame temp = GetOutFrame(); !FrameIsEmpty(temp); temp = GetOutFrame())
 				AddSaveFrame(temp);
@@ -738,6 +740,7 @@ int CreateBuffer()
 	dataHandling.buffer = new;
 	new->incomingPos = (byte*) new->inPackets;
 	new->outgoingPos = (byte*) new->outPackets;
+	new->incomingbytes = RECEIVE_LENGTH;
 	return 1;
 }
 
@@ -1063,6 +1066,10 @@ int WriteFailSafe()
 	}
 	DebugLog("FailSafe found@", dataHandling.failSafe);
 	FailSafe* failsafe = dataHandling.failSafe;
+	if (!failsafe->changed) {
+		DebugLog("FailSafe write unneccessary_");
+		return 1;
+	}
 	FILE* file;
 	file = fopen(FAILSAFE_NAME, "w");
 	if (file != NULL) {
@@ -1075,6 +1082,7 @@ int WriteFailSafe()
 		fprintf(file, "Nominal Exit: %c;\n", (failsafe->nominalExit) ? 'y' : 'n');
 		fprintf(file, "Mode: %c;\n", (failsafe->mode) ? 'f' : 't');
 		fclose(file);
+		failsafe->changed = 0;
 		DebugLog("FailSafe written at§_", FAILSAFE_NAME);
 		return 1;
 	}
@@ -1454,10 +1462,12 @@ int _SetPortConfig_()
 	}
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	if (tcgetattr(dataHandling.handler->comHandle, &(dataHandling.handler->options)) == 0) {
-		dataHandling.handler->options.c_iflag = IGNPAR;
-		dataHandling.handler->options.c_cflag = BAUD_RATE | CS8 | CLOCAL | CREAD;
+		dataHandling.handler->options.c_iflag = 0;
+		dataHandling.handler->options.c_cflag = CS8 | CLOCAL | CREAD;
 		dataHandling.handler->options.c_oflag = 0;
 		dataHandling.handler->options.c_lflag = 0;
+		cfsetispeed(&dataHandling.handler->options, BAUD_RATE);
+		cfsetospeed(&dataHandling.handler->options, BAUD_RATE);
 	}
 #else
 	if (0);

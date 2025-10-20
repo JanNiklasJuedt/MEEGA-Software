@@ -26,9 +26,10 @@
 
 //DataHandling Settings
 #define DATAHANDLINGLIBRARY_OS WINDOWS_OS
-#define CALIBRATION_METHOD LINEAR
-#define DEBUG_OUTPUT LOGFILE + TERMINAL
+#define CALIBRATION_METHOD NONE
+#define DEBUG_OUTPUT TERMINAL + LOGFILE
 #define USE_DEFAULT_VALUES 1
+#define RECEIVE_BLOCKING 1
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -44,6 +45,7 @@
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
 #define DEFAULTCOMPATH "COM3"
+#define BAUD_RATE 38400
 
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 
@@ -54,7 +56,8 @@
 
 #define DATAHANDLINGLIBRARY_CONSTANT
 #define DATAHANDLINGLIBRARY_API
-#define DEFAULTCOMPATH "/dev/serial0"
+#define DEFAULTCOMPATH "/dev/ttyAMA0"
+#define BAUD_RATE B38400
 #define INVALID_HANDLE_VALUE -1
 
 #endif // DATAHANDLINGLIBRARY_OS
@@ -74,6 +77,8 @@
 #define DATA_LENGTH 42 //Bytes
 #define PAYLOAD_LENGTH 21 //Bytes
 
+#define RECEIVE_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * PACKET_LENGTH)
+
 #define CHKSM_TYPE uint16_t
 #define SYNC_TYPE uint16_t
 typedef unsigned char byte;
@@ -92,8 +97,6 @@ typedef unsigned char byte;
 #define MAIN_LEN 4 //Bits
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 6 //Bits
-
-#define BAUD_RATE 38400
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFER_LENGTH;
