@@ -203,21 +203,21 @@ testRun;
 
 //Parameters Declaration
 struct parameter {
-	int ValveDelay, ServoDelay, EoEDelay, PoweroffDelay, NozzleOnCDelay, NoseConeSeparation, AfterLO, ServoAngle, ServoAngleReset, ServoRetryDelay;
+	int Delay_OnGoingValve, Delay_to_OpenNozzleCover, Delay_to_EoE, Delay_NoseConeSeparation, Delay_to_NoseConeSeparation, Angle_Servo;
 };
 #define DEFAULT_PARAMETER \
-	.ValveDelay = 5000, \
-	.ServoDelay = 6000, \
-	.EoEDelay = 30000
+	.Delay_OnGoingValve = 5000, \
+	.Delay_to_OpenNozzleCover = 6000, \
+	.Delay_to_EoE = 30000
 //Unchangeable Parameters
-#define PoweroffDelay 1000
-#define NozzleOnCDelay 1500
-#define ServoAngleReset 0
-#define ServoRetryDelay 3000
+#define Delay_PowerOff 1000
+#define Delay_NozzleCoverFeedback 1500
+#define Angle_ServoReset 0
+#define Delay_ServoRetry 3000
 
 //Default Parameters
-struct parameter Standard = { DEFAULT_PARAMETER, .NoseConeSeparation = 10000, .AfterLO = 55000, .ServoAngle = 90 };
-struct parameter DEBUGstandard = { .AfterLO = 5000, .EoEDelay = 3000 }; //For Debug Mode only
+struct parameter Standard = { DEFAULT_PARAMETER, .Delay_NoseConeSeparation = 10000, .Delay_to_NoseConeSeparation = 55000, .Angle_Servo = 90 };
+struct parameter DEBUGstandard = { .Delay_to_NoseConeSeparation = 5000, .Delay_to_EoE = 3000 }; //For Debug Mode only
 
 //FailSafe Experiment Status
 typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
