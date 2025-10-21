@@ -1570,27 +1570,61 @@ int SetPort(const char name[])
 CHKSM_TYPE CalculateChecksum(DataFrame data)
 {
 	//WIP
-	CHKSM_TYPE chksm = 42;
-	//.... calculate
-	if (chksm == -1) chksm--;
+	CHKSM_TYPE chksm = 0;
+	//start 1 byte
+	chksm += data.start;
+	//sync 2 bytes
+	chksm += (data.sync >> 8) & 0xFF;
+	chksm += data.sync & 0xFF;
+	//flags 1 byte
+	chksm += data.flag;
+	//data 42bytes
+	for (int i = 0; i < DATA_LENGTH; i++) {
+		chksm += data.data[i];
+	}
+	/* if use uint32_t chksm
+	while (chksm > 0xFFFF) {
+		chksm = (chksm & 0xFFFF) + (chksm >> 16);
+	}
+	*/
 	return chksm;
 }
 int CalculateCRC(DataPacket* data)
 {
 	//WIP
-	CHKSM_TYPE crc = 1;
-	if (data->crc == 0) {
-		//.... calculate
-		if (crc == 0 || crc == -1) return 1;
+	CHKSM_TYPE crc = 0xFFFF;
+	const CHKSM_TYPE polynomial = 0x1021;
+	byte  crc_bytes[27];
+	int index = 0;
+	//start 1 byte
+	crc_bytes[index++] = data->start;
+	//sync 2 bytes
+	crc_bytes[index++] = (data->sync >> 8) & 0xFF;
+	crc_bytes[index++] = data->sync & 0xFF;
+	//msg 1 byte
+	crc_bytes[index++] = data->msg;
+	//payload 21 bytes
+	for (int i = 0; i < PAYLOAD_LENGTH; i++) {
+		crc_bytes[index++] = data->payload[i];
+	}
+	//checksum 2 bytes
+	crc_bytes[index++] = (data->chksm >> 8) & 0xFF;
+	crc_bytes[index++] = data->chksm & 0xFF;
+	
+	for (int i = 0; i < index; i++) {
+		crc ^= (crc_bytes[i] << 8); //XOR first 8bits
+		for(int j= 0; j < 8; j++) {
+			if (crc & 0x8000) crc = (crc << 1) ^ polynomial;
+			else crc <<= 1;
+		}
+	}
+
+	if (data->crc == 0) { //no crc -> fill crc
 		data->crc = crc;
-		return 0;
+		return 0; //success
 	}
 	else {
-		//.... calculate
-		crc = 0;
-		if (crc == 0) return 0;
-		//.... calculate
-		return 1;
+		return (crc == data->crc) ? 0 : 1; //0: success, 1: fail. crc presented -> check crc
 	}
 }
 
