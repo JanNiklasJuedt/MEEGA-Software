@@ -248,18 +248,18 @@ int UpdateBuffer()
 	}
 	int out = 0, amount = 0;
 	if (FormPackets() > 0) {
-		amount = Send(dataHandling.buffer->outgoingPos, dataHandling.buffer->outgoingbytes);
+		amount = Send();
 		if (amount < 0)
 			out -= 1;
 		else if (amount != 0) {
-			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
-			dataHandling.buffer->outgoingPos = (byte*)dataHandling.buffer->outPackets + amount % PACKET_LENGTH;
-			dataHandling.buffer->outgoingbytes -= amount;
 		}
 	}
 	amount = Receive(dataHandling.buffer->incomingPos, dataHandling.buffer->incomingbytes);
 	if (amount > 0)
 	{
+#if (TRANSMISSION_DEBUG)
+		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+#endif
 		dataHandling.buffer->incomingPos += amount;
 		dataHandling.buffer->incomingbytes += 2 * RECEIVE_LENGTH - amount;
 		if (dataHandling.buffer->incomingbytes > PACKET_LENGTH * BUFFER_LENGTH) dataHandling.buffer->incomingbytes = RECEIVE_LENGTH;
@@ -1514,26 +1514,29 @@ int LoadPort()
 	return 0;
 }
 
-int Send(byte* start, int amount)
+int Send()
 {
-	if (dataHandling.handler == NULL) {
+	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-	if (start == NULL) {
-		DebugLog("!NULL Pointer passed to Send()");
-		return -1;
-	}
-	int number = 0;
-#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (WriteFile(dataHandling.handler->comHandle, start, amount, &number, NULL))
+	int number = 0, amount = 0;
+	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (PacketIsEmpty(dataHandling.buffer->outPackets[amount])) break;
+	amount *= PACKET_LENGTH;
+#if (TRANSMISSION_DEBUG)
+	if (1) {
+		number = amount;
+#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+	if (WriteFile(dataHandling.handler->comHandle, start, amount, &number, NULL)) {
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	number = write(dataHandling.handler->comHandle, start, amount);
-	if (number >= 0)
+	if (number >= 0) {
 #else 
-	if (0)
+	if (0) {
 #endif
-	{
+#if (!TRANSMISSION_DEBUG)
+		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+#endif
 		DebugLog("Sent# Bytes", number);
 		return number;
 	}
@@ -1541,31 +1544,42 @@ int Send(byte* start, int amount)
 	return -1;
 }
 
-int Receive(byte* buffer, int max)
+int Receive()
 {
-	if (dataHandling.handler == NULL) {
+	// TBC
+	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-	if (buffer == NULL) {
-		DebugLog("!NULL Pointer passed to Receive()");
+	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
+		DebugLog("!Unable to listen to serial Port");
 		return -1;
 	}
-	int number = 0;
-#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (ReadFile(dataHandling.handler->comHandle, buffer, max, &number, NULL))
+	int number = 0, foundStart = 0;
+	DataPacket* current = dataHandling.buffer->inPackets;
+	byte buffer = 0, *incomingPos = (byte*)current;
+	for (int i = 0; i <= PACKET_LENGTH; i++, number++) {
+#if (TRANSMISSION_DEBUG)
+		buffer = ((byte*)dataHandling.buffer->outPackets)[number];
+#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+		if (!ReadFile(dataHandling.handler->comHandle, &buffer, 1, NULL, NULL)) break;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	number = read(dataHandling.handler->comHandle, buffer, max);
-	if (number >= 0)
-#else
-	if (0)
+		if (read(dataHandling.handler->comHandle, &buffer, 1) != 1) break;
 #endif
-	{
-		DebugLog("Received# Bytes", number);
-		return number;
+		if (buffer = -1) {
+			if (foundStart) {
+				current++;
+				incomingPos = (byte*)current;
+			}
+			else foundStart = 1;
+			i = 0;
+		}
+		if (foundStart && i != PACKET_LENGTH) {
+			incomingPos[i] = buffer;
+		}
 	}
-	DebugLog("!Unable to listen to serial Port");
-	return -1;
+	DebugLog("Received# Bytes", number);
+	return number;
 }
 
 int SetPort(const char name[])
@@ -1605,27 +1619,10 @@ CHKSM_TYPE CalculateChecksum(DataFrame data)
 }
 int CalculateCRC(DataPacket* data)
 {
-	//WIP
 	CHKSM_TYPE crc = 0xFFFF;
 	const CHKSM_TYPE polynomial = 0x1021;
-	byte  crc_bytes[27];
-	int index = 0;
-	//start 1 byte
-	crc_bytes[index++] = data->start;
-	//sync 2 bytes
-	crc_bytes[index++] = (data->sync >> 8) & 0xFF;
-	crc_bytes[index++] = data->sync & 0xFF;
-	//msg 1 byte
-	crc_bytes[index++] = data->msg;
-	//payload 21 bytes
-	for (int i = 0; i < PAYLOAD_LENGTH; i++) {
-		crc_bytes[index++] = data->payload[i];
-	}
-	//checksum 2 bytes
-	crc_bytes[index++] = (data->chksm >> 8) & 0xFF;
-	crc_bytes[index++] = data->chksm & 0xFF;
-	
-	for (int i = 0; i < index; i++) {
+	byte*  crc_bytes = (byte*) data;	
+	for (int i = 0; i < PACKET_LENGTH - sizeof(CHKSM_TYPE); i++) {
 		crc ^= (crc_bytes[i] << 8); //XOR first 8bits
 		for(int j= 0; j < 8; j++) {
 			if (crc & 0x8000) crc = (crc << 1) ^ polynomial;
@@ -1638,7 +1635,11 @@ int CalculateCRC(DataPacket* data)
 		return 0; //success
 	}
 	else {
-		return (crc == data->crc) ? 0 : 1; //0: success, 1: fail. crc presented -> check crc
+		if (crc == data->crc) return 0; //0: success, 1: fail. crc presented -> check crc
+		else {
+			//...WIP
+			return 1;
+		}
 	}
 }
 

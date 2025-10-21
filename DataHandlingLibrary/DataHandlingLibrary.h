@@ -10,26 +10,28 @@
 #define DATAHANDLINGLIBRARY_H
 
 //DataHandling Constants for Settings
-#define WINDOWS_OS 0
-#define LINUX_OS 1
-#define MAC_OS 2
-#define ANDROID_OS 3
+#define WINDOWS_OS 1
+#define LINUX_OS 2
+#define MAC_OS 4
+#define ANDROID_OS 8
 
-#define NONE -1
+#define NONE 0
 
 #define TERMINAL 1
 #define LOGFILE 2
 
-#define LINEAR 0
-#define QUADRATIC 1
-#define CUBIC 2
+#define LINEAR 1
+#define QUADRATIC 2
+#define CUBIC 4
 
 //DataHandling Settings
 #define DATAHANDLINGLIBRARY_OS WINDOWS_OS
 #define CALIBRATION_METHOD NONE
 #define DEBUG_OUTPUT TERMINAL + LOGFILE
+
 #define USE_DEFAULT_VALUES 1
 #define RECEIVE_BLOCKING 1
+#define TRANSMISSION_DEBUG 1
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -60,6 +62,14 @@
 #define BAUD_RATE B38400
 #define INVALID_HANDLE_VALUE -1
 
+#else
+
+#define DATAHANDLINGLIBRARY_CONSTANT
+#define DATAHANDLINGLIBRARY_API
+#define DEFAULTCOMPATH ""
+#define BAUD_RATE 0
+#define INVALID_HANDLE_VALUE 0
+
 #endif // DATAHANDLINGLIBRARY_OS
 
 //Unneccessary null define
@@ -72,11 +82,12 @@
 #define PACKET_LENGTH sizeof(DataPacket)
 
 #define PATH_LENGTH 100 //Chars
-#define BUFFER_LENGTH 10 //DataPackets & DataFrames
+#define BUFFER_LENGTH 10 //DataFrames
 
 #define DATA_LENGTH 42 //Bytes
 #define PAYLOAD_LENGTH 21 //Bytes
 
+#define PACKET_BUFFER_LENGTH DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1 //DataPackets
 #define RECEIVE_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * PACKET_LENGTH)
 
 #define CHKSM_TYPE uint16_t
@@ -99,9 +110,7 @@ typedef unsigned char byte;
 #define MSG_ID_LEN 6 //Bits
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
-DATAHANDLINGLIBRARY_CONSTANT const int BufferLength = BUFFER_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
-DATAHANDLINGLIBRARY_CONSTANT const int PayloadLength = PAYLOAD_LENGTH;
 
 DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.1f;
 DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFE_NAME[] = "MEEGA_FailSafe.txt";
@@ -172,11 +181,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 //This acts as an input/output buffer for transmissions
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	byte* incomingPos;
-	int incomingbytes;
-	byte* outgoingPos;
 	int outgoingbytes;
-	struct DataPacket inPackets[BUFFER_LENGTH];
-	struct DataPacket outPackets[BUFFER_LENGTH];
+	struct DataPacket inPackets[PACKET_BUFFER_LENGTH];
+	struct DataPacket outPackets[PACKET_BUFFER_LENGTH];
 	struct DataFrame inFrames[BUFFER_LENGTH];
 	struct DataFrame outFrames[BUFFER_LENGTH];
 } DataBuffer;
@@ -191,12 +198,8 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	byte complete;
 	//if the program has exited nominally (Bool)
 	byte nominalExit;
-	//current operating mode of the program (test: "0" / flight: "")
+	//current operating mode of the program (test: "0" / flight: "1")
 	char mode;
-	//connection mode of the groundstation (unused for onboard)
-	char conn;
-	//language of the groundstation (unused for onboard)
-	char lang;
 	//identifier of the used input/output path
 	char comPath[PATH_LENGTH];
 	//path used to look up calibration data
@@ -412,10 +415,10 @@ DATAHANDLINGLIBRARY_API void CloseSave();
 DATAHANDLINGLIBRARY_API void CloseAll();
 
 //Tries to send outgoing data via the configured output path, returns the amount of bytes send
-DATAHANDLINGLIBRARY_API int Send(byte* start, int amount);
+DATAHANDLINGLIBRARY_API int Send();
 
 //Reads received data via the configured path into the buffer, returns the amount of bytes received
-DATAHANDLINGLIBRARY_API int Receive(byte* buffer, int max);
+DATAHANDLINGLIBRARY_API int Receive();
 
 //Tries to open the comm Port with the specified name
 DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
