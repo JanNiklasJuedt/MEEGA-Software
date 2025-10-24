@@ -92,7 +92,7 @@
 typedef unsigned char byte;
 
 #define START_BYTE 0b11111111
-#define COMM_TIMEOUT 10 //milliseconds
+#define COMM_TIMEOUT 10 //Milliseconds
 
 #define SENSOR_AMOUNT Nozzle_Temperature_3 + 1
 #define TELEMETRY_AMOUNT Experiment_State + 1
@@ -152,10 +152,10 @@ enum DATAHANDLINGLIBRARY_API Flag {
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	//Signals the beginning of a new Frame (= -1)
 	byte start;
-	//Used to form DataPackets (0 denotes an empty DataFrame)
-	SYNC_TYPE sync;
 	//Used to mark DataFrames for faulty or missing data and TeleCommand
 	byte flag;
+	//Used to form DataPackets (0 denotes an empty DataFrame)
+	SYNC_TYPE sync;
 	//Byte Array for saving data
 	byte data[DATA_LENGTH];
 	//Checksum to check for complete Frames
@@ -196,8 +196,6 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	byte complete;
 	//if the program has exited nominally (Bool)
 	byte nominalExit;
-	//current operating mode of the program (test: "0" / flight: "1")
-	char mode;
 	//identifier of the used input/output path
 	char comPath[PATH_LENGTH];
 	//path used to look up calibration data

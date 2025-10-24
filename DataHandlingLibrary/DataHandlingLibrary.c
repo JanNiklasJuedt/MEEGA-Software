@@ -96,8 +96,10 @@ int _CreateHandler_()
 		bytePtr[i] = 0;
 	}
 	dataHandling.handler->comHandle = INVALID_HANDLE_VALUE;
-	if (dataHandling.failSafe != NULL)
+	if (dataHandling.failSafe != NULL) {
 		strcpy(dataHandling.handler->comPath, dataHandling.failSafe->comPath);
+		dataHandling.failSafe->changed = 1;
+	}
 	else {
 		DebugLog("!Could not find FailSafe");
 	}
@@ -198,7 +200,7 @@ int Initialize()
 	}
 	int readExisting = 1;
 	if (dataHandling.failSafe == NULL) readExisting = 0;
-	else readExisting = !(dataHandling.failSafe->nominalExit) & (dataHandling.failSafe->saveFilePath[0] != '\0');
+	else readExisting = !(dataHandling.failSafe->nominalExit) && (dataHandling.failSafe->saveFilePath[0] != '\0');
 	if (readExisting) {
 		DebugLog("Existing SaveFile found at§", dataHandling.failSafe->saveFilePath);
 		ReadSave(dataHandling.failSafe->saveFilePath);
@@ -406,7 +408,10 @@ int CreateCalibration(const char* path)
 	new->dateTime = time(NULL);
 	new->changed = 1;
 	strcpy(new->calibrationFilePath, path);
-	if (dataHandling.failSafe != NULL) strcpy(dataHandling.failSafe->calPath, path);
+	if (dataHandling.failSafe != NULL) {
+		strcpy(dataHandling.failSafe->calPath, path);
+		dataHandling.failSafe->changed = 1;
+	}
 	dataHandling.calibration = new;
 	return 1;
 }
@@ -490,12 +495,12 @@ int ReadCalibration(const char* path)
 
 int WriteCalibration()
 {
-	DebugLog("Writing Calibration to file:");
+	//DebugLog("Writing Calibration to file:");
 	if (dataHandling.calibration == NULL) {
-		DebugLog("!Could not find Calibration_");
+		DebugLog("!Could not find Calibration");
 		return 0;
 	}
-	DebugLog("Calibration found@", dataHandling.calibration);
+	//DebugLog("Calibration found@", dataHandling.calibration);
 	SensorCalibration calibration = *dataHandling.calibration;
 	if (calibration.changed) {
 		FILE* file = fopen(calibration.calibrationFilePath, "w");
@@ -511,15 +516,15 @@ int WriteCalibration()
 				fprintf(file, CALIBRATION_SENSOR_END_STRING);
 			}
 			fclose(file);
-			DebugLog("Calibration written at§_", calibration.calibrationFilePath);
+			//DebugLog("Calibration written at§_", calibration.calibrationFilePath);
 			return 1;
 		}
 		else {
-			DebugLog("!Could not open Calibration file_");
+			DebugLog("!Could not open Calibration file");
 			return 0;
 		}
 	}
-	DebugLog("Write unneccessary_");
+	//DebugLog("Write unneccessary_");
 	return 1;
 }
 
@@ -557,15 +562,15 @@ DataFrame EmptyTC()
 
 long long WriteFrame(DataFrame* frame, int id, long long value)
 {
-	if (frame == NULL || dataHandling.frameLookUp == NULL) {
-		DebugLog("!Invalid Frame-pointer or uninitialized DataHandling");
+	if (frame == NULL) {
+		DebugLog("!Invalid Frame-pointer");
+		return 0;
+	}
+	if (dataHandling.frameLookUp == NULL) {
+		DebugLog("!Uninitialized DataHandling");
 		return 0;
 	}
 	int TC = FrameIsTC(*frame);
-	if ((TC & (id >= TELECOMMAND_AMOUNT)) || id >= TELEMETRY_AMOUNT) {
-		DebugLog("!ID out of range");
-		return 0;
-	}
 	int index;
 	int length;
 	int valid = 0;
@@ -591,7 +596,7 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	}
 	long long maxValue = 1ll << length;
 	if (value < 0 || value >= maxValue) {
-		DebugLog("!Value# out of writable range at Index#", value, id);
+		DebugLog("!Value# out of writable range at ID#", value, id);
 		return 0;
 	}
 	int offset = index % 8;
@@ -830,10 +835,11 @@ DataPacket GetInPacket()
 		return EmptyPacket();
 	}
 	DataPacket temp = EmptyPacket();
-	for (int i = BUFFER_LENGTH; i > 0; i--) {
+	for (int i = PACKET_BUFFER_LENGTH; i > 0; i--) {
 		temp = dataHandling.buffer->inPackets[i - 1];
 		if (!PacketIsEmpty(temp)) {
 			dataHandling.buffer->inPackets[i - 1] = EmptyPacket();
+			break;
 		}
 	}
 	return temp;
@@ -882,7 +888,7 @@ int AddOutPacket(DataPacket data)
 		return -1;
 	}
 	int i = 0;
-	for (; i <= BUFFER_LENGTH; i++) {
+	for (; i <= PACKET_BUFFER_LENGTH; i++) {
 		if (PacketIsEmpty(dataHandling.buffer->outPackets[i])) {
 			dataHandling.buffer->outPackets[i] = data;
 			break;
@@ -939,7 +945,6 @@ int CreateFailSafe()
 	new->nominalExit = 0;
 	new->dateTime = time(NULL);
 	new->version = FAILSAFE_VERSION;
-	new->mode = 0;
 	if (USE_DEFAULT_VALUES) {
 		strcpy(new->saveFilePath, SAVEFILE_NAME);
 		strcpy(new->comPath, DEFAULTCOMPATH);
@@ -957,7 +962,6 @@ int CreateFailSafe()
 		else fprintf(file, "Calibrationfile: None;\n");
 		fprintf(file, "Complete: %c;\n", (new->complete) ? 'y' : 'n');
 		fprintf(file, "Nominal Exit: %c;\n", (new->nominalExit)? 'y' : 'n');
-		fprintf(file, "Mode: %c;\n", (new->mode)? 'f' : 't');
 		fclose(file);
 	}
 	else DebugLog("!Could not create FailSafe file");
@@ -1000,12 +1004,9 @@ int ReadFailSafe()
 								this->complete = (ReadChar == 'y') ? 1 : 0;
 								if (fscanf(file, "Nominal Exit: %c;\n", &ReadChar) != EOF) {
 									this->nominalExit = (ReadChar == 'y') ? 1 : 0;
-									if (fscanf(file, "Mode: %c;\n", &ReadChar) != EOF) {
-										this->mode = (ReadChar == 'f') ? 1 : 0;
-										DebugLog("Failsafe read@_", this);
-										fclose(file);
-										return 1;
-									}
+									DebugLog("Failsafe read@_", this);
+									fclose(file);
+									return 1;
 								}
 							}
 						}
@@ -1025,7 +1026,7 @@ int ReadFailSafe()
 							this->complete = (ReadChar == 'y') ? 1 : 0;
 							if (fscanf(file, "Nominal Exit: %c;\n", &ReadChar) != EOF) {
 								this->nominalExit = (ReadChar == 'y') ? 1 : 0;
-								if (fscanf(file, "Mode: %c;\n", &this->mode) != EOF) {
+								if (fscanf(file, "Mode: %c;\n", &ReadChar) != EOF) {
 									if (fscanf(file, "Connection: %c;\n", &ReadChar) != EOF) {
 										if (fscanf(file, "Language: %c;", &ReadChar) != EOF) {
 											DebugLog("Failsafe read@_", this);
@@ -1053,15 +1054,15 @@ int ReadFailSafe()
 
 int WriteFailSafe()
 {
-	DebugLog("Writing FailSafe to file:");
+	//DebugLog("Writing FailSafe to file:");
 	if (dataHandling.failSafe == NULL) {
-		DebugLog("!Could not find FailSafe_");
+		DebugLog("!Could not find FailSafe");
 		return 0;
 	}
-	DebugLog("FailSafe found@", dataHandling.failSafe);
+	//DebugLog("FailSafe found@", dataHandling.failSafe);
 	FailSafe* failsafe = dataHandling.failSafe;
 	if (!failsafe->changed) {
-		DebugLog("FailSafe write unneccessary_");
+		//DebugLog("FailSafe write unneccessary_");
 		return 1;
 	}
 	FILE* file;
@@ -1074,20 +1075,19 @@ int WriteFailSafe()
 		else fprintf(file, "Calibrationfile: None;\n");
 		fprintf(file, "Complete: %c;\n", (failsafe->complete) ? 'y' : 'n');
 		fprintf(file, "Nominal Exit: %c;\n", (failsafe->nominalExit) ? 'y' : 'n');
-		fprintf(file, "Mode: %c;\n", (failsafe->mode) ? 'f' : 't');
 		fclose(file);
 		failsafe->changed = 0;
-		DebugLog("FailSafe written at§_", FAILSAFE_NAME);
+		//DebugLog("FailSafe written at§_", FAILSAFE_NAME);
 		return 1;
 	}
-	else DebugLog("!Could not open FailSafe file_");
+	else DebugLog("!Could not open FailSafe file");
 	return 0;
 }
 
 int VirtualSave()
 {
 	if (dataHandling.saveFile != NULL) {
-		DebugLog("Found existing SaveFile");
+		//DebugLog("Found existing SaveFile");
 		CloseSave();
 		free(dataHandling.saveFile);
 		dataHandling.saveFile = NULL;
@@ -1133,7 +1133,11 @@ int CreateSave(const char path[])
 		dataHandling.saveFile = NULL;
 		return 0;
 	}
-	if (dataHandling.failSafe != NULL) strcpy(dataHandling.failSafe->saveFilePath, path);
+	if (dataHandling.failSafe != NULL) {
+		strcpy(dataHandling.failSafe->saveFilePath, path);
+		dataHandling.failSafe->complete = 0;
+		dataHandling.failSafe->changed = 1;
+	}
 	else DebugLog("!Could not find FailSafe");
 	DebugLog("SaveFile created@_", dataHandling.saveFile);
 	return 1;
@@ -1222,14 +1226,14 @@ int ReadSave(const char path[])
 
 int WriteSave()
 {
-	DebugLog("Writing SaveFile:");
+	//DebugLog("Writing SaveFile:");
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
 		return 0;
 	}
-	DebugLog("SaveFile found@", dataHandling.saveFile);
+	//DebugLog("SaveFile found@", dataHandling.saveFile);
 	if (dataHandling.saveFile->savedAmount == -1 || dataHandling.saveFile->savedAmount >= dataHandling.saveFile->frameAmount) {
-		DebugLog("SaveFile write unneccessary_");
+		//DebugLog("SaveFile write unneccessary_");
 		return 0;
 	}
 	FILE* file = NULL;
@@ -1248,12 +1252,12 @@ int WriteSave()
 			}
 			fclose(file);
 			if (dataHandling.saveFile->savedAmount < dataHandling.saveFile->frameAmount) DebugLog("!Could not write all frames");
-			DebugLog("SaveFile written at§_", dataHandling.saveFile->saveFilePath);
+			//DebugLog("SaveFile written at§_", dataHandling.saveFile->saveFilePath);
 			return number;
 		}
 		else DebugLog("!Could not open SaveFile file");
 	}
-	DebugLog("Could not write SaveFile at§_", dataHandling.saveFile->saveFilePath);
+	//DebugLog("Could not write SaveFile at§_", dataHandling.saveFile->saveFilePath);
 	return 0;
 }
 
@@ -1395,6 +1399,10 @@ void CloseSave()
 	dataHandling.saveFile->frameAmount = dataHandling.saveFile->savedAmount;
 	dataHandling.saveFile->loadedAmount = 0;
 	dataHandling.saveFile->currentTC = EmptyTC();
+	if (dataHandling.failSafe != NULL) {
+		dataHandling.failSafe->complete = 1;
+		dataHandling.failSafe->changed = 1;
+	}
 	DebugLog("SaveFile closed_");
 }
 
@@ -1404,7 +1412,7 @@ void CloseAll()
 	DebugLog("Setting nominal exit?");
 	if (dataHandling.failSafe != NULL) {
 		dataHandling.failSafe->nominalExit = 1;
-		dataHandling.failSafe->complete = 1;
+		dataHandling.failSafe->changed = 1;
 		if (WriteFailSafe() != -1) DebugLog("Nominal exit set");
 	}
 	else DebugLog("!Could not find FailSafe");
@@ -1507,7 +1515,7 @@ int LoadPort()
 			else DebugLog("!Could not set CommState of serial Port, Error#_", errno);
 		}
 	}
-	else DebugLog("!Could not open serial Port, Error#_", errno);
+	else DebugLog("!Could not open CommPort, Error#_", errno);
 	return 0;
 }
 
@@ -1517,9 +1525,14 @@ int Send()
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
+	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
+		DebugLog("!CommPort not ready");
+		return -1;
+	}
 	int number = 0, amount = 0;
 	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (PacketIsEmpty(dataHandling.buffer->outPackets[amount])) break;
 	amount *= PACKET_LENGTH;
+	
 #if (TRANSMISSION_DEBUG)
 	if (1) {
 		number = amount;
@@ -1534,22 +1547,21 @@ int Send()
 		DebugLog("Sent# Bytes", number);
 		return number;
 	}
-	DebugLog("!Unable to write to serial Port");
+	DebugLog("!Unable to write to CommPort");
 	return -1;
 }
 
 int Receive()
 {
-	// TBC
 	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
 	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
-		DebugLog("!Unable to listen to serial Port");
+		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int writeAmount = 0, foundStart = 0, readAmount = 0;
+	int writeAmount = -1, foundStart = 0, readAmount = 0;
 #if (DATAHANDLINGLIBRARY_OS == LINUX)
 	time_t start_time = 0;
 #endif
@@ -1570,7 +1582,10 @@ int Receive()
 				current++;
 				writePtr = (byte*)current;
 			}
-			else foundStart = 1;
+			else {
+				foundStart = 1;
+				writeAmount = 0;
+			}
 			i = 0;
 		}
 		if (current == dataHandling.buffer->outPackets || readAmount == PACKET_BUFFER_LENGTH * PACKET_LENGTH) break;
@@ -1580,7 +1595,8 @@ int Receive()
 		}
 		else if (i == PACKET_LENGTH) i = 0;
 	}
-	DebugLog("Received# Bytes", writeAmount);
+	if (writeAmount >= 0) DebugLog("Received# Bytes", writeAmount);
+	else DebugLog("!Unable to read from CommPort");
 	return writeAmount;
 }
 
@@ -1591,7 +1607,10 @@ int SetPort(const char name[])
 		return -1;
 	}
 	strcpy(dataHandling.handler->comPath, name);
-	if (dataHandling.failSafe != NULL) strcpy(dataHandling.failSafe->calPath, name);
+	if (dataHandling.failSafe != NULL) {
+		strcpy(dataHandling.failSafe->calPath, name);
+		dataHandling.failSafe->changed = 1;
+	}
 	else DebugLog("!Could not find FailSafe");
 	return LoadPort();
 }
