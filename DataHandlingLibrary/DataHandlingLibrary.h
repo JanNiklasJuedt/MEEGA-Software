@@ -10,27 +10,26 @@
 #define DATAHANDLINGLIBRARY_H
 
 //DataHandling Constants for Settings
-#define WINDOWS_OS 1
-#define LINUX_OS 2
-#define MAC_OS 4
-#define ANDROID_OS 8
+#define WINDOWS_OS 0b00000001
+#define LINUX_OS 0b00000010
+#define MAC_OS 0b00000100
+#define ANDROID_OS 0b00001000
 
 #define NONE 0
 
-#define TERMINAL 1
-#define LOGFILE 2
+#define TERMINAL 0b00000001
+#define LOGFILE 0b00000010
 
-#define LINEAR 1
-#define QUADRATIC 2
-#define CUBIC 4
+#define LINEAR 0b00000001
+#define QUADRATIC 0b00000010
+#define CUBIC 0b00000100
 
 //DataHandling Settings
-#define DATAHANDLINGLIBRARY_OS WINDOWS_OS
-#define CALIBRATION_METHOD NONE
-#define DEBUG_OUTPUT TERMINAL + LOGFILE
+#define DATAHANDLINGLIBRARY_OS (WINDOWS_OS)
+#define CALIBRATION_METHOD (NONE)
+#define DEBUG_OUTPUT (TERMINAL + LOGFILE)
 
 #define USE_DEFAULT_VALUES 1
-#define RECEIVE_BLOCKING 1
 #define TRANSMISSION_DEBUG 1
 
 //OS related stuff
@@ -86,13 +85,14 @@
 
 #define DATA_LENGTH 42 //Bytes
 #define PAYLOAD_LENGTH 21 //Bytes
-
 #define PACKET_BUFFER_LENGTH DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1 //DataPackets
-#define RECEIVE_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * PACKET_LENGTH)
 
 #define CHKSM_TYPE uint16_t
 #define SYNC_TYPE uint16_t
 typedef unsigned char byte;
+
+#define START_BYTE 0b11111111
+#define COMM_TIMEOUT 10 //milliseconds
 
 #define SENSOR_AMOUNT Nozzle_Temperature_3 + 1
 #define TELEMETRY_AMOUNT Experiment_State + 1
@@ -180,8 +180,6 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 
 //This acts as an input/output buffer for transmissions
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
-	byte* incomingPos;
-	int outgoingbytes;
 	struct DataPacket inPackets[PACKET_BUFFER_LENGTH];
 	struct DataPacket outPackets[PACKET_BUFFER_LENGTH];
 	struct DataFrame inFrames[BUFFER_LENGTH];
@@ -240,12 +238,15 @@ typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	DCB options;
 	HANDLE comHandle;
+	COMMTIMEOUTS timeout;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	struct termios options;
 	int comHandle;
+	int timeout
 #else
 	int options;
 	int comHandle;
+	int timeout
 #endif
 	char comPath[PATH_LENGTH];
 } PortHandler;
@@ -408,16 +409,16 @@ DATAHANDLINGLIBRARY_API DataFrame GetTC();
 //Adds a new frame to the end of the SaveFile
 DATAHANDLINGLIBRARY_API void AddSaveFrame(DataFrame data);
 
-//Frees allocated Memory of the passed SaveFile's Frames, does not free SaveFile itself
+//Frees allocated Memory of the loaded SaveFile's Frames, does not free SaveFile itself
 DATAHANDLINGLIBRARY_API void CloseSave();
 
-//Frees all allocated Memory, including "dataHandling" itself, and closes all open Files and Ports
+//Frees all allocated Memory and closes all open Files and Ports
 DATAHANDLINGLIBRARY_API void CloseAll();
 
 //Tries to send outgoing data via the configured output path, returns the amount of bytes send
 DATAHANDLINGLIBRARY_API int Send();
 
-//Reads received data via the configured path into the buffer, returns the amount of bytes received
+//Reads received data via the configured path into the buffer, returns the amount of bytes written to buffer
 DATAHANDLINGLIBRARY_API int Receive();
 
 //Tries to open the comm Port with the specified name

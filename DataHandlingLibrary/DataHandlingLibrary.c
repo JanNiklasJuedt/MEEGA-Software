@@ -251,18 +251,16 @@ int UpdateBuffer()
 		amount = Send();
 		if (amount < 0)
 			out -= 1;
-		else if (amount != 0) {
+		else if (amount != 0 && !TRANSMISSION_DEBUG) {
+			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
 		}
 	}
-	amount = Receive(dataHandling.buffer->incomingPos, dataHandling.buffer->incomingbytes);
+	amount = Receive();
 	if (amount > 0)
 	{
-#if (TRANSMISSION_DEBUG)
-		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
-#endif
-		dataHandling.buffer->incomingPos += amount;
-		dataHandling.buffer->incomingbytes += 2 * RECEIVE_LENGTH - amount;
-		if (dataHandling.buffer->incomingbytes > PACKET_LENGTH * BUFFER_LENGTH) dataHandling.buffer->incomingbytes = RECEIVE_LENGTH;
+		if (TRANSMISSION_DEBUG) {
+			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+		}
 		if (FormFrames() > 0)
 			for (DataFrame temp = GetOutFrame(); !FrameIsEmpty(temp); temp = GetOutFrame())
 				AddSaveFrame(temp);
@@ -738,9 +736,6 @@ int CreateBuffer()
 	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(DataBuffer); i++) bytePtr[i] = 0;
 	dataHandling.buffer = new;
-	new->incomingPos = (byte*) new->inPackets;
-	new->outgoingPos = (byte*) new->outPackets;
-	new->incomingbytes = RECEIVE_LENGTH;
 	return 1;
 }
 
@@ -893,7 +888,6 @@ int AddOutPacket(DataPacket data)
 			break;
 		}
 	}
-	dataHandling.buffer->outgoingbytes += PACKET_LENGTH;
 	return i;
 }
 
@@ -1032,8 +1026,8 @@ int ReadFailSafe()
 							if (fscanf(file, "Nominal Exit: %c;\n", &ReadChar) != EOF) {
 								this->nominalExit = (ReadChar == 'y') ? 1 : 0;
 								if (fscanf(file, "Mode: %c;\n", &this->mode) != EOF) {
-									if (fscanf(file, "Connection: %c;\n", &this->conn) != EOF) {
-										if (fscanf(file, "Language: %c;", &this->lang) != EOF) {
+									if (fscanf(file, "Connection: %c;\n", &ReadChar) != EOF) {
+										if (fscanf(file, "Language: %c;", &ReadChar) != EOF) {
 											DebugLog("Failsafe read@_", this);
 											fclose(file);
 											return 1;
@@ -1454,6 +1448,8 @@ int _SetPortConfig_()
 	}
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	dataHandling.handler->options.DCBlength = sizeof(DCB);
+	COMMTIMEOUTS timeout = { 0 , 0, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000, 0, 0 };
+	dataHandling.handler->timeout = timeout;
 	if (GetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options))) {
 		dataHandling.handler->options.Parity = NOPARITY;
 		dataHandling.handler->options.ByteSize = 8;
@@ -1468,6 +1464,7 @@ int _SetPortConfig_()
 		dataHandling.handler->options.c_lflag = 0;
 		cfsetispeed(&dataHandling.handler->options, BAUD_RATE);
 		cfsetospeed(&dataHandling.handler->options, BAUD_RATE);
+		dataHandling.handler->timeout = COMM_TIMEOUT * CLOCKS_PER_SEC / 1000;
 	}
 #else
 	if (0);
@@ -1494,7 +1491,7 @@ int LoadPort()
 	if (dataHandling.handler->comHandle != INVALID_HANDLE_VALUE) {
 		if (_SetPortConfig_()) {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-			if (SetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options))) {
+			if (SetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options)) && SetCommTimeouts(dataHandling.handler->comHandle, &dataHandling.handler->timeout)) {
 				DebugLog("Opened CommPort_");
 				return 1;
 			}
@@ -1534,9 +1531,6 @@ int Send()
 #else 
 	if (0) {
 #endif
-#if (!TRANSMISSION_DEBUG)
-		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
-#endif
 		DebugLog("Sent# Bytes", number);
 		return number;
 	}
@@ -1555,31 +1549,39 @@ int Receive()
 		DebugLog("!Unable to listen to serial Port");
 		return -1;
 	}
-	int number = 0, foundStart = 0;
-	DataPacket* current = dataHandling.buffer->inPackets;
-	byte buffer = 0, *incomingPos = (byte*)current;
-	for (int i = 0; i <= PACKET_LENGTH; i++, number++) {
-#if (TRANSMISSION_DEBUG)
-		buffer = ((byte*)dataHandling.buffer->outPackets)[number];
-#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-		if (!ReadFile(dataHandling.handler->comHandle, &buffer, 1, NULL, NULL)) break;
-#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-		if (read(dataHandling.handler->comHandle, &buffer, 1) != 1) break;
+	int writeAmount = 0, foundStart = 0, readAmount = 0;
+#if (DATAHANDLINGLIBRARY_OS == LINUX)
+	time_t start_time = 0;
 #endif
-		if (buffer = -1) {
+	DataPacket* current = dataHandling.buffer->inPackets;
+	byte read = 0, *writePtr = (byte*)current;
+	for (int i = 0; i <= PACKET_LENGTH; i++, readAmount++) {
+#if (TRANSMISSION_DEBUG)
+		read = ((byte*)dataHandling.buffer->outPackets)[readAmount];
+#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+		if (!ReadFile(dataHandling.handler->comHandle, &read, 1, NULL, NULL)) break;
+#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
+		start_time = clock(NULL);
+		while (read(dataHandling.handler->comHandle, &read, 1) != 1 && dataHandling.handler->timeout >= clock(NULL) - start_time);
+		if (dataHandling.handler->timeout < clock(NULL) - start_time) break;
+#endif
+		if (read = START_BYTE) {
 			if (foundStart) {
 				current++;
-				incomingPos = (byte*)current;
+				writePtr = (byte*)current;
 			}
 			else foundStart = 1;
 			i = 0;
 		}
+		if (current == dataHandling.buffer->outPackets || readAmount == PACKET_BUFFER_LENGTH * PACKET_LENGTH) break;
 		if (foundStart && i != PACKET_LENGTH) {
-			incomingPos[i] = buffer;
+			writePtr[i] = read;
+			writeAmount++;
 		}
+		else if (i == PACKET_LENGTH) i = 0;
 	}
-	DebugLog("Received# Bytes", number);
-	return number;
+	DebugLog("Received# Bytes", writeAmount);
+	return writeAmount;
 }
 
 int SetPort(const char name[])
@@ -1643,7 +1645,7 @@ int CalculateCRC(DataPacket* data)
 	}
 }
 
-//Debug functions:
+//Debug function:
 void DebugLog(const char* message, ...)
 {
 	static int lineCounter = -1, depth = 0;
