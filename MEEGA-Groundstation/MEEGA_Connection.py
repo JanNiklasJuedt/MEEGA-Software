@@ -59,7 +59,7 @@ class Ui_ConnectionDialog(object):
 
         self.PortEdit = QTextEdit(ConnectionDialog)
         self.PortEdit.setObjectName(u"PortEdit")
-        self.PortEdit.setEnabled(True)
+        self.PortEdit.setEnabled(False)
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
@@ -72,6 +72,7 @@ class Ui_ConnectionDialog(object):
 
         self.IPEdit = QTextEdit(ConnectionDialog)
         self.IPEdit.setObjectName(u"IPEdit")
+        self.IPEdit.setEnabled(False)
         sizePolicy1.setHeightForWidth(self.IPEdit.sizePolicy().hasHeightForWidth())
         self.IPEdit.setSizePolicy(sizePolicy1)
         self.IPEdit.setMinimumSize(QSize(0, 28))
@@ -109,6 +110,13 @@ class Ui_ConnectionDialog(object):
         self.ConnectorBox = QComboBox(ConnectionDialog)
         self.ConnectorBox.addItem("")
         self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
+        self.ConnectorBox.addItem("")
         self.ConnectorBox.setObjectName(u"ConnectorBox")
 
         self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.ConnectorBox)
@@ -136,6 +144,9 @@ class Ui_ConnectionDialog(object):
         self.buttonBox.accepted.connect(ConnectionDialog.accept)
         self.buttonBox.rejected.connect(ConnectionDialog.reject)
 
+        self.ConnectorBox.setCurrentIndex(2)
+
+
         QMetaObject.connectSlotsByName(ConnectionDialog)
     # setupUi
 
@@ -146,8 +157,15 @@ class Ui_ConnectionDialog(object):
         self.label_3.setText(QCoreApplication.translate("ConnectionDialog", u"IP-Adress", None))
         self.RS_Button.setText(QCoreApplication.translate("ConnectionDialog", u"Serial Port (RS-232)", None))
         self.label.setText(QCoreApplication.translate("ConnectionDialog", u"Connector", None))
-        self.ConnectorBox.setItemText(0, QCoreApplication.translate("ConnectionDialog", u"Port 1", None))
-        self.ConnectorBox.setItemText(1, QCoreApplication.translate("ConnectionDialog", u"Port 2", None))
+        self.ConnectorBox.setItemText(0, QCoreApplication.translate("ConnectionDialog", u"COM1", None))
+        self.ConnectorBox.setItemText(1, QCoreApplication.translate("ConnectionDialog", u"COM2", None))
+        self.ConnectorBox.setItemText(2, QCoreApplication.translate("ConnectionDialog", u"COM3", None))
+        self.ConnectorBox.setItemText(3, QCoreApplication.translate("ConnectionDialog", u"COM4", None))
+        self.ConnectorBox.setItemText(4, QCoreApplication.translate("ConnectionDialog", u"COM5", None))
+        self.ConnectorBox.setItemText(5, QCoreApplication.translate("ConnectionDialog", u"COM6", None))
+        self.ConnectorBox.setItemText(6, QCoreApplication.translate("ConnectionDialog", u"COM7", None))
+        self.ConnectorBox.setItemText(7, QCoreApplication.translate("ConnectionDialog", u"COM8", None))
+        self.ConnectorBox.setItemText(8, QCoreApplication.translate("ConnectionDialog", u"COM9", None))
 
     # retranslateUi
 

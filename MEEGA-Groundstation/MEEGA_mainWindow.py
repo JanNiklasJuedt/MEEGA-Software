@@ -19,8 +19,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout,
     QGroupBox, QHBoxLayout, QHeaderView, QLabel,
     QLayout, QMainWindow, QMenu, QMenuBar,
-    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
+    QProgressBar, QSizePolicy, QSpacerItem, QTreeWidget,
+    QTreeWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -107,6 +107,10 @@ class Ui_MainWindow(object):
         self.actionManual.setCheckable(True)
         self.actionDisconnect = QAction(MainWindow)
         self.actionDisconnect.setObjectName(u"actionDisconnect")
+        self.actionSelf_Scaling_Axes = QAction(MainWindow)
+        self.actionSelf_Scaling_Axes.setObjectName(u"actionSelf_Scaling_Axes")
+        self.actionDiagrams = QAction(MainWindow)
+        self.actionDiagrams.setObjectName(u"actionDiagrams")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -754,51 +758,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.treeWidget)
 
-        self.groupBox_timescale = QGroupBox(self.groupBox_2)
-        self.groupBox_timescale.setObjectName(u"groupBox_timescale")
-        sizePolicy10 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        sizePolicy10.setHorizontalStretch(1)
-        sizePolicy10.setVerticalStretch(0)
-        sizePolicy10.setHeightForWidth(self.groupBox_timescale.sizePolicy().hasHeightForWidth())
-        self.groupBox_timescale.setSizePolicy(sizePolicy10)
-        self.groupBox_timescale.setMinimumSize(QSize(0, 0))
-        self.groupBox_timescale.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.horizontalLayout_8 = QHBoxLayout(self.groupBox_timescale)
-        self.horizontalLayout_8.setSpacing(10)
-        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.horizontalLayout_8.setContentsMargins(10, 10, 10, 10)
-        self.button_Total = QPushButton(self.groupBox_timescale)
-        self.button_Total.setObjectName(u"button_Total")
-        sizePolicy11 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy11.setHorizontalStretch(1)
-        sizePolicy11.setVerticalStretch(0)
-        sizePolicy11.setHeightForWidth(self.button_Total.sizePolicy().hasHeightForWidth())
-        self.button_Total.setSizePolicy(sizePolicy11)
-        self.button_Total.setMinimumSize(QSize(50, 30))
-        self.button_Total.setLocale(QLocale(QLocale.English, QLocale.Germany))
-
-        self.horizontalLayout_8.addWidget(self.button_Total)
-
-        self.pushButton = QPushButton(self.groupBox_timescale)
-        self.pushButton.setObjectName(u"pushButton")
-        sizePolicy4.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
-        self.pushButton.setSizePolicy(sizePolicy4)
-        self.pushButton.setMinimumSize(QSize(50, 30))
-
-        self.horizontalLayout_8.addWidget(self.pushButton)
-
-        self.button_Partial = QPushButton(self.groupBox_timescale)
-        self.button_Partial.setObjectName(u"button_Partial")
-        sizePolicy11.setHeightForWidth(self.button_Partial.sizePolicy().hasHeightForWidth())
-        self.button_Partial.setSizePolicy(sizePolicy11)
-        self.button_Partial.setMinimumSize(QSize(50, 30))
-        self.button_Partial.setLocale(QLocale(QLocale.English, QLocale.Germany))
-
-        self.horizontalLayout_8.addWidget(self.button_Partial)
-
-
-        self.verticalLayout_5.addWidget(self.groupBox_timescale)
-
 
         self.horizontalLayout_4.addWidget(self.groupBox_2)
 
@@ -808,11 +767,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.timePlotGroupBox = QGroupBox(self.centralwidget)
         self.timePlotGroupBox.setObjectName(u"timePlotGroupBox")
-        sizePolicy12 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
-        sizePolicy12.setHorizontalStretch(3)
-        sizePolicy12.setVerticalStretch(0)
-        sizePolicy12.setHeightForWidth(self.timePlotGroupBox.sizePolicy().hasHeightForWidth())
-        self.timePlotGroupBox.setSizePolicy(sizePolicy12)
+        sizePolicy10 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
+        sizePolicy10.setHorizontalStretch(3)
+        sizePolicy10.setVerticalStretch(0)
+        sizePolicy10.setHeightForWidth(self.timePlotGroupBox.sizePolicy().hasHeightForWidth())
+        self.timePlotGroupBox.setSizePolicy(sizePolicy10)
         self.timePlotGroupBox.setMinimumSize(QSize(600, 300))
         self.timePlotGroupBox.setLocale(QLocale(QLocale.English, QLocale.Germany))
 
@@ -838,11 +797,11 @@ class Ui_MainWindow(object):
         self.layout_progressbars.setContentsMargins(0, -1, 0, -1)
         self.label_SODS = QLabel(self.centralwidget)
         self.label_SODS.setObjectName(u"label_SODS")
-        sizePolicy13 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
-        sizePolicy13.setHorizontalStretch(0)
-        sizePolicy13.setVerticalStretch(0)
-        sizePolicy13.setHeightForWidth(self.label_SODS.sizePolicy().hasHeightForWidth())
-        self.label_SODS.setSizePolicy(sizePolicy13)
+        sizePolicy11 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy11.setHorizontalStretch(0)
+        sizePolicy11.setVerticalStretch(0)
+        sizePolicy11.setHeightForWidth(self.label_SODS.sizePolicy().hasHeightForWidth())
+        self.label_SODS.setSizePolicy(sizePolicy11)
         self.label_SODS.setMinimumSize(QSize(127, 0))
         self.label_SODS.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.label_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
@@ -866,11 +825,11 @@ class Ui_MainWindow(object):
 
         self.progressBar_SODS = QProgressBar(self.centralwidget)
         self.progressBar_SODS.setObjectName(u"progressBar_SODS")
-        sizePolicy14 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
-        sizePolicy14.setHorizontalStretch(5)
-        sizePolicy14.setVerticalStretch(0)
-        sizePolicy14.setHeightForWidth(self.progressBar_SODS.sizePolicy().hasHeightForWidth())
-        self.progressBar_SODS.setSizePolicy(sizePolicy14)
+        sizePolicy12 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy12.setHorizontalStretch(5)
+        sizePolicy12.setVerticalStretch(0)
+        sizePolicy12.setHeightForWidth(self.progressBar_SODS.sizePolicy().hasHeightForWidth())
+        self.progressBar_SODS.setSizePolicy(sizePolicy12)
         self.progressBar_SODS.setMinimumSize(QSize(50, 0))
         font2 = QFont()
         font2.setFamilies([u"Arial"])
@@ -890,11 +849,11 @@ class Ui_MainWindow(object):
 
         self.progressBar_PF = QProgressBar(self.centralwidget)
         self.progressBar_PF.setObjectName(u"progressBar_PF")
-        sizePolicy15 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
-        sizePolicy15.setHorizontalStretch(1)
-        sizePolicy15.setVerticalStretch(0)
-        sizePolicy15.setHeightForWidth(self.progressBar_PF.sizePolicy().hasHeightForWidth())
-        self.progressBar_PF.setSizePolicy(sizePolicy15)
+        sizePolicy13 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy13.setHorizontalStretch(1)
+        sizePolicy13.setVerticalStretch(0)
+        sizePolicy13.setHeightForWidth(self.progressBar_PF.sizePolicy().hasHeightForWidth())
+        self.progressBar_PF.setSizePolicy(sizePolicy13)
         self.progressBar_PF.setMinimumSize(QSize(75, 0))
         self.progressBar_PF.setFont(font2)
         self.progressBar_PF.setLocale(QLocale(QLocale.English, QLocale.Germany))
@@ -905,8 +864,8 @@ class Ui_MainWindow(object):
 
         self.progressBar_LO = QProgressBar(self.centralwidget)
         self.progressBar_LO.setObjectName(u"progressBar_LO")
-        sizePolicy15.setHeightForWidth(self.progressBar_LO.sizePolicy().hasHeightForWidth())
-        self.progressBar_LO.setSizePolicy(sizePolicy15)
+        sizePolicy13.setHeightForWidth(self.progressBar_LO.sizePolicy().hasHeightForWidth())
+        self.progressBar_LO.setSizePolicy(sizePolicy13)
         self.progressBar_LO.setMinimumSize(QSize(75, 0))
         self.progressBar_LO.setFont(font2)
         self.progressBar_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
@@ -926,11 +885,11 @@ class Ui_MainWindow(object):
 
         self.label_LO = QLabel(self.centralwidget)
         self.label_LO.setObjectName(u"label_LO")
-        sizePolicy16 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy16.setHorizontalStretch(0)
-        sizePolicy16.setVerticalStretch(0)
-        sizePolicy16.setHeightForWidth(self.label_LO.sizePolicy().hasHeightForWidth())
-        self.label_LO.setSizePolicy(sizePolicy16)
+        sizePolicy14 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy14.setHorizontalStretch(0)
+        sizePolicy14.setVerticalStretch(0)
+        sizePolicy14.setHeightForWidth(self.label_LO.sizePolicy().hasHeightForWidth())
+        self.label_LO.setSizePolicy(sizePolicy14)
         self.label_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
         self.label_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -949,8 +908,8 @@ class Ui_MainWindow(object):
 
         self.label_EOE = QLabel(self.centralwidget)
         self.label_EOE.setObjectName(u"label_EOE")
-        sizePolicy16.setHeightForWidth(self.label_EOE.sizePolicy().hasHeightForWidth())
-        self.label_EOE.setSizePolicy(sizePolicy16)
+        sizePolicy14.setHeightForWidth(self.label_EOE.sizePolicy().hasHeightForWidth())
+        self.label_EOE.setSizePolicy(sizePolicy14)
         self.label_EOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
         self.label_EOE.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -961,8 +920,8 @@ class Ui_MainWindow(object):
 
         self.progressBar_SD = QProgressBar(self.centralwidget)
         self.progressBar_SD.setObjectName(u"progressBar_SD")
-        sizePolicy15.setHeightForWidth(self.progressBar_SD.sizePolicy().hasHeightForWidth())
-        self.progressBar_SD.setSizePolicy(sizePolicy15)
+        sizePolicy13.setHeightForWidth(self.progressBar_SD.sizePolicy().hasHeightForWidth())
+        self.progressBar_SD.setSizePolicy(sizePolicy13)
         self.progressBar_SD.setMinimumSize(QSize(75, 0))
         self.progressBar_SD.setBaseSize(QSize(97, 0))
         self.progressBar_SD.setFont(font2)
@@ -975,11 +934,11 @@ class Ui_MainWindow(object):
 
         self.progressBar_SOE = QProgressBar(self.centralwidget)
         self.progressBar_SOE.setObjectName(u"progressBar_SOE")
-        sizePolicy17 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy17.setHorizontalStretch(20)
-        sizePolicy17.setVerticalStretch(0)
-        sizePolicy17.setHeightForWidth(self.progressBar_SOE.sizePolicy().hasHeightForWidth())
-        self.progressBar_SOE.setSizePolicy(sizePolicy17)
+        sizePolicy15 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy15.setHorizontalStretch(20)
+        sizePolicy15.setVerticalStretch(0)
+        sizePolicy15.setHeightForWidth(self.progressBar_SOE.sizePolicy().hasHeightForWidth())
+        self.progressBar_SOE.setSizePolicy(sizePolicy15)
         self.progressBar_SOE.setMinimumSize(QSize(100, 0))
         self.progressBar_SOE.setFont(font2)
         self.progressBar_SOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
@@ -990,8 +949,8 @@ class Ui_MainWindow(object):
 
         self.label_PF = QLabel(self.centralwidget)
         self.label_PF.setObjectName(u"label_PF")
-        sizePolicy16.setHeightForWidth(self.label_PF.sizePolicy().hasHeightForWidth())
-        self.label_PF.setSizePolicy(sizePolicy16)
+        sizePolicy14.setHeightForWidth(self.label_PF.sizePolicy().hasHeightForWidth())
+        self.label_PF.setSizePolicy(sizePolicy14)
         self.label_PF.setLocale(QLocale(QLocale.English, QLocale.Germany))
         self.label_PF.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -1011,7 +970,7 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QRect(0, 0, 1366, 17))
+        self.menubar.setGeometry(QRect(0, 0, 1366, 23))
         self.menubar.setFont(font)
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
@@ -1022,12 +981,12 @@ class Ui_MainWindow(object):
         self.menuSettings.setObjectName(u"menuSettings")
         self.menuLanguage = QMenu(self.menuSettings)
         self.menuLanguage.setObjectName(u"menuLanguage")
+        self.menuConnection = QMenu(self.menuSettings)
+        self.menuConnection.setObjectName(u"menuConnection")
         self.menuStart = QMenu(self.menubar)
         self.menuStart.setObjectName(u"menuStart")
         self.menuSetup = QMenu(self.menubar)
         self.menuSetup.setObjectName(u"menuSetup")
-        self.menuConnection = QMenu(self.menuSetup)
-        self.menuConnection.setObjectName(u"menuConnection")
         MainWindow.setMenuBar(self.menubar)
 
         self.menubar.addAction(self.menuStart.menuAction())
@@ -1041,39 +1000,37 @@ class Ui_MainWindow(object):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionResults)
         self.menuFile.addAction(self.menuExport.menuAction())
-        self.menuFile.addSeparator()
         self.menuExport.addAction(self.actionExportHousholding)
         self.menuExport.addAction(self.actionExportMeasurements)
         self.menuExport.addAction(self.actionExportEverything)
         self.menuSettings.addAction(self.menuLanguage.menuAction())
         self.menuSettings.addSeparator()
-        self.menuSettings.addAction(self.actionDocumentation)
+        self.menuSettings.addAction(self.menuConnection.menuAction())
+        self.menuSettings.addSeparator()
+        self.menuSettings.addAction(self.actionDiagrams)
         self.menuLanguage.addAction(self.actionEnglish)
         self.menuLanguage.addAction(self.actionGerman)
-        self.menuStart.addAction(self.actionTest_Mode)
-        self.menuStart.addAction(self.actionFlight_Mode)
-        self.menuStart.addSeparator()
-        self.menuStart.addAction(self.actionControl_Panel)
-        self.menuStart.addSeparator()
-        self.menuStart.addAction(self.actionEstimated_Launch_Time)
-        self.menuStart.addSeparator()
-        self.menuStart.addAction(self.actionRestart)
-        self.menuStart.addAction(self.actionQuit)
-        self.menuSetup.addAction(self.actionCalibration)
-        self.menuSetup.addAction(self.menuConnection.menuAction())
         self.menuConnection.addAction(self.actionConnect)
-        self.menuConnection.addSeparator()
         self.menuConnection.addAction(self.actionRetry)
         self.menuConnection.addSeparator()
         self.menuConnection.addAction(self.actionAutomatic)
         self.menuConnection.addAction(self.actionManual)
         self.menuConnection.addSeparator()
         self.menuConnection.addAction(self.actionDisconnect)
+        self.menuStart.addAction(self.actionTest_Mode)
+        self.menuStart.addAction(self.actionFlight_Mode)
+        self.menuStart.addSeparator()
+        self.menuStart.addAction(self.actionControl_Panel)
+        self.menuStart.addSeparator()
+        self.menuStart.addAction(self.actionDocumentation)
+        self.menuStart.addSeparator()
+        self.menuStart.addAction(self.actionRestart)
+        self.menuStart.addAction(self.actionQuit)
+        self.menuSetup.addAction(self.actionCalibration)
+        self.menuSetup.addSeparator()
+        self.menuSetup.addAction(self.actionEstimated_Launch_Time)
 
         self.retranslateUi(MainWindow)
-
-        self.button_Partial.setDefault(True)
-
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
@@ -1112,6 +1069,8 @@ class Ui_MainWindow(object):
         self.actionAutomatic.setText(QCoreApplication.translate("MainWindow", u"Automatic", None))
         self.actionManual.setText(QCoreApplication.translate("MainWindow", u"Manual", None))
         self.actionDisconnect.setText(QCoreApplication.translate("MainWindow", u"Disconnect", None))
+        self.actionSelf_Scaling_Axes.setText(QCoreApplication.translate("MainWindow", u"Self-Scaling Axes", None))
+        self.actionDiagrams.setText(QCoreApplication.translate("MainWindow", u"Diagrams", None))
         self.label_time.setText(QCoreApplication.translate("MainWindow", u"T -", None))
         self.label_Connection.setText(QCoreApplication.translate("MainWindow", u"Connection", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Status", None))
@@ -1124,9 +1083,9 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Chip", None))
         self.statusLabelTCompare.setText("")
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Chip", None))
-        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
-        self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Reservoir", None))
-        self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Reservoir", None))
+        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Chamber", None))
+        self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
+        self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
         self.statusLabelTChip.setText("")
         self.statusLabelMainboard.setText("")
         self.statusLabelSOE.setText("")
@@ -1144,7 +1103,7 @@ class Ui_MainWindow(object):
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 2", None))
         self.label_33.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 3", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
-        self.label_14.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
+        self.label_14.setText(QCoreApplication.translate("MainWindow", u"P Chamber", None))
         self.statusLabelTNozzle1.setText("")
         self.statusLabelTReservoir.setText("")
         self.label_15.setText(QCoreApplication.translate("MainWindow", u"P Ambient", None))
@@ -1178,9 +1137,9 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem6 = ___qtreewidgetitem3.child(2)
         ___qtreewidgetitem6.setText(0, QCoreApplication.translate("MainWindow", u"3", None));
         ___qtreewidgetitem7 = ___qtreewidgetitem2.child(1)
-        ___qtreewidgetitem7.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
+        ___qtreewidgetitem7.setText(0, QCoreApplication.translate("MainWindow", u"Chamber", None));
         ___qtreewidgetitem8 = ___qtreewidgetitem2.child(2)
-        ___qtreewidgetitem8.setText(0, QCoreApplication.translate("MainWindow", u"Reservoir", None));
+        ___qtreewidgetitem8.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
         ___qtreewidgetitem9 = ___qtreewidgetitem2.child(3)
         ___qtreewidgetitem9.setText(0, QCoreApplication.translate("MainWindow", u"Ambient", None));
         ___qtreewidgetitem10 = ___qtreewidgetitem1.child(1)
@@ -1192,19 +1151,15 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem13 = ___qtreewidgetitem11.child(1)
         ___qtreewidgetitem13.setText(0, QCoreApplication.translate("MainWindow", u"2", None));
         ___qtreewidgetitem14 = ___qtreewidgetitem11.child(2)
-        ___qtreewidgetitem14.setText(0, QCoreApplication.translate("MainWindow", u"2", None));
+        ___qtreewidgetitem14.setText(0, QCoreApplication.translate("MainWindow", u"3", None));
         ___qtreewidgetitem15 = ___qtreewidgetitem10.child(1)
-        ___qtreewidgetitem15.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
+        ___qtreewidgetitem15.setText(0, QCoreApplication.translate("MainWindow", u"Chamber", None));
         ___qtreewidgetitem16 = ___qtreewidgetitem10.child(2)
-        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"Reservoir", None));
+        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
         ___qtreewidgetitem17 = ___qtreewidgetitem10.child(3)
-        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"Compare Point", None));
+        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
-        self.groupBox_timescale.setTitle(QCoreApplication.translate("MainWindow", u"Timescale", None))
-        self.button_Total.setText(QCoreApplication.translate("MainWindow", u"Total", None))
-        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"10s", None))
-        self.button_Partial.setText(QCoreApplication.translate("MainWindow", u"SOE", None))
         self.timePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Time", None))
         self.label_SODS.setText(QCoreApplication.translate("MainWindow", u"Experiment Preparation", None))
         self.label_SD.setText(QCoreApplication.translate("MainWindow", u"Shutdown", None))
@@ -1221,8 +1176,8 @@ class Ui_MainWindow(object):
         self.menuExport.setTitle(QCoreApplication.translate("MainWindow", u"Export", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menuLanguage.setTitle(QCoreApplication.translate("MainWindow", u"Language", None))
+        self.menuConnection.setTitle(QCoreApplication.translate("MainWindow", u"Connection", None))
         self.menuStart.setTitle(QCoreApplication.translate("MainWindow", u"Start", None))
         self.menuSetup.setTitle(QCoreApplication.translate("MainWindow", u"Setup", None))
-        self.menuConnection.setTitle(QCoreApplication.translate("MainWindow", u"Connection", None))
     # retranslateUi
 

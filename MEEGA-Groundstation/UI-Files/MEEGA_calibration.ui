@@ -28,22 +28,22 @@
      </item>
      <item>
       <property name="text">
-       <string>P Reservoir</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>T Reservoir</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
        <string>P Accumulator</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>T Accumulator</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>P Chamber</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>T Chamber</string>
       </property>
      </item>
      <item>
