@@ -2,26 +2,26 @@
 #include "DataHandlingLibrary.h"
 
 //Core initialization:
-static struct DataHandlingHub dataHandling = { NULL, NULL, NULL, NULL, NULL, NULL };
-static SaveFrame* currentFrame = NULL;
+static struct DataHandlingHub dataHandling = { NULL, NULL, NULL, NULL, NULL, NULL }; //Access to all reserved memory
+static SaveFrame* currentFrame = NULL; //Used by GetNextFrame()
 
 //INTERNAL Declarations:
-static int _SetPositions_();
-static int _CreateHandler_();
-static int _CreateFrameLookUp_();
-static void _SortCalibration_();
-static SYNC_TYPE _GetSync_();
-static byte _ToMSG_(byte type, byte id);
-static void _FromMSG_(byte msg, byte* type_out, byte* id_out);
-static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount);
-static int _SetPortConfig_();
+static int _SetPositions_(); //Fills in the FrameLookUpTable
+static int _CreateHandler_(); //Reserves memory for the PortHandler
+static int _CreateFrameLookUp_(); //Reserves memory for the FrameLookUpTable
+static void _SortCalibration_(); //Sorts the CalibrationPoint-Array
+static SYNC_TYPE _GetSync_(); //Returns a new, usable sync value
+static byte _ToMSG_(byte type, byte id); //Encodes the MSG-byte
+static void _FromMSG_(byte msg, byte* type_out, byte* id_out); //Decodes the MSG-byte
+static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount); //Shifts values inside an array
+static int _SetPortConfig_(); //Configures Port settings, needs an opened Port
 
 //EX-EXPORT (INTERNAL) Declarations:
-DataPacket GetInPacket();
-int AddOutPacket(DataPacket data);
-int VirtualSave();
-DataPacket CreatePacket(SYNC_TYPE sync);
-DataPacket EmptyPacket();
+DataPacket GetInPacket(); //Returns the latest incoming Packet
+int AddOutPacket(DataPacket data); //Adds a Packet to the outgoing buffer
+int VirtualSave(); //Creates a SaveFile-struct in memory
+DataPacket CreatePacket(SYNC_TYPE sync); //Creates a Packet with the designated sync-value
+DataPacket EmptyPacket(); //Creates an empty Packet
 int FormPackets(); //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
 int FormFrames(); //Converts all buffered incoming DataPackets into buffered DataFrames (with {0} values if parts are missing), returns the amount converted
 DataFrame GetOutFrame(); //Returns the latest buffered outgoing DataFrame and removes it from the buffer
@@ -251,22 +251,23 @@ int UpdateBuffer()
 	int out = 0, amount = 0;
 	if (FormPackets() > 0) {
 		amount = Send();
-		if (amount < 0)
-			out -= 1;
-		else if (amount != 0 && !TRANSMISSION_DEBUG) {
+		if (amount < 0)	out--;
+#if (!TRANSMISSION_DEBUG)
+		else if (amount > 0) {
 			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
 		}
+#endif
 	}
 	amount = Receive();
 	if (amount > 0)
 	{
-		if (TRANSMISSION_DEBUG) {
-			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+#if (TRANSMISSION_DEBUG)
+		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
+#endif
+		if (FormFrames() > 0) {
+			for (DataFrame temp = GetInFrame(); !FrameIsEmpty(temp); temp = GetInFrame()) AddSaveFrame(temp);
 		}
-		if (FormFrames() > 0)
-			for (DataFrame temp = GetOutFrame(); !FrameIsEmpty(temp); temp = GetOutFrame())
-				AddSaveFrame(temp);
-		else out -= 1;
+		else out--;
 	}
 	return out;
 }
@@ -276,26 +277,26 @@ int UpdateFiles()
 	int out = 0;
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
-		out -= 1;
+		out--;
 	}
 	else if (WriteSave() == -1) {
-		out -= 1;
+		out--;
 	}
 	if (dataHandling.failSafe == NULL) {
 		DebugLog("!Could not find FailSafe");
-		out -= 1;
+		out--;
 	}
 	else if (!WriteFailSafe()) {
-		out -= 1;
+		out--;
 	}
 	if (dataHandling.calibration == NULL) {
 		if (CALIBRATION_METHOD != NONE) {
 			DebugLog("!Could not find Calibration");
-			out -= 1;
+			out--;
 		}
 	}
 	else if (!WriteCalibration()) {
-		out -= 1;
+		out--;
 	}
 	return out;
 }
@@ -929,6 +930,14 @@ int AddInFrame(DataFrame frame)
 	return i;
 }
 
+#define FAILSAFE_TITLE_STRING "MEEGA FailSafe\n\n"
+#define FAILSAFE_VERSION_STRING "Version: %f;\n"
+#define FAILSAFE_DATE_STRING "Datetime: %lli;\n"
+#define FAILSAFE_SAVEFILE_STRING "Savefile: %s;\n"
+#define FAILSAFE_CALIBRATION_STRING "Calibrationfile: %s;\n"
+#define FAILSAFE_COMPLETE_STRING "Complete: %c;\n"
+#define FAILSAFE_NOMINAL_STRING "Nominal Exit: %c;\n"
+
 int CreateFailSafe() 
 {
 	if (dataHandling.failSafe != NULL) {
@@ -953,15 +962,15 @@ int CreateFailSafe()
 	FILE* file;
 	file = fopen(FAILSAFE_NAME, "w");
 	if (file != NULL) {
-		fprintf(file, "MEEGA FailSafe\n\n");
-		fprintf(file, "Version: %f;\n", new->version);
-		fprintf(file, "Datetime: %lli;\n", new->dateTime);
-		if (USE_DEFAULT_VALUES) fprintf(file, "Savefile: %s;\n", new->saveFilePath);
-		else fprintf(file, "Savefile: None;\n");
-		if ((CALIBRATION_METHOD != NONE) & USE_DEFAULT_VALUES) fprintf(file, "Calibrationfile: %s;\n", new->calPath);
-		else fprintf(file, "Calibrationfile: None;\n");
-		fprintf(file, "Complete: %c;\n", (new->complete) ? 'y' : 'n');
-		fprintf(file, "Nominal Exit: %c;\n", (new->nominalExit)? 'y' : 'n');
+		fprintf(file, FAILSAFE_TITLE_STRING);
+		fprintf(file, FAILSAFE_VERSION_STRING, new->version);
+		fprintf(file, FAILSAFE_DATE_STRING, new->dateTime);
+		if (USE_DEFAULT_VALUES) fprintf(file, FAILSAFE_SAVEFILE_STRING, new->saveFilePath);
+		else fprintf(file, FAILSAFE_SAVEFILE_STRING, " ");
+		if ((CALIBRATION_METHOD != NONE) & USE_DEFAULT_VALUES) fprintf(file, FAILSAFE_CALIBRATION_STRING, new->calPath);
+		else fprintf(file, FAILSAFE_CALIBRATION_STRING, " ");
+		fprintf(file, FAILSAFE_COMPLETE_STRING, (new->complete) ? 'y' : 'n');
+		fprintf(file, FAILSAFE_NOMINAL_STRING, (new->nominalExit)? 'y' : 'n');
 		fclose(file);
 	}
 	else DebugLog("!Could not create FailSafe file");
@@ -991,59 +1000,61 @@ int ReadFailSafe()
 	this->version = FAILSAFE_VERSION;
 	file = fopen(FAILSAFE_NAME, "r");
 	if (file != NULL) {
-		if (fscanf(file, "MEEGA FailSafe\n\nVersion: %f;", &ReadVersion) != EOF) {
-			if (ReadVersion == this->version) {
-				//Newest FileReader here:
-				char ReadChar;
-				int length = PATH_LENGTH;
-				if (fscanf(file, "Datetime: %lli;\n", &this->dateTime) != EOF) {
-					if (fscanf(file, "Savefile: %s;\n", &this->saveFilePath) != EOF) {
-						if (fscanf(file, "Calibrationfile: %s;\n", &this->calPath) != EOF) {
-							length = 1;
-							if (fscanf(file, "Complete: %c;\n", &ReadChar) != EOF) {
-								this->complete = (ReadChar == 'y') ? 1 : 0;
-								if (fscanf(file, "Nominal Exit: %c;\n", &ReadChar) != EOF) {
-									this->nominalExit = (ReadChar == 'y') ? 1 : 0;
-									DebugLog("Failsafe read@_", this);
-									fclose(file);
-									return 1;
+		if (fscanf(file, FAILSAFE_TITLE_STRING) != EOF) {
+			if (fscanf(file, FAILSAFE_VERSION_STRING, &ReadVersion) != EOF) {
+				if (ReadVersion == this->version) {
+					//Newest FileReader here:
+					char ReadChar;
+					int length = PATH_LENGTH;
+					if (fscanf(file, FAILSAFE_DATE_STRING, &this->dateTime) != EOF) {
+						if (fscanf(file, FAILSAFE_SAVEFILE_STRING, &this->saveFilePath) != EOF) {
+							if (fscanf(file, FAILSAFE_CALIBRATION_STRING, &this->calPath) != EOF) {
+								length = 1;
+								if (fscanf(file, FAILSAFE_COMPLETE_STRING, &ReadChar) != EOF) {
+									this->complete = (ReadChar == 'y') ? 1 : 0;
+									if (fscanf(file, FAILSAFE_NOMINAL_STRING, &ReadChar) != EOF) {
+										this->nominalExit = (ReadChar == 'y') ? 1 : 0;
+										DebugLog("Failsafe read@_", this);
+										fclose(file);
+										return 1;
+									}
 								}
 							}
 						}
 					}
+					DebugLog("!Could not parse FailSafe file");
+					fclose(file);
 				}
-				DebugLog("!Could not parse FailSafe file");
-				fclose(file);
-			}
-			else if (ReadVersion = 1.0f) {
-				//Older FileReader:
-				char ReadChar;
-				int length = PATH_LENGTH;
-				if (fscanf(file, "Datetime: %lli;\n", &this->dateTime) != EOF) {
-					if (fscanf(file, "Savefile: %s;\n", &this->saveFilePath) != EOF) {
-						length = 1;
-						if (fscanf(file, "Complete: %c;\n", &ReadChar) != EOF) {
-							this->complete = (ReadChar == 'y') ? 1 : 0;
-							if (fscanf(file, "Nominal Exit: %c;\n", &ReadChar) != EOF) {
-								this->nominalExit = (ReadChar == 'y') ? 1 : 0;
-								if (fscanf(file, "Mode: %c;\n", &ReadChar) != EOF) {
-									if (fscanf(file, "Connection: %c;\n", &ReadChar) != EOF) {
-										if (fscanf(file, "Language: %c;", &ReadChar) != EOF) {
-											DebugLog("Failsafe read@_", this);
-											fclose(file);
-											return 1;
+				else if (ReadVersion = 1.0f) {
+					//Older FileReader:
+					char ReadChar;
+					int length = PATH_LENGTH;
+					if (fscanf(file, FAILSAFE_DATE_STRING, &this->dateTime) != EOF) {
+						if (fscanf(file, FAILSAFE_SAVEFILE_STRING, &this->saveFilePath) != EOF) {
+							length = 1;
+							if (fscanf(file, FAILSAFE_COMPLETE_STRING, &ReadChar) != EOF) {
+								this->complete = (ReadChar == 'y') ? 1 : 0;
+								if (fscanf(file, FAILSAFE_NOMINAL_STRING, &ReadChar) != EOF) {
+									this->nominalExit = (ReadChar == 'y') ? 1 : 0;
+									if (fscanf(file, "Mode: %c;\n", &ReadChar) != EOF) {
+										if (fscanf(file, "Connection: %c;\n", &ReadChar) != EOF) {
+											if (fscanf(file, "Language: %c;", &ReadChar) != EOF) {
+												DebugLog("Failsafe read@_", this);
+												fclose(file);
+												return 1;
+											}
 										}
 									}
 								}
 							}
 						}
 					}
+					DebugLog("!Could not parse FailSafe file");
+					fclose(file);
 				}
-				DebugLog("!Could not parse FailSafe file");
-				fclose(file);
-			}
-			else if (ReadVersion = 0.0f) {
-				//Older FileReader:
+				else if (ReadVersion = 0.0f) {
+					//Older FileReader:
+				}
 			}
 		}
 	}
@@ -1068,13 +1079,14 @@ int WriteFailSafe()
 	FILE* file;
 	file = fopen(FAILSAFE_NAME, "w");
 	if (file != NULL) {
-		fprintf(file, "Version: %f;\n", failsafe->version);
-		fprintf(file, "Datetime: %lli;\n", failsafe->dateTime);
-		fprintf(file, "Savefile: %s;\n", failsafe->saveFilePath);
-		if (CALIBRATION_METHOD != NONE) fprintf(file, "Calibrationfile: %s;\n", failsafe->calPath);
-		else fprintf(file, "Calibrationfile: None;\n");
-		fprintf(file, "Complete: %c;\n", (failsafe->complete) ? 'y' : 'n');
-		fprintf(file, "Nominal Exit: %c;\n", (failsafe->nominalExit) ? 'y' : 'n');
+		fprintf(file, FAILSAFE_TITLE_STRING);
+		fprintf(file, FAILSAFE_VERSION_STRING, failsafe->version);
+		fprintf(file, FAILSAFE_DATE_STRING, failsafe->dateTime);
+		fprintf(file, FAILSAFE_SAVEFILE_STRING, failsafe->saveFilePath);
+		if (CALIBRATION_METHOD != NONE) fprintf(file, FAILSAFE_CALIBRATION_STRING, failsafe->calPath);
+		else fprintf(file, FAILSAFE_CALIBRATION_STRING, " ");
+		fprintf(file, FAILSAFE_COMPLETE_STRING, (failsafe->complete) ? 'y' : 'n');
+		fprintf(file, FAILSAFE_NOMINAL_STRING, (failsafe->nominalExit) ? 'y' : 'n');
 		fclose(file);
 		failsafe->changed = 0;
 		//DebugLog("FailSafe written at§_", FAILSAFE_NAME);
@@ -1525,10 +1537,12 @@ int Send()
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
+#if (!TRANSMISSION_DEBUG)
 	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
+#endif
 	int number = 0, amount = 0;
 	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (PacketIsEmpty(dataHandling.buffer->outPackets[amount])) break;
 	amount *= PACKET_LENGTH;
@@ -1557,43 +1571,53 @@ int Receive()
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
+#if (!TRANSMISSION_DEBUG)
 	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int writeAmount = -1, foundStart = 0, readAmount = 0;
+#endif
+	int writeAmount = -1, foundStart = 0;
 #if (DATAHANDLINGLIBRARY_OS == LINUX)
 	time_t start_time = 0;
 #endif
 	DataPacket* current = dataHandling.buffer->inPackets;
 	byte read = 0, *writePtr = (byte*)current;
-	for (int i = 0; i <= PACKET_LENGTH; i++, readAmount++) {
 #if (TRANSMISSION_DEBUG)
-		read = ((byte*)dataHandling.buffer->outPackets)[readAmount];
-#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+	int readIndex = 0;
+	for (int i = 0; i <= PACKET_LENGTH; i++, readIndex++) {
+		read = ((byte*)dataHandling.buffer->outPackets)[readIndex];
+#else
+	for (int i = 0; i <= PACKET_LENGTH; i++) {
+#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 		if (!ReadFile(dataHandling.handler->comHandle, &read, 1, NULL, NULL)) break;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 		start_time = clock(NULL);
 		while (read(dataHandling.handler->comHandle, &read, 1) != 1 && dataHandling.handler->timeout >= clock(NULL) - start_time);
 		if (dataHandling.handler->timeout < clock(NULL) - start_time) break;
 #endif
-		if (read = START_BYTE) {
+#endif
+		if (read == START_BYTE) {
 			if (foundStart) {
 				current++;
 				writePtr = (byte*)current;
 			}
 			else {
 				foundStart = 1;
-				writeAmount = 0;
+				writeAmount++;
 			}
 			i = 0;
 		}
-		if (current == dataHandling.buffer->outPackets || readAmount == PACKET_BUFFER_LENGTH * PACKET_LENGTH) break;
+#if (TRANSMISSION_DEBUG)
+		if (current == dataHandling.buffer->outPackets || readIndex == PACKET_BUFFER_LENGTH * PACKET_LENGTH) break;
+#else
+		if (current == dataHandling.buffer->outPackets) break;
+#endif
 		if (foundStart && i != PACKET_LENGTH) {
 			writePtr[i] = read;
 			writeAmount++;
 		}
-		else if (i == PACKET_LENGTH) i = 0;
+		else if (!foundStart && i == PACKET_LENGTH) i = 0;
 	}
 	if (writeAmount >= 0) DebugLog("Received# Bytes", writeAmount);
 	else DebugLog("!Unable to read from CommPort");
@@ -1674,7 +1698,7 @@ void DebugLog(const char* message, ...)
 	va_list args;
 	va_start(args, message);
 	if (output == NULL) {
-		if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) {
+		if (DEBUG_OUTPUT & LOGFILE == LOGFILE) {
 			output = fopen(DEBUGLOG_NAME, "w");
 			if (output == NULL) {
 				output = stdout;

@@ -85,7 +85,7 @@
 
 #define DATA_LENGTH 42 //Bytes
 #define PAYLOAD_LENGTH 21 //Bytes
-#define PACKET_BUFFER_LENGTH DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1 //DataPackets
+#define PACKET_BUFFER_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1) //DataPackets
 
 #define CHKSM_TYPE uint16_t
 #define SYNC_TYPE uint16_t
@@ -166,10 +166,10 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	//Signals the beginning of a new Packet (= -1)
 	byte start;
-	//Used to stitch together DataFrames (= DataFrame.sync)
-	SYNC_TYPE sync;
 	//Used to identify payload data
 	byte msg;
+	//Used to stitch together DataFrames (= DataFrame.sync)
+	SYNC_TYPE sync;
 	//Byte Array containing a part of the Frame.data
 	byte payload[PAYLOAD_LENGTH];
 	//Checksum of the corresponding Frame
