@@ -27,7 +27,7 @@
 //DataHandling Settings
 #define DATAHANDLINGLIBRARY_OS (WINDOWS_OS)
 #define CALIBRATION_METHOD (NONE)
-#define DEBUG_OUTPUT (TERMINAL + LOGFILE)
+#define DEBUG_OUTPUT (TERMINAL | LOGFILE)
 
 #define USE_DEFAULT_VALUES 1
 #define TRANSMISSION_DEBUG 1
@@ -126,7 +126,9 @@ DATAHANDLINGLIBRARY_CONSTANT const char DEBUGLOG_NAME[] = "MEEGA_DataHandlingLog
 
 //Enums and Structs
 
-//Telemetry data identifier
+/// <summary>
+/// Telemetry data identifier
+/// </summary>
 enum DATAHANDLINGLIBRARY_API TMID{
 	//Sensors:
 	Ambient_Pressure, Compare_Temperature, Tank_Pressure, Tank_Temperature, Chamber_Pressure, Chamber_Temperature,
@@ -138,17 +140,23 @@ enum DATAHANDLINGLIBRARY_API TMID{
 	Nozzle_Open, Nozzle_Closed, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_P, Sensorboard_T, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode, Experiment_State
 };
 
-//Telecommand data identifier
+/// <summary>
+/// Telecommand data identifier
+/// </summary>
 enum DATAHANDLINGLIBRARY_API TCID {
 	Mode_Change, Valve_Delay, Servo_Delay, EoE_Delay, Power_Off_Delay, Nozzle_On_Delay, Dry_Run, LED_Control, Servo_Control, Valve_Control, Camera_Control, Test_Abort, Test_Run
 };
 
-//DataFrame annotation flags
+/// <summary>
+/// DataFrame annotation flags
+/// </summary>
 enum DATAHANDLINGLIBRARY_API Flag {
 	Source, OK, Biterror, Partial, TeleCommand
 };
 
-//Stores all data pertaining one timestep (frame), exactly as it will be saved on the harddrive
+/// <summary>
+/// Stores all data pertaining one timestep, exactly as it will be saved on the harddrive
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	//Signals the beginning of a new Frame (= -1)
 	byte start;
@@ -162,7 +170,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	CHKSM_TYPE chksm;
 } DataFrame;
 
-//Stores the data contained in one packet of the transmission protocol
+/// <summary>
+/// Stores the data contained in one packet of the transmission protocol
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	//Signals the beginning of a new Packet (= -1)
 	byte start;
@@ -178,7 +188,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	CHKSM_TYPE crc;
 } DataPacket;
 
-//This acts as an input/output buffer for transmissions
+/// <summary>
+/// Input/output buffer for transmissions
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	struct DataPacket inPackets[PACKET_BUFFER_LENGTH];
 	struct DataPacket outPackets[PACKET_BUFFER_LENGTH];
@@ -186,7 +198,9 @@ typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	struct DataFrame outFrames[BUFFER_LENGTH];
 } DataBuffer;
 
-//Stores all persistent data needed for a (spontanious) program reboot
+/// <summary>
+/// Stores all persistent data needed for a (spontanious) program reboot
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	float version;
 	time_t dateTime;
@@ -203,14 +217,18 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	byte changed;
 } FailSafe;
 
-//Stores one DataFrame of a savefile, as well as a pointer to the next one
+/// <summary>
+/// Stores one DataFrame of a savefile, as well as pointers to the neighbours
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API SaveFrame {
 	struct DataFrame data;
 	struct SaveFrame* nextFrame;
 	struct SaveFrame* previousFrame;
 } SaveFrame;
 
-//Stores all data collected/received during the mission
+/// <summary>
+/// Stores all data collected/received during the mission
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	float version;
 	time_t dateTime;
@@ -231,7 +249,9 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	char saveFilePath[PATH_LENGTH];
 } SaveFile;
 
-//Stores all data neccessary for communication devices
+/// <summary>
+/// Stores all data neccessary for Communication devices
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	DCB options;
@@ -246,17 +266,22 @@ typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 	int comHandle;
 	int timeout
 #endif
+	int valid;
 	char comPath[PATH_LENGTH];
 } PortHandler;
 
-//Stores one calibration point consisting of the digital ADC output and the corresponding analog calibration measurement
+/// <summary>
+/// Stores one calibration point consisting of the digital ADC output and the corresponding analog calibration measurement
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API CalibrationPoint {
 	long long digital;
 	float analog;
 	char valid;
 } CalibrationPoint;
 
-//Stores all data neccessary for sensor value mapping
+/// <summary>
+/// Stores all data neccessary for sensor value mapping
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API SensorCalibration {
 	float version;
 	time_t dateTime;
@@ -266,13 +291,17 @@ typedef struct DATAHANDLINGLIBRARY_API SensorCalibration {
 	char calibrationFilePath[PATH_LENGTH];
 } SensorCalibration;
 
-//Stores data neccessary for reading/writing Frame-data
+/// <summary>
+/// Stores data neccessary for reading/writing Frame-data
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API FrameLookUpTable {
 	int telemetry_Pos_Len[TELEMETRY_AMOUNT][2];
 	int telecommand_Pos_Len[TELECOMMAND_AMOUNT][2];
 } FrameLookUpTable;
 
-//Stores pointers to all top-level Data dataHandling components of the program
+/// <summary>
+/// Stores pointers to all top-level Data dataHandling components of the program
+/// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 	struct SaveFile* saveFile;
 	struct FailSafe* failSafe;
@@ -284,142 +313,331 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 
 //Function Delcarations
 
-//Logs the message into the Debug Output, uses special characters for formatting (:,-,_,?,!,#,§,@)
+/// <summary>
+/// Logs the message into the Debug Output with following format characters:
+/// {:} New Section
+/// {_} End Section
+/// {-} End DebugLog
+/// {?} Fill in " ..." 
+/// {!} Error message
+/// {#} Integer argument 
+/// {§} String argument
+/// {@} Pointer argument
+/// {~} Integer Array argument (expects: int length, int* array)
+/// </summary>
+/// <param name="message">String containing format characters</param>
+/// <param name="...">Variadic arguments for format characters</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 
-//Calculates checksum of given DataFrame
+/// <summary>
+/// Prints the active SaveFile to the Debug Output
+/// </summary>
+/// <returns></returns>
+DATAHANDLINGLIBRARY_API void DebugSaveFile();
+
+/// <summary>
+/// Calculates checksum of DataFrames
+/// </summary>
+/// <param name="data">DataFrame to check</param>
+/// <returns>Calculated checksum</returns>
 DATAHANDLINGLIBRARY_API CHKSM_TYPE CalculateChecksum(DataFrame data);
 
-//Calculates cyclic redundancy check with given DataPacket, returns whether there are uncorrected errors
+/// <summary>
+/// Calculates cyclic redundancy check of DataPackets
+/// </summary>
+/// <param name="data">DataPacket to check</param>
+/// <returns>{0} for no Errors {1} for unsolved Errors {-1} for solved Errors</returns>
 DATAHANDLINGLIBRARY_API int CalculateCRC(DataPacket* data);
 
-//Calls necessary functions for saving and transmitting data;
+/// <summary>
+/// Calls neccessary functions for saving and transmitting data
+/// </summary>
+/// <returns>The amount of Errors</returns>
 DATAHANDLINGLIBRARY_API int UpdateAll();
 
-//Updates the buffer, handles packet and transmission operations
+/// <summary>
+/// Updates the buffer, handles packet and transmission operations
+/// </summary>
+/// <returns>The amount of Errors</returns>
 DATAHANDLINGLIBRARY_API int UpdateBuffer();
 
-//Writes all changes to the corresponding files
+/// <summary>
+/// Writes all changes to the corresponding files
+/// </summary>
+/// <returns>The amount of Errors</returns>
 DATAHANDLINGLIBRARY_API int UpdateFiles();
 
-//Returns a pointer to access all DataHandling structures
+/// <summary>
+/// </summary>
+/// <returns>A pointer to access all DataHandling structures</returns>
 DATAHANDLINGLIBRARY_API DataHandlingHub* GetDataHandling();
 
-//Returns a pointer to the FailSafe structure
+/// <summary>
+/// </summary>
+/// <returns>A pointer to the FailSafe structure</returns>
 DATAHANDLINGLIBRARY_API FailSafe* GetFailSafe();
 
-//Maps digital sensor values to returned calibrated measurement values
+/// <summary>
+/// Maps digital sensor values to calibrated measurement values
+/// </summary>
+/// <param name="id">TMID of the sensor</param>
+/// <param name="value">Digital sensor value</param>
+/// <returns>Analog measurement value</returns>
 DATAHANDLINGLIBRARY_API float MapSensorValue(int id, long long value);
 
-//Writes a calibration point into the SensorCalibration structure
+/// <summary>
+/// Writes a calibration point into the SensorCalibration structure
+/// </summary>
+/// <param name="id">TMID of the sensor</param>
+/// <param name="number">Index of the point</param>
+/// <param name="digitalValue"></param>
+/// <param name="analogValue"></param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void WritePoint(int id, int number, long long digitalValue, float analogValue);
 
-//Writes a calibration point into the SensorCalibration structure
+/// <summary>
+/// Writes a calibration point into the SensorCalibration structure
+/// </summary>
+/// <param name="id">TMID of the sensor</param>
+/// <param name="number">Index of the point</param>
+/// <param name="point"></param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void AddPoint(int id, int number, CalibrationPoint point);
 
-//Reads a CalibrationPoint from the SensorCalibration structure
+/// <summary>
+/// Reads a CalibrationPoint from the SensorCalibration structure
+/// </summary>
+/// <param name="id">TMID of the sensor</param>
+/// <param name="number">Index of the point</param>
+/// <returns>Read CalibrationPoint</returns>
 DATAHANDLINGLIBRARY_API CalibrationPoint ReadPoint(int id, int number);
 
-//Reads a SensorCalibration structure from the given filepath
+/// <summary>
+/// Reads the SensorCalibration structure from a file
+/// </summary>
+/// <param name="path">String with system path and name</param>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int ReadCalibration(const char* path);
 
-//Writes a SensorCalibration structure to a file
+/// <summary>
+/// Writes the SensorCalibration structure to a file
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int WriteCalibration();
 
-//Creates a new SensorCalibration structure
+/// <summary>
+/// Creates a new SensorCalibration structure
+/// </summary>
+/// <param name="path">String with system path and name</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 
-//Initializes Memory and loads Data from files if possible
+/// <summary>
+/// Initializes Memory and loads Data from files if possible
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int Initialize();
 
-//Returns a new DataFrame
+/// <summary>
+/// </summary>
+/// <returns>A new DataFrame</returns>
 DATAHANDLINGLIBRARY_API DataFrame CreateFrame();
 
-//Returns a new empty TeleCommand-DataFrame
+/// <summary>
+/// </summary>
+/// <returns>A new TeleCommand-DataFrame</returns>
 DATAHANDLINGLIBRARY_API DataFrame CreateTC();
 
-//Returns an empty DataFrame
+/// <summary>
+/// </summary>
+/// <returns>An empty DataFrame</returns>
 DATAHANDLINGLIBRARY_API DataFrame EmptyFrame();
 
-//Returns an empty DataFrame, marked as TeleCommand
+/// <summary>
+/// </summary>
+/// <returns>An empty TeleCommand-DataFrame</returns>
 DATAHANDLINGLIBRARY_API DataFrame EmptyTC();
 
-//Writes data onto a DataFrame according to the ID (enum TCID / TMID), returns the old value ({0} if empty)
+/// <summary>
+/// Writes data onto a DataFrame
+/// </summary>
+/// <param name="frame">Pointer to the frame</param>
+/// <param name="id">TMID or TCID, according to the frame</param>
+/// <param name="value"></param>
+/// <returns>The old value ({0} if empty)</returns>
 DATAHANDLINGLIBRARY_API long long WriteFrame(DataFrame* frame, int id, long long value);
 
-//Returns stored data on a DataFrame according to the ID (enum TCID / TMID)
+/// <summary>
+/// Reads data from a DataFrame
+/// </summary>
+/// <param name="frame">DataFrame to read from</param>
+/// <param name="id">TMID or TCID, according to the frame</param>
+/// <returns>Data read</returns>
 DATAHANDLINGLIBRARY_API long long ReadFrame(DataFrame frame, int id);
 
-//Returns wether a DataFrame contains useful data
+/// <summary>
+/// </summary>
+/// <param name="frame">DataFrame to check</param>
+/// <returns>Whether the DataFrame contains useful data</returns>
 DATAHANDLINGLIBRARY_API int FrameIsEmpty(DataFrame frame);
 
-//Returns wether a DataFrame is a TeleCommand-DataFrame
+/// <summary>
+/// </summary>
+/// <param name="frame">DataFrame to check</param>
+/// <returns>Whether the DataFrame is a TeleCommand-DataFrame</returns>
 DATAHANDLINGLIBRARY_API int FrameIsTC(DataFrame frame);
 
-//Returns wether the given frame has the specified flag-ID (enum Flags)
+/// <summary>
+/// Checks if the DataFrame has the specified Flag
+/// </summary>
+/// <param name="frame">DataFrame to check</param>
+/// <param name="id">From enum Flags</param>
+/// <returns>Whether the DataFrame has the flag set</returns>
 DATAHANDLINGLIBRARY_API int FrameHasFlag(DataFrame frame, int id);
 
-//Sets the given flag-ID (enum Flags) for the given frame
+/// <summary>
+/// Sets the specified Flag for the DataFrame
+/// </summary>
+/// <param name="frame">Pointer to the DataFrame</param>
+/// <param name="id">From enum Flags</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void FrameSetFlag(DataFrame* frame, int id); 
 
-//Removes the given flag-ID (enum Flags) for the given frame
+/// <summary>
+/// Removes the specified Flag from the DataFrame
+/// </summary>
+/// <param name="frame">Pointer to the DataFrame</param>
+/// <param name="id">From enum Flags</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void FrameRemoveFlag(DataFrame* frame, int id);
 
-//Adds an outgoing DataFrame to the Buffer, returns the corresponding index
+/// <summary>
+/// Adds an outgoing DataFrame to the Buffer
+/// </summary>
+/// <param name="frame">DataFrame to add</param>
+/// <returns>The corresponding index</returns>
 DATAHANDLINGLIBRARY_API int AddOutFrame(DataFrame frame);
 
-//Shorthand for AddOutFrame() and AddSaveFrame()
+/// <summary>
+/// Shorthand for AddOutFrame() and AddSaveFrame()
+/// </summary>
+/// <param name="frame">DataFrame to add</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void AddFrame(DataFrame frame);
 
-//Initializes new Buffer-Arrays
+/// <summary>
+/// Initializes new Buffer-Arrays
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int CreateBuffer();
 
-//Creates a new Failsafe structure from default values
+/// <summary>
+/// Creates a new Failsafe structure from default values
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int CreateFailSafe();
 
-//Reads the current Failsafe-file into a structure
+/// <summary>
+/// Reads a Failsafe-file into a structure
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int ReadFailSafe();
 
-//Updates the current Failsafe-file to match the structure, returns whether successful
+/// <summary>
+/// Writes the Failsafe-structure into a file
+/// </summary>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int WriteFailSafe();
 
-//Writes the frames added since the last save onto the harddrive, returns the number of bytes written or {-1} if unsuccessful
+/// <summary>
+/// Writes the frames added since the last save onto the harddrive
+/// </summary>
+/// <returns>The number of bytes written or {-1} if unsuccessful</returns>
 DATAHANDLINGLIBRARY_API int WriteSave();
 
-//Creates a new SaveFile structure and file
+/// <summary>
+/// Creates a new SaveFile structure and file
+/// </summary>
+/// <param name="path">System path and name file</param>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int CreateSave(const char path[]);
 
 //Rewrite Due
 DATAHANDLINGLIBRARY_API int CheckSave();
 
-//Reads a SaveFile-file into a Savefile-structure, discarding current memory
+/// <summary>
+/// Reads a SaveFile-file into the Savefile-structure, discarding current memory
+/// </summary>
+/// <param name="path">System path and name of file</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API int ReadSave(const char path[]);
 
-//Returns the Frame of the SaveFile at the corresponding index, defaults to the last one and ignores TC Frames!
+/// <summary>
+/// Returns the Frame of the SaveFile at the corresponding index, defaults to the last one and ignores TC Frames
+/// </summary>
+/// <param name="index"></param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API DataFrame GetSaveFrame(int index);
 
-//Returns the next Frame, counting from the last successful call to GetSaveFrame()
+/// <summary>
+/// Returns the next Frame, counting from the last successful call to GetSaveFrame()
+/// </summary>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API DataFrame GetNextFrame();
 
-//Returns the newest TC Frame
+/// <summary>
+/// </summary>
+/// <returns>The newest TC Frame</returns>
 DATAHANDLINGLIBRARY_API DataFrame GetTC();
 
-//Adds a new frame to the end of the SaveFile
+/// <summary>
+/// Adds a new frame to the end of the SaveFile
+/// </summary>
+/// <param name="data">DataFrame to add</param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void AddSaveFrame(DataFrame data);
 
-//Frees allocated Memory of the loaded SaveFile's Frames, does not free SaveFile itself
+/// <summary>
+/// Frees allocated Memory of the loaded SaveFile's Frames, does not free SaveFile itself
+/// </summary>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void CloseSave();
 
-//Frees all allocated Memory and closes all open Files and Ports
+/// <summary>
+/// Frees all allocated Memory and closes all open Files and Ports
+/// </summary>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API void CloseAll();
 
-//Tries to send outgoing data via the configured output path, returns the amount of bytes send
+/// <summary>
+/// Tries to send outgoing data via the CommPort
+/// </summary>
+/// <returns>The Amount of bytes send</returns>
 DATAHANDLINGLIBRARY_API int Send();
 
-//Reads received data via the configured path into the buffer, returns the amount of bytes written to buffer
+/// <summary>
+/// Reads received data via the CommPort into the buffer
+/// </summary>
+/// <returns>The amount of bytes written to buffer</returns>
 DATAHANDLINGLIBRARY_API int Receive();
 
-//Tries to open the comm Port with the specified name
+/// <summary>
+/// Tries to open the Communication Port with the specified name
+/// </summary>
+/// <param name="name"></param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
+
+/// <summary>
+/// </summary>
+/// <returns>Whether a Communication Port is opened and ready to use</returns>
+DATAHANDLINGLIBRARY_API int PortIsOpen();
+
+/// <summary>
+/// Closes an open Communication Port
+/// </summary>
+/// <returns></returns>
+DATAHANDLINGLIBRARY_API void ClosePort();
 
 #endif // DATAHANDLINGLIBRARY_H

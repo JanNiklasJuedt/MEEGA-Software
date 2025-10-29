@@ -236,9 +236,11 @@ int Initialize()
 
 int UpdateAll()
 {
+	DebugLog("Updating:");
 	int out = 0;
 	out += UpdateFiles();
 	out += UpdateBuffer();
+	DebugLog("Update done_");
 	return out;
 }
 
@@ -1434,15 +1436,6 @@ void CloseAll()
 	if (dataHandling.failSafe != NULL) free(dataHandling.failSafe);
 	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
 	if (dataHandling.handler != NULL) {
-#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-		if (!CloseHandle(dataHandling.handler->comHandle)) {
-#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-		if (!close(dataHandling.handler->comHandle)) {
-#else
-		if (0) {
-#endif
-			DebugLog("!Could not close serial Port");
-		}
 		free(dataHandling.handler);
 	}
 	if (dataHandling.saveFile != NULL) {
@@ -1503,7 +1496,10 @@ int LoadPort()
 		DebugLog("!Uninitialized DataHandling_");
 		return 0;
 	}
-#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+#if (TRANSMISSION_DEBUG)
+	DebugLog("Opened CommPort_");
+	return 1;
+#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	dataHandling.handler->comHandle = CreateFileA(dataHandling.handler->comPath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	dataHandling.handler->comHandle = open(dataHandling.handler->comPath, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -1513,12 +1509,14 @@ int LoadPort()
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 			if (SetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options)) && SetCommTimeouts(dataHandling.handler->comHandle, &dataHandling.handler->timeout)) {
 				DebugLog("Opened CommPort_");
+				dataHandling.handler->valid = 1;
 				return 1;
 			}
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 			tcflush(dataHandling.handler->comHandle, TCIOFLUSH);
 			if (tcsetattr(dataHandling.handler->comHandle, TCSANOW, &(dataHandling.handler->options)) == 0) {
 				DebugLog("Opened CommPort_");
+				dataHandling.handler->valid = 1;
 				return 1;
 			}
 #else
@@ -1531,18 +1529,47 @@ int LoadPort()
 	return 0;
 }
 
+void ClosePort() {
+	DebugLog("Closing CommPort:");
+	if (!PortIsOpen()) {
+		DebugLog("No opened CommPort found_");
+		return;
+	}
+#if (TRANSMISSION_DEBUG)
+	if (0) {
+#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+	if (!CloseHandle(dataHandling.handler->comHandle)) {
+#elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
+	if (!close(dataHandling.handler->comHandle)) {
+#else
+	if (0) {
+#endif
+		DebugLog("!Could not close CommPort_");
+	}
+	else DebugLog("CommPort closed_");
+}
+
+int PortIsOpen() {
+	if (dataHandling.handler == NULL) {
+		DebugLog("!Uninitialized DataHandling");
+		return 0;
+	}
+#if (TRANSMISSION_DEBUG)
+	return 1;
+#endif
+	return dataHandling.handler->comHandle != INVALID_HANDLE_VALUE && dataHandling.handler->valid;
+}
+
 int Send()
 {
 	if (dataHandling.handler == NULL || dataHandling.buffer == NULL) {
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-#if (!TRANSMISSION_DEBUG)
-	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
+	if (!PortIsOpen()) {
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-#endif
 	int number = 0, amount = 0;
 	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (PacketIsEmpty(dataHandling.buffer->outPackets[amount])) break;
 	amount *= PACKET_LENGTH;
@@ -1571,12 +1598,10 @@ int Receive()
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-#if (!TRANSMISSION_DEBUG)
-	if (dataHandling.handler->comHandle == INVALID_HANDLE_VALUE) {
+	if (!PortIsOpen()) {
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-#endif
 	int writeAmount = -1, foundStart = 0;
 #if (DATAHANDLINGLIBRARY_OS == LINUX)
 	time_t start_time = 0;
@@ -1691,50 +1716,49 @@ int CalculateCRC(DataPacket* data)
 //Debug function:
 void DebugLog(const char* message, ...)
 {
-	static int lineCounter = -1, depth = 0;
+	static int lineCounter[] = {-1, 0, 0, 0, 0, 0}, depth = 0;
 	static FILE* output = NULL;
-	static char* error = "Error: ", * numeric = " {%i}", * pointer = " at 0x%p", * string = " %s", * test = " ...", * counter = "[%02i] ";
+	static int bothOutputs = 0;
+	const char* error = "Error: ", * numeric = " {%i}", * pointer = " at 0x%p", * string = " %s", * test = " ...", * counter = "[%02i] ";
 	if (DEBUG_OUTPUT == NONE) return;
 	va_list args;
 	va_start(args, message);
 	if (output == NULL) {
-		if (DEBUG_OUTPUT & LOGFILE == LOGFILE) {
+		if (DEBUG_OUTPUT == (TERMINAL | LOGFILE)) bothOutputs = 1;
+		if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) {
 			output = fopen(DEBUGLOG_NAME, "w");
-			if (output == NULL) {
-				output = stdout;
-				DebugLog("!Could not open Debug logging file");
-			}
+		}
+		if (output == NULL) {
+			output = stdout;
+			bothOutputs = 0;
+			if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) DebugLog("!Could not open Debug logging file");
 		}
 	}
-	if (lineCounter == -1) {
+	if (lineCounter[0] == -1) {
 		fprintf(output, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
-		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-			fprintf(stdout, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
-		lineCounter++;
+		if (bothOutputs) fprintf(stdout, "Start of Debug Log:\n\nLibrary Version: %f\nDatetime: %i\n\n", VERSION, (int)time(NULL));
+		lineCounter[0]++;
 	}
 	int inputIndex = 0, makroIndex = 0, outputIndex = 0;
-	char* makro = counter, outputString[PATH_LENGTH];
+	char* makro, outputString[PATH_LENGTH];
 	for (; outputIndex < PATH_LENGTH; outputIndex++) {
 		outputString[outputIndex] = '\0';
 	}
 	for (; makroIndex < depth; makroIndex++) {
 		fprintf(output, "    ");
-		if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-			fprintf(stdout, "    ");
+		if (bothOutputs) fprintf(stdout, "    ");
 	}
-	fprintf(output, counter, lineCounter);
-	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-		fprintf(stdout, counter, lineCounter);
+	fprintf(output, counter, lineCounter[depth]);
+	if (bothOutputs) fprintf(stdout, counter, lineCounter);
 	for (inputIndex = 0, outputIndex = 0; message[inputIndex] != '\0'; inputIndex++) {
 		makro = NULL;
 		switch (message[inputIndex]) {
 		case '-': {
 			fprintf(output, "\nEnd of Debug Log: %s", message + inputIndex);
-			if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-				fprintf(stdout, "\nEnd of Debug Log: %s", message + inputIndex);
+			if (bothOutputs) fprintf(stdout, "\nEnd of Debug Log: %s", message + inputIndex);
 			fclose(output);
 			output = NULL;
-			lineCounter = -1;
+			lineCounter[0] = -1;
 			depth = 0;
 			va_end(args);
 			return;
@@ -1742,7 +1766,8 @@ void DebugLog(const char* message, ...)
 		case ':': {
 			outputString[outputIndex] = ':';
 			outputIndex++;
-			depth++;
+			if (depth < 5) depth++;
+			lineCounter[depth] = 0;
 			break;
 		}
 		case '_': {
@@ -1769,6 +1794,21 @@ void DebugLog(const char* message, ...)
 			makro = string;
 			break;
 		}
+		case '~': {
+			vfprintf(output, outputString, args);
+			if (bothOutputs) vfprintf(stdout, outputString, args);
+			for (outputIndex = 0; outputIndex < PATH_LENGTH; outputIndex++) {
+				outputString[outputIndex] = '\0';
+			}
+			outputIndex = 0;
+			int max = va_arg(args, int), *array = va_arg(args, int*);
+			if (array == NULL) break;
+			for (makroIndex = 0; makroIndex < max; makroIndex++) {
+				fprintf(output, numeric, array[makroIndex]);
+				if (bothOutputs) fprintf(stdout, numeric, array[makroIndex]);
+			}
+			break;
+		}
 		default: {
 			outputString[outputIndex] = message[inputIndex];
 			outputIndex++;
@@ -1780,9 +1820,32 @@ void DebugLog(const char* message, ...)
 	}
 	outputString[outputIndex] = '\n';
 	vfprintf(output, outputString, args);
-	if (((DEBUG_OUTPUT & TERMINAL) == TERMINAL) & (output != stdout))
-		vfprintf(stdout, outputString, args);
-	lineCounter++;
+	if (bothOutputs) vfprintf(stdout, outputString, args);
+	lineCounter[depth]++;
 	va_end(args);
+}
+
+void DebugSaveFile() {
+	DebugLog("Printing SaveFile:");
+	if (dataHandling.saveFile == NULL) {
+		DebugLog("!SaveFile not found_");
+		return;
+	}
+	int i;
+	long long content[TELEMETRY_AMOUNT];
+	DebugLog("Version#", dataHandling.saveFile->version);
+	DebugLog("Time of Creation#", dataHandling.saveFile->dateTime);
+	DebugLog("Filename$", dataHandling.saveFile->saveFilePath);
+	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
+		if (FrameIsTC(current->data)) {
+			for (i = 0; i < TELECOMMAND_AMOUNT; i++) content[i] = ReadFrame(current->data, i);
+			DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELECOMMAND_AMOUNT, content, current->data.chksm);
+		}
+		else {
+			for (i = 0; i < TELEMETRY_AMOUNT; i++) content[i] = ReadFrame(current->data, i);
+			DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELEMETRY_AMOUNT, content, current->data.chksm);
+		}
+	}
+	DebugLog("End of SaveFile_");
 }
 //End of DataHandlingLibrary
