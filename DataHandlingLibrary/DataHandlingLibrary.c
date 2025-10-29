@@ -238,8 +238,8 @@ int UpdateAll()
 {
 	DebugLog("Updating:");
 	int out = 0;
-	out += UpdateFiles();
 	out += UpdateBuffer();
+	out += UpdateFiles();
 	DebugLog("Update done_");
 	return out;
 }
@@ -1394,6 +1394,8 @@ void CloseSave()
 		return;
 	}
 	DebugLog("Savefile found@", dataHandling.saveFile);
+	DebugLog("Writing SaveFile");
+	WriteSave();
 	DebugLog("Emptying SaveFileFrames?");
 	SaveFrame *current = dataHandling.saveFile->lastFrame, *last = dataHandling.saveFile->firstFrame, *next;
 	if (current != NULL) {
@@ -1436,6 +1438,7 @@ void CloseAll()
 	if (dataHandling.failSafe != NULL) free(dataHandling.failSafe);
 	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
 	if (dataHandling.handler != NULL) {
+		ClosePort();
 		free(dataHandling.handler);
 	}
 	if (dataHandling.saveFile != NULL) {
@@ -1604,7 +1607,7 @@ int Receive()
 	}
 	int writeAmount = -1, foundStart = 0;
 #if (DATAHANDLINGLIBRARY_OS == LINUX)
-	time_t start_time = 0;
+	clock_t start_time = 0;
 #endif
 	DataPacket* current = dataHandling.buffer->inPackets;
 	byte read = 0, *writePtr = (byte*)current;
@@ -1721,8 +1724,9 @@ void DebugLog(const char* message, ...)
 	static int bothOutputs = 0;
 	const char* error = "Error: ", * numeric = " {%i}", * pointer = " at 0x%p", * string = " %s", * test = " ...", * counter = "[%02i] ";
 	if (DEBUG_OUTPUT == NONE) return;
-	va_list args;
+	va_list args, args_cpy;
 	va_start(args, message);
+	va_copy(args_cpy, args);
 	if (output == NULL) {
 		if (DEBUG_OUTPUT == (TERMINAL | LOGFILE)) bothOutputs = 1;
 		if ((DEBUG_OUTPUT & LOGFILE) == LOGFILE) {
@@ -1749,7 +1753,7 @@ void DebugLog(const char* message, ...)
 		if (bothOutputs) fprintf(stdout, "    ");
 	}
 	fprintf(output, counter, lineCounter[depth]);
-	if (bothOutputs) fprintf(stdout, counter, lineCounter);
+	if (bothOutputs) fprintf(stdout, counter, lineCounter[depth]);
 	for (inputIndex = 0, outputIndex = 0; message[inputIndex] != '\0'; inputIndex++) {
 		makro = NULL;
 		switch (message[inputIndex]) {
@@ -1780,6 +1784,7 @@ void DebugLog(const char* message, ...)
 		}
 		case '#': {
 			makro = numeric;
+			va_arg(args_cpy, int);
 			break;
 		}
 		case '?': {
@@ -1788,10 +1793,12 @@ void DebugLog(const char* message, ...)
 		}
 		case '@': {
 			makro = pointer;
+			va_arg(args_cpy, void*);
 			break;
 		}
 		case '§': {
 			makro = string;
+			va_arg(args_cpy, char*);
 			break;
 		}
 		case '~': {
@@ -1801,12 +1808,14 @@ void DebugLog(const char* message, ...)
 				outputString[outputIndex] = '\0';
 			}
 			outputIndex = 0;
-			int max = va_arg(args, int), *array = va_arg(args, int*);
+			int max = va_arg(args_cpy, int);
+			int* array = va_arg(args_cpy, int*);
 			if (array == NULL) break;
 			for (makroIndex = 0; makroIndex < max; makroIndex++) {
 				fprintf(output, numeric, array[makroIndex]);
 				if (bothOutputs) fprintf(stdout, numeric, array[makroIndex]);
 			}
+			va_copy(args, args_cpy);
 			break;
 		}
 		default: {
@@ -1823,6 +1832,7 @@ void DebugLog(const char* message, ...)
 	if (bothOutputs) vfprintf(stdout, outputString, args);
 	lineCounter[depth]++;
 	va_end(args);
+	va_end(args_cpy);
 }
 
 void DebugSaveFile() {
@@ -1832,19 +1842,21 @@ void DebugSaveFile() {
 		return;
 	}
 	int i;
-	long long content[TELEMETRY_AMOUNT];
-	DebugLog("Version#", dataHandling.saveFile->version);
+	int content[TELEMETRY_AMOUNT];
+	DebugLog("Version#", (int)(dataHandling.saveFile->version * 10));
 	DebugLog("Time of Creation#", dataHandling.saveFile->dateTime);
-	DebugLog("Filename$", dataHandling.saveFile->saveFilePath);
+	DebugLog("Filename§", dataHandling.saveFile->saveFilePath);
 	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
 		if (FrameIsTC(current->data)) {
-			for (i = 0; i < TELECOMMAND_AMOUNT; i++) content[i] = ReadFrame(current->data, i);
-			DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELECOMMAND_AMOUNT, content, current->data.chksm);
+			for (i = 0; i < TELEMETRY_AMOUNT; i++) {
+				if (i < TELECOMMAND_AMOUNT) content[i] = (int) ReadFrame(current->data, i);
+				else content[i] = 0;
+			}
 		}
 		else {
-			for (i = 0; i < TELEMETRY_AMOUNT; i++) content[i] = ReadFrame(current->data, i);
-			DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELEMETRY_AMOUNT, content, current->data.chksm);
+			for (i = 0; i < TELEMETRY_AMOUNT; i++) content[i] = (int) ReadFrame(current->data, i);
 		}
+		DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELEMETRY_AMOUNT, content, current->data.chksm);
 	}
 	DebugLog("End of SaveFile_");
 }
