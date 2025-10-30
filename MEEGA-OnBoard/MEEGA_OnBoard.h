@@ -40,6 +40,8 @@
 #define Servo_On 5	//pin
 #define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
 #define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
+#define CS_PSB 7
+#define CS_TSB 8
 
 #define RPi_SOE 25	//pin
 #define RPi_LO 23	//pin
@@ -147,11 +149,11 @@ int delay(int millisecond) {	//1000x Second
 #define SPI_SPEED 1000000	//1MHz - MPR_P_SPI max 800kHz; AD7793_ADC max 4MHz; LTC2450_ADC max 2MHz  - Test with 500kHz, 1MHz
 #define CMD_READ 0xA1 //Command to read data from the sensors
 
-#define P_TxPACKET_LENGTH 16 //bytes
+#define P_TxPACKET_LENGTH 17 //bytes
 #define SPI_PRESSURE 1	//SPI Channel 1
 #define PRESSURE_SENSORS 6
 
-#define T_TxPACKET_LENGTH 18 //bytes
+#define T_TxPACKET_LENGTH 19 //bytes
 #define SPI_TEMPERATURE 0	//SPI Channel 0
 #define TEMPERATURE_SENSORS 6
 
@@ -223,7 +225,6 @@ struct parameter DEBUGstandard = { .Delay_to_NoseConeSeparation = 5000, .Delay_t
 typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
 ExperimentState currentState = WAIT_LO;
 
-
 //EXPERIMENT
 //Function receiving the SOE signal from the RPi
 int SoESignal();
@@ -250,3 +251,11 @@ void FailSafeRecovery();
 void ReadPressureSensors(uint32_t* Sensors);
 //Read Temperature sensors from SPI
 void ReadTemperatureSensors(uint32_t* Sensors);
+
+//Mainboard Status
+uint8_t mainboardStatus(uint8_t tempStat, uint8_t voltStat);
+//Temperature Status
+float temp_data(void);
+uint8_t temp_stat(float temp);
+//Voltage Status
+uint8_t volt_stat(void);

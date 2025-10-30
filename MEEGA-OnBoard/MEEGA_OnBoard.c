@@ -549,8 +549,14 @@ void DataAcquisition(DataFrame * frame) {
 	int mainboard = 0;			//Mainboard is not implemented yet ?
 	int ExperimentStatus = 1;
 #elif (MODE == RELEASE)
+	//Sensor Readings Declaration
 	ReadPressureSensors(pressureRead);
 	ReadTemperatureSensors(temperatureRead);
+
+	//Mainboard Functions Declaration
+	float mainboard_Temp = temp_data();
+	uint8_t Mainboard_TempStat = temp_stat(mainboard_Temp);
+	uint8_t Mainboard_VoltStat = volt_stat();
 
 	int SystemTime = clock();	//System Time
 	uint32_t AmbientPressure = pressureRead[0];
@@ -570,10 +576,9 @@ void DataAcquisition(DataFrame * frame) {
 	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
 	int LEDsStat = digitalRead(LEDs_Pin);
-	int Sensorboard_Pressure = 0;		//Sensorboard is not implemented yet
-	int Sensorboard_Temperature = 0;
-	int mainboard = 0;			//Mainboard is not implemented yet
-	//Experiment Status CHECK!
+	int Sensorboard_Pressure = pressureRead[6];
+	int Sensorboard_Temperature = temperatureRead[6];
+	uint8_t mainboard = mainboardStatus(Mainboard_TempStat, Mainboard_VoltStat);
 #endif //MODE
 
 	WriteFrame(frame, System_Time, SystemTime);
@@ -749,8 +754,14 @@ static void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length)
 void ReadPressureSensors(uint32_t* Sensors) {
 	uint8_t txBuf = CMD_READ; // Request data from channel 1
 	uint8_t rxBuf[P_TxPACKET_LENGTH];
+	uint8_t rxLatest[P_TxPACKET_LENGTH];
+
+	digitalWrite(CS_PSB, HIGH);
 	wiringPiSPIDataRW(SPI_PRESSURE, &txBuf, 1);
 	wiringPiSPIDataRW(SPI_PRESSURE, rxBuf, P_TxPACKET_LENGTH);
+	digitalWrite(CS_PSB, LOW);
+
+	memcpy(rxLatest, rxBuf, P_TxPACKET_LENGTH);
 
 	Sensors[0] = (rxBuf[0] << 8) | rxBuf[1];						//TPR280 Ambient Pressure
 	Sensors[1] = (rxBuf[2] << 8) | rxBuf[3];						//PT5494 Accumulator Pressure
@@ -758,20 +769,28 @@ void ReadPressureSensors(uint32_t* Sensors) {
 	Sensors[3] = (rxBuf[7] << 16) | (rxBuf[8] << 8) | rxBuf[9];		//P1 Nozzle Throat Pressure
 	Sensors[4] = (rxBuf[10] << 16) | (rxBuf[11] << 8) | rxBuf[12];	//P2 Nozzle Midspan Pressure
 	Sensors[5] = (rxBuf[13] << 16) | (rxBuf[14] << 8) | rxBuf[15];	//P3 Nozzle Exit Pressure
+	Sensors[6] = rxBuf[16];											//Flag
 }
 
 void ReadTemperatureSensors(uint32_t* Sensors) {
 	uint8_t txBuf = CMD_READ; // Request data from channel 0
 	uint8_t rxBuf[T_TxPACKET_LENGTH];
+	uint8_t rxLatest[T_TxPACKET_LENGTH];
+
+	digitalWrite(CS_TSB, HIGH);
 	wiringPiSPIDataRW(SPI_TEMPERATURE, &txBuf, 1);
 	wiringPiSPIDataRW(SPI_TEMPERATURE, rxBuf, T_TxPACKET_LENGTH);
+	digitalWrite(CS_TSB, LOW);
+
+	memcpy(rxLatest, rxBuf, T_TxPACKET_LENGTH);
 
 	Sensors[0] = (rxBuf[0] << 16) | (rxBuf[1] << 8) | rxBuf[2];		//TPR280 Ambient Pressure
 	Sensors[1] = (rxBuf[3] << 16) | (rxBuf[4] << 8) | rxBuf[5];		//PT5494 Accumulator Pressure
 	Sensors[2] = (rxBuf[6] << 16) | (rxBuf[7] << 8) | rxBuf[8];		//P0 Chamber Pressure
-	Sensors[3] = (rxBuf[9] << 16) | (rxBuf[10] << 8) | rxBuf[11];		//P1 Nozzle Throat Pressure
+	Sensors[3] = (rxBuf[9] << 16) | (rxBuf[10] << 8) | rxBuf[11];	//P1 Nozzle Throat Pressure
 	Sensors[4] = (rxBuf[12] << 16) | (rxBuf[13] << 8) | rxBuf[14];	//P2 Nozzle Midspan Pressure
 	Sensors[5] = (rxBuf[15] << 16) | (rxBuf[16] << 8) | rxBuf[17];	//P3 Nozzle Exit Pressure
+	Sensors[6] = rxBuf[18];											//Flag
 }
 #endif //SENSORS_SPI_VERSION
 #endif //MODE
@@ -799,4 +818,45 @@ void FailSafeRecovery() {
 		ServoRunning = 0;
 		NozzleOpened = 0;
 	}
+}
+
+
+//Mainboard CM5 Temperature and Voltage Status
+//TEMPERATURE
+float temp_data(void) {
+	FILE* fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+	if (!fp) return -1;
+	int temp_millideg;
+	fscanf_s(fp, "%d", &temp_millideg);
+	fclose(fp);
+	return temp_millideg / 1000.0;
+}
+uint8_t temp_stat(float temp) {
+	if (temp < 5.0) return 1;		//cold
+	else if (temp < 30.0) return 2;	//normal
+	else if (temp < 55.0) return 3;	//warm
+	else return 4;					//hot
+}
+
+//VOLTAGE
+uint8_t volt_stat(void) {
+	FILE* fp = popen("vcgencmd get_throttled", "r");
+	if (!fp) return -1;
+
+	char output[64];
+	if (!fgets(output, sizeof(output), fp)) {pclose(fp); return 1;}
+	pclose(fp);
+
+	unsigned int volt = 0;
+	sscanf_s(output, "throttled=0x%x", &volt);
+
+	if (volt & 0x1) return 0;			//low
+	else if (volt & 0x10000) return 0;	//low
+	else return 1;						//normal
+}
+
+uint8_t mainboardStatus(uint8_t tempStat, uint8_t voltStat) {
+	uint8_t Temp = (tempStat - 1) & 0x03;	//2 bits
+	uint8_t Volt = (voltStat == 1) ? 1:0;	//1 bit
+	return (Volt << 3) | Temp;
 }
