@@ -224,8 +224,8 @@ int main() {
 			}
 			
 			else {
-				ExperimentControl();
-				if (ExperimentControl() == 0) continue;
+				int ControlPanel = ExperimentControl();
+				if (ControlPanel == 0) continue;
 				
 			}
 
@@ -498,24 +498,21 @@ int ServoRun(struct parameter parameter, int modeSel) {
 #if (MODE == RELEASE)
 //Control Panel Function
 int ExperimentControl() {
-	while (1) {
-		DataFrame FrameTC = GetTC();
+	DataFrame FrameTC = GetTC();
+	if (!FrameIsEmpty(FrameTC)) {
+
 		//Valve Control
-		if (!FrameIsEmpty(FrameTC)) {
+		if (ReadFrame(FrameTC, Valve_Control) == 1) digitalWrite(Valve_Pin, ValveOpen);	//command open valve
+		else if (ReadFrame(FrameTC, Valve_Control) == 0) digitalWrite(Valve_Pin, ValveClose);	//command close valve
 
-			//Valve Control
-			if (ReadFrame(FrameTC, Valve_Control) == 1) digitalWrite(Valve_Pin, ValveOpen);	//command open valve
-			else if (ReadFrame(FrameTC, Valve_Control) == 0) digitalWrite(Valve_Pin, ValveClose);	//command close valve
+		//LEDs Control
+		if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs_Pin, 1);	//command open valve
+		else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, 0);	//command close valve
 
-			//LEDs Control
-			if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs_Pin, 1);	//command open valve
-			else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, 0);	//command close valve
-
-			//Servo Control
-			if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
-		}
-		delay(500);
+		//Servo Control
+		if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
 	}
+	else if (FrameIsEmpty(FrameTC)) return 0;
 	return 0;
 }
 #endif
