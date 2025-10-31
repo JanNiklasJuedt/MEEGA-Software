@@ -167,15 +167,10 @@ int main() {
 			break;
 		}
 		else if (modeSel == test) {	//Test Mode
-			while (!SoESignal()) delay(100); //---------------------------------------------------------USE IF, like LO signal
-			SoEReceived = 1;
-#if (EXPERIMENT == TEST)
-			printf("SoE Signal Received\n");
-#endif
-			digitalWrite(Servo_On, 1);
-			digitalWrite(LEDs_Pin, 1);
 #if (MODE == DEBUG)
 			config = Standard;
+			SoEReceived = 1;
+			printf("SoE Signal Received\n");
 			int valveTest = ValveRun(config,test);
 			if (valveTest != -1) {
 				int servoTest = ServoRun(config,test);
@@ -194,8 +189,11 @@ int main() {
 			DataFrame FrameTC = GetTC();
 			dryRun = ReadFrame(FrameTC, Dry_Run);
 			testRun = ReadFrame(FrameTC, Test_Run);
-			
-			if (testRun == 1 || dryRun == 1) {
+
+			if (testRun == 1) {
+				SoEReceived = 1;
+				digitalWrite(Servo_On, 1);
+				digitalWrite(LEDs_Pin, 1);
 				config = Standard;
 				config.Angle_Servo = (dryRun == 1) ? 30 : 90;
 				
@@ -207,7 +205,7 @@ int main() {
 				config.Delay_to_OpenNozzleCover = (GS_Delay_to_OpenNozzleCover != 0) ? GS_Delay_to_OpenNozzleCover : Standard.Delay_to_OpenNozzleCover; 	//If the value from ground station is 0, use the default value
 				config.Delay_to_EoE = (GS_Delay_to_EoE != 0) ? GS_Delay_to_EoE : Standard.Delay_to_EoE;				//If the value from ground station is 0, use the default value
 
-				if(testRun == 1) {
+				if(dryRun == 0) {
 					int valveTest = ValveRun(config,test);
 					if (valveTest == -1) {
 						digitalWrite(LEDs_Pin, 0);
@@ -215,17 +213,20 @@ int main() {
 						continue; //abort test
 					}
 				}
-				
-				int experimentTest = ServoRun(config,test);
-				if (experimentTest == -1) {
-					digitalWrite(LEDs_Pin, 0);
-					digitalWrite(Servo_On, 0);
-					continue; //abort test
+				else if (testRun == 1 && dryRun == 1) {
+					int servoTest = ServoRun(config, test);
+					if (servoTest == -1) {
+						digitalWrite(LEDs_Pin, 0);
+						digitalWrite(Servo_On, 0);
+						continue; //abort test
+					}
 				}
 			}
 			
 			else {
 				ExperimentControl();
+				if (ExperimentControl() == 0) continue;
+				
 			}
 
 #endif
@@ -622,7 +623,7 @@ void Log() {
 		AddFrame(frame);	//func from UPDATED DataHandlingLib
 		UpdateAll();
 
-		if (SoEReceived) {
+		if (SoEReceived == 1) {
 #if (ONBOARD_OS == WINDOWS)
 			//printf("Full Data Acquisition\n");
 			clock_t end = clock();
@@ -822,6 +823,7 @@ void FailSafeRecovery() {
 
 
 //Mainboard CM5 Temperature and Voltage Status
+#if (ONBOARD_OS == LINUX)
 //TEMPERATURE
 float temp_data(void) {
 	FILE* fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
@@ -860,3 +862,4 @@ uint8_t mainboardStatus(uint8_t tempStat, uint8_t voltStat) {
 	uint8_t Volt = (voltStat == 1) ? 1:0;	//1 bit
 	return (Volt << 3) | Temp;
 }
+#endif
