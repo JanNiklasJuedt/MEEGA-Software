@@ -246,6 +246,7 @@ int UpdateAll()
 
 int UpdateBuffer()
 {
+	DebugLog("Updating Buffer");
 	if (dataHandling.buffer == NULL) {
 		DebugLog("!Uninitiated DataHandling");
 		return 0;
@@ -276,6 +277,7 @@ int UpdateBuffer()
 
 int UpdateFiles()
 {
+	DebugLog("Updating Files");
 	int out = 0;
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
@@ -1027,7 +1029,7 @@ int ReadFailSafe()
 					DebugLog("!Could not parse FailSafe file");
 					fclose(file);
 				}
-				else if (ReadVersion = 1.0f) {
+				else if (ReadVersion == 1.0f) {
 					//Older FileReader:
 					char ReadChar;
 					int length = PATH_LENGTH;
@@ -1341,7 +1343,7 @@ DataFrame GetTC()
 	SaveFrame* currentFrame = dataHandling.saveFile->lastFrame;
 	for (; currentFrame->previousFrame != NULL; currentFrame = currentFrame->previousFrame) {
 		if (FrameIsTC(currentFrame->data)) {
-			if (!FrameIsEmpty(currentFrame->data) & FrameHasFlag(currentFrame->data, OK)) {
+			if (!FrameIsEmpty(currentFrame->data) && FrameHasFlag(currentFrame->data, OK)) {
 				newestTC = currentFrame->data;
 				break;
 			}
@@ -1464,7 +1466,7 @@ int _SetPortConfig_()
 	}
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	dataHandling.handler->options.DCBlength = sizeof(DCB);
-	COMMTIMEOUTS timeout = { 0 , 0, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000, 0, 0 };
+	COMMTIMEOUTS timeout = { MAXDWORD , MAXDWORD, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000, 0, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000 };
 	dataHandling.handler->timeout = timeout;
 	if (GetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options))) {
 		dataHandling.handler->options.Parity = NOPARITY;
@@ -1581,9 +1583,9 @@ int Send()
 	if (1) {
 		number = amount;
 #elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (WriteFile(dataHandling.handler->comHandle, start, amount, &number, NULL)) {
+	if (amount > 0 && WriteFile(dataHandling.handler->comHandle, dataHandling.buffer->outPackets, amount, &number, NULL)) {
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	number = write(dataHandling.handler->comHandle, start, amount);
+	number = write(dataHandling.handler->comHandle, dataHandling.buffer->outPackets, amount);
 	if (number >= 0) {
 #else 
 	if (0) {
@@ -1605,12 +1607,12 @@ int Receive()
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int writeAmount = -1, foundStart = 0;
-#if (DATAHANDLINGLIBRARY_OS == LINUX)
+	int writeAmount = 0, foundStart = 0, didntTimeout = 0;
+#if (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	clock_t start_time = 0;
 #endif
 	DataPacket* current = dataHandling.buffer->inPackets;
-	byte read = 0, *writePtr = (byte*)current;
+	byte readByte = 0, *writePtr = (byte*)current;
 #if (TRANSMISSION_DEBUG)
 	int readIndex = 0;
 	for (int i = 0; i <= PACKET_LENGTH; i++, readIndex++) {
@@ -1618,14 +1620,15 @@ int Receive()
 #else
 	for (int i = 0; i <= PACKET_LENGTH; i++) {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-		if (!ReadFile(dataHandling.handler->comHandle, &read, 1, NULL, NULL)) break;
+		if (!ReadFile(dataHandling.handler->comHandle, &readByte, 1, &didntTimeout, NULL)) break;
+		if (!didntTimeout) break;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-		start_time = clock(NULL);
-		while (read(dataHandling.handler->comHandle, &read, 1) != 1 && dataHandling.handler->timeout >= clock(NULL) - start_time);
-		if (dataHandling.handler->timeout < clock(NULL) - start_time) break;
+		start_time = clock();
+		while (read(dataHandling.handler->comHandle, &readByte, 1) != 1 && dataHandling.handler->timeout >= clock() - start_time);
+		if (dataHandling.handler->timeout < clock() - start_time) break;
 #endif
 #endif
-		if (read == START_BYTE) {
+		if (readByte == START_BYTE) {
 			if (foundStart) {
 				current++;
 				writePtr = (byte*)current;
@@ -1642,7 +1645,7 @@ int Receive()
 		if (current == dataHandling.buffer->outPackets) break;
 #endif
 		if (foundStart && i != PACKET_LENGTH) {
-			writePtr[i] = read;
+			writePtr[i] = readByte;
 			writeAmount++;
 		}
 		else if (!foundStart && i == PACKET_LENGTH) i = 0;

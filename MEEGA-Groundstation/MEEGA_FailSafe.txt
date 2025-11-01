@@ -1,7 +1,8 @@
+MEEGA FailSafe
+
 Version: 1.100000;
 Datetime: 0;
 Savefile: MEEGA_SaveFile.meega;
-Calibrationfile: MEEGA_Calibration.txt;
-Complete: y;
-Nominal Exit: y;
-Mode: t;
+Calibrationfile:  ;
+Complete: n;
+Nominal Exit: n;

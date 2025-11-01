@@ -30,7 +30,7 @@
 #define DEBUG_OUTPUT (TERMINAL | LOGFILE)
 
 #define USE_DEFAULT_VALUES 1
-#define TRANSMISSION_DEBUG 1
+#define TRANSMISSION_DEBUG 0
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -45,7 +45,7 @@
 #endif // DATAHANDLINGLIBRARY_EXPORTS
 
 #define DATAHANDLINGLIBRARY_CONSTANT __declspec(dllexport)
-#define DEFAULTCOMPATH "COM3"
+#define DEFAULTCOMPATH "COM4"
 #define BAUD_RATE 38400
 
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
@@ -260,11 +260,11 @@ typedef struct DATAHANDLINGLIBRARY_API PortHandler {
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	struct termios options;
 	int comHandle;
-	int timeout
+	int timeout;
 #else
 	int options;
 	int comHandle;
-	int timeout
+	int timeout;
 #endif
 	int valid;
 	char comPath[PATH_LENGTH];
