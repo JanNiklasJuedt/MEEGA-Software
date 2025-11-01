@@ -2,6 +2,7 @@
 from __future__ import annotations
 from math import floor
 from math import sin, radians
+import numpy as np
 import sys
 import time
 
@@ -220,7 +221,7 @@ class GSMain(QMainWindow):
         #check for invalid index
         if index is None or index < 0:
             return
-        statusList = self.collection.dataAccumulation.household[index][0:12] + self.collection.dataAccumulation.household[index][14:20] + self.collection.dataAccumulation.household[index][21:23]
+        statusList = np.concatenate((self.collection.dataAccumulation.household[index][0:12], self.collection.dataAccumulation.household[index][14:20], self.collection.dataAccumulation.household[index][21:23]))
         for i in range(len(self.statusDisplay)):
             match statusList[i]:
                 case self.ACTIVE:
@@ -256,11 +257,13 @@ class GSMain(QMainWindow):
         self.timeChart.addAxis(self.timeAxis, Qt.AlignBottom)
         self.timeChart.addAxis(self.timePressureAxis, Qt.AlignLeft)
         self.timeChart.addAxis(self.timeTemperatureAxis, Qt.AlignRight)
-        for s in self.timeSeries:
-            s.attachAxis(self.timeAxis)
-            s.attachAxis(self.timePressureAxis)
-            s.attachAxis(self.timeTemperatureAxis)
-        
+        for i in range(len(self.timeSeries)):
+            if i%2 == 0:
+                self.timeSeries[i].attachAxis(self.timePressureAxis)
+            else:
+                self.timeSeries[i].attachAxis(self.timeTemperatureAxis)
+            self.timeSeries[i].attachAxis(self.timeAxis)
+            
         #create Layout
         self.timeLayout = QVBoxLayout(self.ui.timePlotGroupBox)
         self.timeLayout.setContentsMargins(0,0,0,0)
@@ -281,23 +284,21 @@ class GSMain(QMainWindow):
         self.distanceChart.addSeries(self.distanceTSeries)
 
         #create and configure Axes
-        self.distanceYAxis = QValueAxis()
+        self.distanceAxis = QValueAxis()
         self.distancePressureAxis = QValueAxis()
         self.distanceTemperatureAxis = QValueAxis()
         self.distancePressureAxis.setTitleText("pressure in Pa")
         self.distanceTemperatureAxis.setTitleText("temperature in K")
-        self.distanceYAxis.setRange(0, 4)
+        self.distanceAxis.setRange(0, 4)
         self.distancePressureAxis.setRange(0, self.collection.settings.pressureAxeValue)
         self.distanceTemperatureAxis.setRange(0, self.collection.settings.temperatureAxeValue)
         self.distanceChart.addAxis(self.distancePressureAxis, Qt.AlignBottom)
         self.distanceChart.addAxis(self.distanceTemperatureAxis, Qt.AlignTop)
-        self.distanceChart.addAxis(self.distanceYAxis, Qt.AlignLeft)
+        self.distanceChart.addAxis(self.distanceAxis, Qt.AlignLeft)
         self.distancePSeries.attachAxis(self.distancePressureAxis)
-        self.distancePSeries.attachAxis(self.distanceTemperatureAxis)
-        self.distancePSeries.attachAxis(self.distanceYAxis)
-        self.distanceTSeries.attachAxis(self.distancePressureAxis)
+        self.distancePSeries.attachAxis(self.distanceAxis)
         self.distanceTSeries.attachAxis(self.distanceTemperatureAxis)
-        self.distanceTSeries.attachAxis(self.distanceYAxis)
+        self.distanceTSeries.attachAxis(self.distanceAxis)
         
         #create Layout
         self.distanceLayout = QVBoxLayout(self.ui.distancePlotGroupBox)
@@ -341,9 +342,10 @@ class GSMain(QMainWindow):
         )):
             #time plot
             for i in range(12):
-                while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) >= settings.scrollingTimeSeconds*1000:
+                while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) > settings.scrollingTimeSeconds*1000:
                     self.timeSeries[i].remove(0)
                 self.timeSeries[i].append(dataAccu.household[index][20], dataAccu.sensorData[index][i])
+                #save highest pressure for scaling of axes
                 if i%2 == 0: #pressure Value
                     if dataAccu.sensorData[index][i] > self.timeHighestPres:
                         self.timeHighestPres = dataAccu.sensorData[index][i]
@@ -372,11 +374,18 @@ class GSMain(QMainWindow):
                     if settings.startOfExperimentIndex != -1:
                         startIndex = self.collection.startOfExperimentIndex
         else:
-            startIndex = max(0, len(sensorData) - self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds - 1)
+            startIndex = max(0, dataAcc.gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
 
-        xValues = [household[p][20] for p in range(startIndex, endIndex)]
+        if endIndex <= startIndex:
+            for s in self.timeSeries:
+                s.clear()
+            return
+        
+        xValues = household[startIndex:endIndex, 20].copy()
+        yMatrix = sensorData[startIndex:endIndex, :12].copy()
+
         for i in range(12):
-            yValues =  [sensorData[p][i] for p in range(startIndex, endIndex)]
+            yValues =  yMatrix[:, i]
             points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
             self.timeSeries[i].replace(points)
 
@@ -457,13 +466,16 @@ class GSMain(QMainWindow):
     def onItemChanged(self, item, column):
         if item.data(0, Qt.UserRole) is None:
             return
-        series = self.timeSeries[item.data(0, Qt.UserRole)]
+        seriesIndex = item.data(0, Qt.UserRole)
+        series = self.timeSeries[seriesIndex]
         if item.checkState(0) == Qt.Checked:
             if series not in self.timeChart.series():
                 self.timeChart.addSeries(series)
                 series.attachAxis(self.timeAxis)
-                series.attachAxis(self.timeTemperatureAxis)
-                series.attachAxis(self.timePressureAxis)
+                if seriesIndex%2 == 0:
+                    series.attachAxis(self.timePressureAxis)
+                else:
+                    series.attachAxis(self.timeTemperatureAxis)
         else:
             if series in self.timeChart.series():
                 self.timeChart.removeSeries(series)
@@ -872,8 +884,8 @@ class DataAccumulation:
         self.collection = collection
         self.gatherIndex = -1
         self.allocationSize = 5000
-        self.sensorData = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
-        self.household = [[0 for _ in range(27)] for __ in range(self.allocationSize)]
+        self.sensorData = np.zeros((self.allocationSize, 12))
+        self.household = np.zeros((self.allocationSize, 27))
 
     def accumulate(self):
         # while True:
@@ -886,10 +898,10 @@ class DataAccumulation:
         self.gatherIndex += 1 ###only for testing purposes###
         ###
         if self.gatherIndex%self.allocationSize == 0:
-            dataExtension = [[0 for _ in range(12)] for __ in range(self.allocationSize)]
-            householdExtension = [[0 for _ in range(27)] for __ in range(self.allocationSize)]
-            self.sensorData.extend(dataExtension)
-            self.household.extend(householdExtension)
+            dataExtension = np.zeros((self.allocationSize, 12))
+            householdExtension = np.zeros((self.allocationSize, 27))
+            np.concatenate((self.sensorData, dataExtension), axis = 0)
+            np.concatenate((self.household, householdExtension), axis = 0)
         for i in range(12):
             ###
             self.sensorData[self.gatherIndex][i] = int(150*sin(radians(10*self.gatherIndex + 10*i))+150) ###only for testing purposes###
@@ -914,11 +926,12 @@ class DataAccumulation:
         # self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
         # self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
         # self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
-        
-        if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
-            self.collection.settings.liftOffIndex = self.gatherIndex
-        if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
-            self.collection.settings.startOfExperimentIndex = self.gatherIndex
+
+        if self.gatherIndex > 0:
+            if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
+                self.collection.settings.liftOffIndex = self.gatherIndex
+            if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+                self.collection.settings.startOfExperimentIndex = self.gatherIndex
 
 class DataHandlingThread(QThread):
     newFrameSignal = Signal(int)
