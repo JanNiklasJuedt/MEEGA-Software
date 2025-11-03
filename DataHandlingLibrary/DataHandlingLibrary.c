@@ -1616,7 +1616,7 @@ int Receive()
 #if (TRANSMISSION_DEBUG)
 	int readIndex = 0;
 	for (int i = 0; i <= PACKET_LENGTH; i++, readIndex++) {
-		read = ((byte*)dataHandling.buffer->outPackets)[readIndex];
+		readByte = ((byte*)dataHandling.buffer->outPackets)[readIndex];
 #else
 	for (int i = 0; i <= PACKET_LENGTH; i++) {
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
