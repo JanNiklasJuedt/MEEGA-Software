@@ -1,7 +1,7 @@
 #imports
 from __future__ import annotations
 from math import floor
-from math import sin, radians
+from math import sin, radians, pi
 import numpy as np
 import sys
 import time
@@ -86,6 +86,10 @@ class Telecommand:
 
 #class to define the Main Window
 class GSMain(QMainWindow):
+    ACTIVE = 1
+    ISSUES = 2
+    INACTIVE = 0
+    NOCONNECTION = 3
     def __init__(self, collection: ClassCollection):
         super().__init__()
 
@@ -337,7 +341,13 @@ class GSMain(QMainWindow):
         if index >= len(dataAccu.sensorData) or index >= len(dataAccu.household):
             return
 
+        
         #distance plot
+        self.distanceChartView.setUpdatesEnabled(False)
+        self.distanceChartView.scene().blockSignals(True)
+        self.timeChartView.setUpdatesEnabled(False)
+        self.timeChartView.blockSignals(True)
+
         self.distancePSeries.clear()
         self.distanceTSeries.clear()
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][2], 0)
@@ -368,10 +378,19 @@ class GSMain(QMainWindow):
                 else: #temperature Value
                     if dataAccu.sensorData[index][i] > self.timeHighestTemp:
                         self.timeHighestTemp = dataAccu.sensorData[index][i]
+
             self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
 
         if settings.temperatureAxeMode == Settings.SELFSCALING or settings.pressureAxeMode == Settings.SELFSCALING:
             self.updateAxes()
+
+        self.timeChartView.setUpdatesEnabled(True)
+        self.timeChartView.blockSignals(False)
+        self.distanceChartView.setUpdatesEnabled(True)
+        self.distanceChartView.scene().blockSignals(False)
+
+        self.distanceChartView.repaint()
+        self.timeChartView.repaint()
 
     def rebuildPlot(self):
         settings = self.collection.settings
@@ -405,8 +424,12 @@ class GSMain(QMainWindow):
                 s.clear()
             return
         
-        xValues = household[startIndex:endIndex, 20].copy()
-        yMatrix = sensorData[startIndex:endIndex, :12].copy()
+        if startIndex == 0:
+            xValues = household[:endIndex, 20]
+            yMatrix = sensorData[:endIndex, :12]
+        else:
+            xValues = np.ascontiguousarray(household[startIndex:endIndex, 20])
+            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :12])
 
         for i in range(12):
             yValues =  yMatrix[:, i]
@@ -635,13 +658,13 @@ class GSControl(QWidget):
     # LED control slots
     @Slot()
     def onLED(self):
-        self.ledState = 0
+        self.ledState = 1
         self.collection.telecommand.newTCFrame()
         self.updateTCFrame()
         self.collection.telecommand.sendInit()
     @Slot()
     def offLED(self):
-        self.ledState = 1
+        self.ledState = 0
         self.collection.telecommand.newTCFrame()
         self.updateTCFrame()
         self.collection.telecommand.sendInit()
@@ -913,30 +936,30 @@ class DataAccumulation:
 
     def accumulate(self):
         # if DataHandling.PortIsOpen():
-        #     self.collection.mainWindow.connectionStatus = GSMain.INACITVE
+        #     self.collection.mainWindow.connectionStatus = GSMain.INACTIVE
         # else:
         #     self.collection.mainWindow.connectionStatus = GSMain.NOCONNECTION
         # while True:
-            # frame = DataHandling.getnextframe()
-            # if DataHandling.frameisempty(frame):
-            #    break
-            # else:
-            #     self.gatherIndex += 1
-            # if DataHandling.FrameHasFlag(frame, Flag.OK):
-                # self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
-            # else:
-                # self.collection.mainWindow.connectionStatus = GSMain.ISSUES
+        #     frame = DataHandling.GetNextFrame()
+        #     if DataHandling.FrameIsEmpty(frame):
+        #        break
+        #     else:
+        #         self.gatherIndex += 1
+        #     if DataHandling.FrameHasFlag(frame, Flag.OK):
+        #         self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
+        #     else:
+        #         self.collection.mainWindow.connectionStatus = GSMain.ISSUES
         ###
         self.gatherIndex += 1 ###only for testing purposes###
         ###
         if self.gatherIndex%self.allocationSize == 0:
             dataExtension = np.zeros((self.allocationSize, 12))
             householdExtension = np.zeros((self.allocationSize, 27))
-            np.concatenate((self.sensorData, dataExtension), axis = 0)
-            np.concatenate((self.household, householdExtension), axis = 0)
+            self.sensorData = np.concatenate((self.sensorData, dataExtension))
+            self.household = np.concatenate((self.household, householdExtension))
         for i in range(12):
             ###
-            self.sensorData[self.gatherIndex][i] = int(150*sin(radians(10*self.gatherIndex + 10*i))+150) ###only for testing purposes###
+            self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
             ###
             # self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
         ###
@@ -959,11 +982,11 @@ class DataAccumulation:
         # self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
         # self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
-        if self.gatherIndex > 0:
-            if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
-                self.collection.settings.liftOffIndex = self.gatherIndex
-            if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
-                self.collection.settings.startOfExperimentIndex = self.gatherIndex
+        # if self.gatherIndex > 0:
+        #     if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
+        #         self.collection.settings.liftOffIndex = self.gatherIndex
+        #     if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+        #         self.collection.settings.startOfExperimentIndex = self.gatherIndex
 
 class DataHandlingThread(QThread):
     newFrameSignal = Signal(int)
@@ -971,21 +994,34 @@ class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
-        self.frequency = 2
+        self.frequency = 20
     def run(self):
         period_ms = 1000 / self.frequency
         while True:
             clock = time.monotonic_ns()
-            self.collection.dataAccumulation.accumulate()
-            self.collection.telecommand.sendStep()
-            self.newFrameSignal.emit(int(self.collection.dataAccumulation.gatherIndex))
+            DataHandling.DebugSaveFile()
             DataHandling.UpdateAll()
+            # clock2 = time.monotonic_ns()
+            # print("DataHandlingUpdate-time: " + str((clock2-clock)/1000000))
+            self.collection.dataAccumulation.accumulate()
+            # clock3 = time.monotonic_ns()
+            # print("dataAcc-time: " + str((clock3-clock2)/1000000))
+            self.collection.telecommand.sendStep()
+            # clock4 = time.monotonic_ns()
+            # print("tc-time: " + str((clock4-clock3)/1000000))
+            self.newFrameSignal.emit(int(self.collection.dataAccumulation.gatherIndex))
+            # clock5 = time.monotonic_ns()
+            # print("signal-emit-time: " + str((clock5-clock4)/1000000))
             if self.isInterruptionRequested():
                 DataHandling.CloseAll()
                 break
             endTime = time.monotonic_ns()
+            # print(period_ms-(endTime - clock)/1000000)
             if (endTime - clock)/1000000 < period_ms:
-                self.msleep(period_ms - (endTime - clock) / 1000000)
+                time.sleep((period_ms - (endTime - clock) / 1000000)/1000)
+            # clock6 = time.monotonic_ns()
+            # print("rest-time: " + str((clock6-clock5)/1000000))
+            # print("DataHandling Loop-time: " + str((clock6 - clock) / 1000000) + "\n")
 
 class ClassCollection:
     def __init__(self):
