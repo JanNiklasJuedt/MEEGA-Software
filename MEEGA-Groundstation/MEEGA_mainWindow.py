@@ -220,19 +220,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addItem(self.horizontalSpacer_7)
 
-        self.label = QLabel(self.connectionFrame)
-        self.label.setObjectName(u"label")
+        self.connectionLabel = QLabel(self.connectionFrame)
+        self.connectionLabel.setObjectName(u"connectionLabel")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy4)
-        self.label.setMinimumSize(QSize(50, 50))
-        self.label.setFrameShape(QFrame.Shape.Panel)
-        self.label.setFrameShadow(QFrame.Shadow.Sunken)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sizePolicy4.setHeightForWidth(self.connectionLabel.sizePolicy().hasHeightForWidth())
+        self.connectionLabel.setSizePolicy(sizePolicy4)
+        self.connectionLabel.setMinimumSize(QSize(50, 50))
+        self.connectionLabel.setFrameShape(QFrame.Shape.Panel)
+        self.connectionLabel.setFrameShadow(QFrame.Shadow.Sunken)
+        self.connectionLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.horizontalLayout_3.addWidget(self.label)
+        self.horizontalLayout_3.addWidget(self.connectionLabel)
 
 
         self.horizontalLayout_6.addWidget(self.connectionFrame)
@@ -1073,7 +1073,7 @@ class Ui_MainWindow(object):
         self.actionDiagrams.setText(QCoreApplication.translate("MainWindow", u"Diagrams", None))
         self.label_time.setText(QCoreApplication.translate("MainWindow", u"T -", None))
         self.label_Connection.setText(QCoreApplication.translate("MainWindow", u"Connection", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"Status", None))
+        self.connectionLabel.setText(QCoreApplication.translate("MainWindow", u"Status", None))
         self.distancePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Distance", None))
         self.groupBox_sensorstatus.setTitle(QCoreApplication.translate("MainWindow", u"System Status", None))
         self.label_18.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 3", None))

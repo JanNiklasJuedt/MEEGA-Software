@@ -97,6 +97,8 @@ class GSMain(QMainWindow):
         self.ACTIVE = 1
         self.ISSUES = 2
         self.INACTIVE = 0
+        self.NOCONNECTION = 3
+        self.connectionStatus = self.NOCONNECTION
         self.collection = collection
 
         #creating local status list
@@ -126,6 +128,7 @@ class GSMain(QMainWindow):
         self.activepix = QPixmap("Ressources\\active.png")
         self.issuespix = QPixmap("Ressources\\issues.png")
         self.inactivepix = QPixmap("Ressources\\inactive.png")
+        self.noconnectionpix = QPixmap("Ressources\\noconnection.png")
 
         self.scalePixmaps()
         
@@ -181,7 +184,12 @@ class GSMain(QMainWindow):
             self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.inactivepix_scaled = self.inactivepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             #scale for connection status
-            #self.activepix_
+            connectionLabelSize = self.ui.connectionLabel.size()
+            connectionCircle = min(connectionLabelSize.width(), connectionLabelSize.height())
+            self.activepix_connection = self.activepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.issuespix_connection = self.activepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.inactivepix_connection = self.inactivepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.noconnectionpix_connection = self.noconnectionpix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     #override resizeEvent to rescale pixmaps when window size changes
     def resizeEvent(self, event):
             self.scalePixmaps()
@@ -215,7 +223,15 @@ class GSMain(QMainWindow):
         pass
     def displayStatus(self, index: int):
         #connection status
-
+        match self.connectionStatus:
+            case self.ACTIVE:
+                self.ui.connectionLabel.setPixmap(self.activepix_connection)
+            case self.ISSUES:
+                self.ui.connectionLabel.setPixmap(self.issuespix_connection)
+            case self.INACTIVE:
+                self.ui.connectionLabel.setPixmap(self.inactivepix_connection)
+            case self.NOCONNECTION:
+                self.ui.connectionLabel.setPixmap(self.noconnectionpix_connection)
 
         #sensor / household status
         #check for invalid index
@@ -362,6 +378,7 @@ class GSMain(QMainWindow):
         dataAcc = self.collection.dataAccumulation
         sensorData = dataAcc.sensorData
         household = dataAcc.household
+        clear = False
 
         startIndex = 0
         endIndex = dataAcc.gatherIndex
@@ -370,13 +387,20 @@ class GSMain(QMainWindow):
                 case Settings.LO:
                     if settings.liftOffIndex != -1:
                         startIndex = settings.liftOffIndex
+                    else:
+                        clear = True
                 case Settings.SOE:
                     if settings.startOfExperimentIndex != -1:
                         startIndex = self.collection.startOfExperimentIndex
+                    else:
+                        clear = True
         else:
             startIndex = max(0, dataAcc.gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
 
         if endIndex <= startIndex:
+            clear = True
+
+        if clear:
             for s in self.timeSeries:
                 s.clear()
             return
@@ -888,12 +912,20 @@ class DataAccumulation:
         self.household = np.zeros((self.allocationSize, 27))
 
     def accumulate(self):
+        # if DataHandling.PortIsOpen():
+        #     self.collection.mainWindow.connectionStatus = GSMain.INACITVE
+        # else:
+        #     self.collection.mainWindow.connectionStatus = GSMain.NOCONNECTION
         # while True:
             # frame = DataHandling.getnextframe()
             # if DataHandling.frameisempty(frame):
             #    break
             # else:
             #     self.gatherIndex += 1
+            # if DataHandling.FrameHasFlag(frame, Flag.OK):
+                # self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
+            # else:
+                # self.collection.mainWindow.connectionStatus = GSMain.ISSUES
         ###
         self.gatherIndex += 1 ###only for testing purposes###
         ###
