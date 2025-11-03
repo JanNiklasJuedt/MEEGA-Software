@@ -826,7 +826,7 @@ float temp_data(void) {
 	FILE* fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
 	if (!fp) return -1;
 	int temp_millideg;
-	fscanf_s(fp, "%d", &temp_millideg);
+	fscanf(fp, "%d", &temp_millideg);
 	fclose(fp);
 	return temp_millideg / 1000.0;
 }
@@ -847,7 +847,7 @@ uint8_t volt_stat(void) {
 	pclose(fp);
 
 	unsigned int volt = 0;
-	sscanf_s(output, "throttled=0x%x", &volt);
+	sscanf(output, "throttled=0x%x", &volt);
 
 	if (volt & 0x1) return 0;			//low
 	else if (volt & 0x10000) return 0;	//low

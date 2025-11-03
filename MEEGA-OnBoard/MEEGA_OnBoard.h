@@ -25,9 +25,9 @@
 #define SPIDEV 1
 
 //OnBoard Settings
-#define ONBOARD_OS WINDOWS
-#define MODE DEBUG
-#define EXPERIMENT TEST
+#define ONBOARD_OS LINUX
+#define MODE RELEASE
+#define EXPERIMENT RUN
 #define SERVO_VERSION SERVO_v1
 #define SENSORS_SPI_VERSION WIRINGPISPI
 
