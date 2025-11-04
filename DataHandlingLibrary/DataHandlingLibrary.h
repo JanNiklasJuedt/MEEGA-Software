@@ -104,7 +104,7 @@ typedef unsigned char byte;
 #define DELAY_LEN 16 //Bits
 #define BASE_LEN 1 //Bits
 #define STM_LEN 2 //Bits
-#define EXP_LEN 3 //Bits
+#define EXP_LEN 4 //Bits
 #define MAIN_LEN 4 //Bits
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 6 //Bits
