@@ -84,6 +84,25 @@ class Telecommand:
             DataHandling.AddFrame(self.tcframe)
             self.sendCounter -= 1
 
+#class to handle telecommands
+class Telecommand:
+    def __init__(self, collection):
+        self.collection = collection
+        self.tcframe = DataHandling.CreateTC()
+        self.sendCounter = 0
+
+    def newTCFrame(self):
+        self.tcframe = DataHandling.CreateTC()
+        DataHandling.WriteFrame(self.tcframe, 0, self.collection.settings.mode)
+
+    def sendInit(self):
+        self.sendCounter = 10
+
+    def sendStep(self):
+        if self.sendCounter > 0:
+            DataHandling.AddFrame(self.tcframe)
+            self.sendCounter -= 1
+
 #class to define the Main Window
 class GSMain(QMainWindow):
     ACTIVE = 1
@@ -471,6 +490,20 @@ class GSMain(QMainWindow):
     def onNewFrame(self, index: int):
         self.extendPlots(index)
         self.displayStatus(index)
+    @Slot()
+    def modeSwitched(self):
+        if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
+            self.collection.settings.mode = Settings.FLIGHT
+            self.ui.label_mode.setText("Flight Mode")
+            self.ui.actionControl_Panel.setEnabled(False)
+            self.collection.controlPanel.clearPanel()
+            self.collection.controlPanel.hide()
+        else:
+            self.collection.settings.mode = Settings.TEST
+            self.ui.label_mode.setText("Test Mode")
+            self.ui.actionControl_Panel.setEnabled(True)
+        self.collection.telecommand.newTCFrame()
+        self.collection.telecommand.sendInit()
     @Slot()
     def modeSwitched(self):
         if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:

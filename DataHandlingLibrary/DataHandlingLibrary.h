@@ -321,7 +321,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataHandlingHub {
 /// {?} Fill in " ..." 
 /// {!} Error message
 /// {#} Integer argument 
-/// {ง} String argument
+/// {ยง} String argument
 /// {@} Pointer argument
 /// {~} Integer Array argument (expects: int length, int* array)
 /// </summary>
@@ -639,5 +639,8 @@ DATAHANDLINGLIBRARY_API int PortIsOpen();
 /// </summary>
 /// <returns></returns>
 DATAHANDLINGLIBRARY_API void ClosePort();
+
+//Tries to open the comm Port with the specified name
+DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
 
 #endif // DATAHANDLINGLIBRARY_H

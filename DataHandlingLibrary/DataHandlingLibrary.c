@@ -202,7 +202,7 @@ int Initialize()
 	if (dataHandling.failSafe == NULL) readExisting = 0;
 	else readExisting = !(dataHandling.failSafe->nominalExit) && (dataHandling.failSafe->saveFilePath[0] != '\0');
 	if (readExisting) {
-		DebugLog("Existing SaveFile found at§", dataHandling.failSafe->saveFilePath);
+		DebugLog("Existing SaveFile found atÂ§", dataHandling.failSafe->saveFilePath);
 		ReadSave(dataHandling.failSafe->saveFilePath);
 	}
 	if (USE_DEFAULT_VALUES & (dataHandling.saveFile == NULL)) {
@@ -486,7 +486,7 @@ int ReadCalibration(const char* path)
 							}
 						}
 						if (!error) {
-							DebugLog("Calibration read from§_", path);
+							DebugLog("Calibration read fromÂ§_", path);
 							return 1;
 						}
 					}
@@ -521,13 +521,15 @@ int WriteCalibration()
 				fprintf(file, CALIBRATION_SENSOR_END_STRING);
 			}
 			fclose(file);
-			//DebugLog("Calibration written at§_", calibration.calibrationFilePath);
+			//DebugLog("Calibration written atÂ§_", calibration.calibrationFilePath);
 			return 1;
 		}
 		else {
 			DebugLog("!Could not open Calibration file");
 			return 0;
 		}
+	else {
+		file = fopen(path, "rb");
 	}
 	//DebugLog("Write unneccessary_");
 	return 1;
@@ -1071,7 +1073,7 @@ int WriteFailSafe()
 {
 	//DebugLog("Writing FailSafe to file:");
 	if (dataHandling.failSafe == NULL) {
-		DebugLog("!Could not find FailSafe");
+		DebugLog("!Could not find FailSafe_");
 		return 0;
 	}
 	//DebugLog("FailSafe found@", dataHandling.failSafe);
@@ -1093,7 +1095,7 @@ int WriteFailSafe()
 		fprintf(file, FAILSAFE_NOMINAL_STRING, (failsafe->nominalExit) ? 'y' : 'n');
 		fclose(file);
 		failsafe->changed = 0;
-		//DebugLog("FailSafe written at§_", FAILSAFE_NAME);
+		//DebugLog("FailSafe written atÂ§_", FAILSAFE_NAME);
 		return 1;
 	}
 	else DebugLog("!Could not open FailSafe file");
@@ -1268,12 +1270,12 @@ int WriteSave()
 			}
 			fclose(file);
 			if (dataHandling.saveFile->savedAmount < dataHandling.saveFile->frameAmount) DebugLog("!Could not write all frames");
-			//DebugLog("SaveFile written at§_", dataHandling.saveFile->saveFilePath);
+			//DebugLog("SaveFile written atÂ§_", dataHandling.saveFile->saveFilePath);
 			return number;
 		}
 		else DebugLog("!Could not open SaveFile file");
 	}
-	//DebugLog("Could not write SaveFile at§_", dataHandling.saveFile->saveFilePath);
+	//DebugLog("Could not write SaveFile atÂ§_", dataHandling.saveFile->saveFilePath);
 	return 0;
 }
 
@@ -1799,7 +1801,7 @@ void DebugLog(const char* message, ...)
 			va_arg(args_cpy, void*);
 			break;
 		}
-		case '§': {
+		case 'Â§': {
 			makro = string;
 			va_arg(args_cpy, char*);
 			break;
@@ -1848,7 +1850,7 @@ void DebugSaveFile() {
 	int content[TELEMETRY_AMOUNT];
 	DebugLog("Version#", (int)(dataHandling.saveFile->version * 10));
 	DebugLog("Time of Creation#", dataHandling.saveFile->dateTime);
-	DebugLog("Filename§", dataHandling.saveFile->saveFilePath);
+	DebugLog("FilenameÂ§", dataHandling.saveFile->saveFilePath);
 	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
 		if (FrameIsTC(current->data)) {
 			for (i = 0; i < TELEMETRY_AMOUNT; i++) {
