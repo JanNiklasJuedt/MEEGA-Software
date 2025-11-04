@@ -178,12 +178,16 @@ uint32_t temperatureRead[TEMPERATURE_SENSORS];
 int NozzlePos = 0,
 SoE = 0;
 #endif
-const int ValveOpen = 1,
-ValveClose = 0,
+const int ValveOpen = 0,
+ValveClose = 1,
 ValveStuck = 3,
+ServoOn = 0,
+ServoOff = 1,
 ServoStuck = 3,
 NozzleStuck = 3,
 NozzleOpen = 1,
+LEDsOn = 0,
+LEDsOff = 1;
 flight = 1,
 test = 0;
 
@@ -197,6 +201,7 @@ nozzleStatus = 0,
 NozzleOpened = 0,
 TestStatus = 0,
 LOSignal,
+SoESignal,
 SoEReceived = 0,
 EoE = 0,
 modeSel,

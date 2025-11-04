@@ -22,6 +22,8 @@ int main() {
 #if (MODE == RELEASE)
 	pullUpDnControl(RPi_LO, PUD_UP);
 	pullUpDnControl(RPi_SOE, PUD_UP);
+	pullUpDnControl(Nozzle_Cover_S1, PUD_UP);
+	pullUpDnControl(Nozzle_Cover_S2, PUD_UP);
 #endif
 
 	Initialize();
@@ -36,9 +38,9 @@ int main() {
 	if (pthread_create(&logThread, NULL, LogThread, (void*)&config)) {	//Create a thread for logging
 		//LED blink for 5 times: logging thread failed to start
 		for (int i = 0;i < 5;i++) {
-			digitalWrite(LEDs_Pin, 1);
+			digitalWrite(LEDs_Pin, LEDsOn);
 			delay(500);
-			digitalWrite(LEDs_Pin, 0);
+			digitalWrite(LEDs_Pin, LEDsOff);
 			delay(500);
 		}
 		return 1;
@@ -47,15 +49,13 @@ int main() {
 	int EoECompleted = 0;
 
 	while (!EoECompleted) {
-		//int flightmode = 1;
-		//int testmode = 0;
-		LOSignal = digitalRead(RPi_LO);
 
 		//RESET
 		//TestStatus = 0;
 		SoEReceived = 0;
 		ServoRotation(Angle_ServoReset);
-		digitalWrite(Servo_On, 0);
+		digitalWrite(Servo_On, ServoOff);
+		digitalWrite(LEDs_Pin, LEDsOff);
 		//RESET
 
 #if (MODE == DEBUG)
@@ -72,12 +72,13 @@ int main() {
 #if (MODE == DEBUG)
 			printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LOSignal);
 #endif
-			if (LOSignal == 0) continue; //-------------------------------------------------------------------change to HIGH if connected to RaspberryPi PULL UP resistor
+			LOSignal = digitalRead(RPi_LO);
+			if (LOSignal == 1) continue; //-------------------------------------------------------------------change to HIGH if connected to RaspberryPi PULL UP resistor
 
 			while (1) {
 				switch (currentState) {
 				case WAIT_LO:
-					if (LOSignal == 1) {	//----------------------------------------------------------------change to LOW if connected to RaspberryPi PULL UP resistor
+					if (LOSignal == 0) {	//----------------------------------------------------------------change to LOW if connected to RaspberryPi PULL UP resistor
 #if (EXPERIMENT == TEST)
 						printf("Lift Off Signal Received\n");
 #endif
@@ -95,7 +96,7 @@ int main() {
 					break;
 
 				case NOSECONE_SEPARATION:
-					digitalWrite(LEDs_Pin, 1);	//LED on
+					digitalWrite(LEDs_Pin, LEDsOn);	//LED on
 #if (MODE == DEBUG)
 					printf("Nose Cone Separation\n");
 #endif
@@ -103,18 +104,21 @@ int main() {
 					printf("Nose Cone Separation\n");
 #endif
 					delay(config.Delay_NoseConeSeparation);			//Wait for Nozzle Cone Separation
-					digitalWrite(LEDs_Pin, 0);	//LED off
+					digitalWrite(LEDs_Pin, LEDsOff);	//LED off
 					currentState = WAIT_SOE;
 					break;
 
 				case WAIT_SOE:
-					while (!SoESignal()) delay(100);
-					SoEReceived = 1;
+					//while (!SoESignal()) delay(100);
+					SoESignal = digitalRead(RPi_SOE);
+					if (SoESignal == 0) {
+						SoEReceived = 1;
 #if (EXPERIMENT == TEST)
-					printf("SoE Signal Received\n");
+						printf("SoE Signal Received\n");
 #endif
-					digitalWrite(Servo_On, 1);
-					digitalWrite(LEDs_Pin, 1);
+						digitalWrite(Servo_On, ServoOn);
+						digitalWrite(LEDs_Pin, LEDsOn);
+					}
 					currentState = VALVE_OPENED;
 					break;
 
@@ -136,8 +140,8 @@ int main() {
 
 				case NOZZLE_OPENED:
 					NozzleOpened = 1;
-					digitalWrite(Servo_On, 0);
-					digitalWrite(LEDs_Pin, 0);			//LED off
+					digitalWrite(Servo_On, ServoOff);
+					digitalWrite(LEDs_Pin, LEDsOff);			//LED off
 					currentState = END_OF_EXPERIMENT; //End of Experiment
 					break;
 				case END_OF_EXPERIMENT:
@@ -192,8 +196,8 @@ int main() {
 
 			if (testRun == 1) {
 				SoEReceived = 1;
-				digitalWrite(Servo_On, 1);
-				digitalWrite(LEDs_Pin, 1);
+				digitalWrite(Servo_On, ServoOn);
+				digitalWrite(LEDs_Pin, LEDsOn);
 				config = Standard;
 				config.Angle_Servo = (dryRun == 1) ? 30 : 90;
 				
@@ -208,16 +212,16 @@ int main() {
 				if(dryRun == 0) {
 					int valveTest = ValveRun(config,test);
 					if (valveTest == -1) {
-						digitalWrite(LEDs_Pin, 0);
-						digitalWrite(Servo_On, 0);
+						digitalWrite(LEDs_Pin, LEDsOff);
+						digitalWrite(Servo_On, ServoOff);
 						continue; //abort test
 					}
 				}
 				else if (testRun == 1 && dryRun == 1) {
 					int servoTest = ServoRun(config, test);
 					if (servoTest == -1) {
-						digitalWrite(LEDs_Pin, 0);
-						digitalWrite(Servo_On, 0);
+						digitalWrite(LEDs_Pin, LEDsOff);
+						digitalWrite(Servo_On, ServoOff);
 						continue; //abort test
 					}
 				}
@@ -405,9 +409,9 @@ int ServoRun(struct parameter parameter, int modeSel) {
 #if (EXPERIMENT == TEST)
 					printf("Attempt %d to open nozzle\n", i + 1);
 #endif
-					digitalWrite(Servo_Pin, 1);
+					digitalWrite(Servo_Pin, ServoOn);
 					delay(Delay_ServoRetry);
-					digitalWrite(Servo_Pin, 0);
+					digitalWrite(Servo_Pin, ServoOff);
 					delay(Delay_NozzleCoverFeedback);
 #endif
 #if (MODE == DEBUG)
@@ -506,8 +510,8 @@ int ExperimentControl() {
 		else if (ReadFrame(FrameTC, Valve_Control) == 0) digitalWrite(Valve_Pin, ValveClose);	//command close valve
 
 		//LEDs Control
-		if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs_Pin, 1);	//command open valve
-		else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, 0);	//command close valve
+		if (ReadFrame(FrameTC, LED_Control) == 1) digitalWrite(LEDs_Pin, LEDsOn);	//command open valve
+		else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, LEDsOff);	//command close valve
 
 		//Servo Control
 		if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
@@ -663,7 +667,7 @@ void* LogThread(void* arg) {
 //END OF DATA ACQUISITION PROGRAM
 
 
-
+/*
 //Receiving SoE Signal from RaspberryPi
 int SoESignal() {
 #if (ONBOARD_OS == WINDOWS)
@@ -675,7 +679,18 @@ int SoESignal() {
 	return (digitalRead(RPi_SOE) == LOW);	//PULL UP Resistor using LOW. Func. -> Check if SoE signal is HIGH, if so, start experiment. change to HIGH if connected to RaspberryPi
 #endif //ONBOARD_OS
 }
-
+//Receiving LO Signal from RaspberryPi
+int LOSignal() {
+#if (ONBOARD_OS == WINDOWS)
+	int LO;
+	printf("*LO Signal? 1 for YES, 0 for NO: "); scanf_s("%d", &LO);
+	if (LO == 1) return (digitalRead(RPi_LO) == 0);
+	else return (digitalRead(RPi_LO) == 1);
+#elif (ONBOARD_OS == LINUX)
+	return (digitalRead(RPi_LO) == LOW);	//PULL UP Resistor using LOW. Func. -> Check if SoE signal is HIGH, if so, start experiment. change to HIGH if connected to RaspberryPi
+#endif //ONBOARD_OS
+}
+*/
 
 
 //Servo Control Function
