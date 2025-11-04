@@ -322,7 +322,7 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="label">
+            <widget class="QLabel" name="connectionLabel">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -548,7 +548,7 @@
            <item row="2" column="5">
             <widget class="QLabel" name="label_30">
              <property name="text">
-              <string>T Accumulator</string>
+              <string>T Chamber</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -561,7 +561,7 @@
               <locale language="English" country="Germany"/>
              </property>
              <property name="text">
-              <string>P Reservoir</string>
+              <string>P Accumulator</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -571,7 +571,7 @@
            <item row="1" column="5">
             <widget class="QLabel" name="label_29">
              <property name="text">
-              <string>T Reservoir</string>
+              <string>T Accumulator</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -926,7 +926,7 @@
            <item row="2" column="2">
             <widget class="QLabel" name="label_14">
              <property name="text">
-              <string>P Accumulator</string>
+              <string>P Chamber</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1473,7 +1473,7 @@
                </item>
                <item>
                 <property name="text">
-                 <string>Accumulator</string>
+                 <string>Chamber</string>
                 </property>
                 <property name="checkState">
                  <enum>Checked</enum>
@@ -1481,7 +1481,7 @@
                </item>
                <item>
                 <property name="text">
-                 <string>Reservoir</string>
+                 <string>Accumulator</string>
                 </property>
                 <property name="checkState">
                  <enum>Checked</enum>
@@ -1534,7 +1534,7 @@
                 </item>
                 <item>
                  <property name="text">
-                  <string>2</string>
+                  <string>3</string>
                  </property>
                  <property name="checkState">
                   <enum>Checked</enum>
@@ -1543,6 +1543,17 @@
                   <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
                  </property>
                 </item>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Chamber</string>
+                </property>
+                <property name="checkState">
+                 <enum>Checked</enum>
+                </property>
+                <property name="flags">
+                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                </property>
                </item>
                <item>
                 <property name="text">
@@ -1557,18 +1568,7 @@
                </item>
                <item>
                 <property name="text">
-                 <string>Reservoir</string>
-                </property>
-                <property name="checkState">
-                 <enum>Checked</enum>
-                </property>
-                <property name="flags">
-                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Compare Point</string>
+                 <string>Compare</string>
                 </property>
                 <property name="checkState">
                  <enum>Checked</enum>
@@ -1579,111 +1579,6 @@
                </item>
               </item>
              </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="groupBox_timescale">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>1</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="locale">
-              <locale language="English" country="Germany"/>
-             </property>
-             <property name="title">
-              <string>Timescale</string>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_8">
-              <property name="spacing">
-               <number>10</number>
-              </property>
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>10</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>10</number>
-              </property>
-              <item>
-               <widget class="QPushButton" name="button_Total">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>1</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>50</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="locale">
-                 <locale language="English" country="Germany"/>
-                </property>
-                <property name="text">
-                 <string>Total</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>50</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>10s</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="button_Partial">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>1</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>50</width>
-                  <height>30</height>
-                 </size>
-                </property>
-                <property name="locale">
-                 <locale language="English" country="Germany"/>
-                </property>
-                <property name="text">
-                 <string>SOE</string>
-                </property>
-                <property name="default">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </widget>
            </item>
           </layout>
@@ -1707,7 +1602,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QGroupBox" name="groupBox">
+           <widget class="QGroupBox" name="timePlotGroupBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
               <horstretch>3</horstretch>
@@ -2180,7 +2075,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="font">
@@ -2224,7 +2119,6 @@
     <addaction name="separator"/>
     <addaction name="actionResults"/>
     <addaction name="menuExport"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -2237,9 +2131,23 @@
      <addaction name="actionEnglish"/>
      <addaction name="actionGerman"/>
     </widget>
+    <widget class="QMenu" name="menuConnection">
+     <property name="title">
+      <string>Connection</string>
+     </property>
+     <addaction name="actionConnect"/>
+     <addaction name="actionRetry"/>
+     <addaction name="separator"/>
+     <addaction name="actionAutomatic"/>
+     <addaction name="actionManual"/>
+     <addaction name="separator"/>
+     <addaction name="actionDisconnect"/>
+    </widget>
     <addaction name="menuLanguage"/>
     <addaction name="separator"/>
-    <addaction name="actionDocumentation"/>
+    <addaction name="menuConnection"/>
+    <addaction name="separator"/>
+    <addaction name="actionDiagrams"/>
    </widget>
    <widget class="QMenu" name="menuStart">
     <property name="title">
@@ -2250,7 +2158,7 @@
     <addaction name="separator"/>
     <addaction name="actionControl_Panel"/>
     <addaction name="separator"/>
-    <addaction name="actionEstimated_Launch_Time"/>
+    <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="actionRestart"/>
     <addaction name="actionQuit"/>
@@ -2259,21 +2167,9 @@
     <property name="title">
      <string>Setup</string>
     </property>
-    <widget class="QMenu" name="menuConnection">
-     <property name="title">
-      <string>Connection</string>
-     </property>
-     <addaction name="actionConnect"/>
-     <addaction name="separator"/>
-     <addaction name="actionRetry"/>
-     <addaction name="separator"/>
-     <addaction name="actionAutomatic"/>
-     <addaction name="actionManual"/>
-     <addaction name="separator"/>
-     <addaction name="actionDisconnect"/>
-    </widget>
     <addaction name="actionCalibration"/>
-    <addaction name="menuConnection"/>
+    <addaction name="separator"/>
+    <addaction name="actionEstimated_Launch_Time"/>
    </widget>
    <addaction name="menuStart"/>
    <addaction name="menuFile"/>
@@ -2445,6 +2341,16 @@
   <action name="actionDisconnect">
    <property name="text">
     <string>Disconnect</string>
+   </property>
+  </action>
+  <action name="actionSelf_Scaling_Axes">
+   <property name="text">
+    <string>Self-Scaling Axes</string>
+   </property>
+  </action>
+  <action name="actionDiagrams">
+   <property name="text">
+    <string>Diagrams</string>
    </property>
   </action>
  </widget>
