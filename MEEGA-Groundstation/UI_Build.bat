@@ -7,3 +7,4 @@ pyside6-uic UI-Files\MEEGA_startup.ui -o MEEGA_startup.py
 pyside6-uic UI-Files\MEEGA_error.ui -o MEEGA_error.py
 pyside6-uic UI-Files\MEEGA_controlPanel.ui -o MEEGA_controlPanel.py
 pyside6-uic UI-Files\MEEGA_calibration.ui -o MEEGA_calibration.py
+pyside6-uic UI-Files\MEEGA_diagramSettings.ui -o MEEGA_diagramSettings.py

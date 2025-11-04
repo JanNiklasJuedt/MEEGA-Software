@@ -75,7 +75,7 @@
      <item row="0" column="1">
       <widget class="QTextEdit" name="PortEdit">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -99,6 +99,9 @@
      </item>
      <item row="1" column="1">
       <widget class="QTextEdit" name="IPEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -165,14 +168,52 @@
      </item>
      <item row="0" column="1">
       <widget class="QComboBox" name="ConnectorBox">
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
        <item>
         <property name="text">
-         <string>Port 1</string>
+         <string>COM1</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Port 2</string>
+         <string>COM2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM9</string>
         </property>
        </item>
       </widget>

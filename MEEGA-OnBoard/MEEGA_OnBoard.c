@@ -333,7 +333,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 	DataFrame FrameTC = GetTC();
 #endif
 	if (modeSel == flight) {
-		ServoRotation(parameter.Angle_Servo); //command rotate the serve 90° first attempt*
+		ServoRotation(parameter.Angle_Servo); //command rotate the serve 90Â° first attempt*
 #if (MODE == DEBUG)
 		printf("Command to run Servo\n");
 		printf("Servo run for 90 Degree\n");
@@ -371,7 +371,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 #endif
 #endif
 			//Nozzle Cover Problem: in close position
-			ServoRotation(parameter.Angle_Servo); //command rotate the serve 90° second attempt*
+			ServoRotation(parameter.Angle_Servo); //command rotate the serve 90Â° second attempt*
 #if (MODE == DEBUG)
 			printf("Second attempt\n");
 			printf("Servo run for 90 Degree\n");
@@ -468,7 +468,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 			return -1; //abort test
 		}
 		else if (dryRun && parameter.Angle_Servo >= 30) {
-			ServoRotation(Angle_ServoReset); //command rotate the serve 90° first attempt*
+			ServoRotation(Angle_ServoReset); //command rotate the serve 90Â° first attempt*
 #if (MODE == DEBUG || EXPERIMENT == TEST)
 			printf("End of Experiment: Test Mode\n");
 #endif
@@ -694,7 +694,7 @@ int LOSignal() {
 
 
 //Servo Control Function
- //The servo 90° rotation is 1ms=0° to 2ms=90°
+ //The servo 90Â° rotation is 1ms=0Â° to 2ms=90Â°
 void ServoRotation(int degree) {
 #if (SERVO_VERSION == SERVO_v1)
 	if (degree < 0) degree = 0;
@@ -703,7 +703,7 @@ void ServoRotation(int degree) {
 	int minR = 1000;
 	int maxR = 2000;
 	int pulse_us = minR + degree * (maxR - minR) / 90;
-	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
+	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0Â° to 20 = 90Â° in x10 of millisecond
 	softPwmWrite(Servo_Pin, pwmWidth);
 #elif (SERVO_VERSION == SERVO_v2)
 	if (degree < 0) degree = 0;
