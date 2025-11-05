@@ -175,7 +175,7 @@ ServoStuck = 3,
 NozzleStuck = 3,
 NozzleOpen = 1,
 LEDsOn = 0,
-LEDsOff = 1;
+LEDsOff = 1,
 flight = 1,
 test = 0;
 
@@ -219,7 +219,7 @@ int ServoRun(int angle);
 //Functiong in Test Mode manually controlling the Experiment from the Ground Station
 void ExperimentControl();
 //Waits or aborts if modeSel == test and Test_Abort in TC is true
-int delay(int milliseconds);
+int delay_abortable(int milliseconds);
 
 //DATA LOGGING
 //Function acquiring the Data from the Sensors and writing it into a DataFrame
