@@ -29,8 +29,8 @@ from MEEGA_PyDataHandling import *
 class Settings:
     AUTOMATIC = 0
     MANUAL = 1
-    FLIGHT = 0
-    TEST = 1
+    FLIGHT = 1
+    TEST = 0
     SERIAL = 0
     TCP = 1
     #diagram flags
@@ -69,26 +69,6 @@ class Settings:
 class Telecommand:
     def __init__(self, collection):
         self.collection = collection
-        self.tcframe = DataHandling.CreateTC()
-        self.sendCounter = 0
-
-    def newTCFrame(self):
-        self.tcframe = DataHandling.CreateTC()
-        DataHandling.WriteFrame(self.tcframe, 0, self.collection.settings.mode)
-
-    def sendInit(self):
-        self.sendCounter = 10
-
-    def sendStep(self):
-        if self.sendCounter > 0:
-            DataHandling.AddFrame(self.tcframe)
-            self.sendCounter -= 1
-
-#class to handle telecommands
-class Telecommand:
-    def __init__(self, collection):
-        self.collection = collection
-        self.tcframe = DataHandling.CreateTC()
         self.sendCounter = 0
 
     def newTCFrame(self):
@@ -210,7 +190,7 @@ class GSMain(QMainWindow):
             connectionLabelSize = self.ui.connectionLabel.size()
             connectionCircle = min(connectionLabelSize.width(), connectionLabelSize.height())
             self.activepix_connection = self.activepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self.issuespix_connection = self.activepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.issuespix_connection = self.issuespix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.inactivepix_connection = self.inactivepix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.noconnectionpix_connection = self.noconnectionpix.scaled(connectionCircle, connectionCircle, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     #override resizeEvent to rescale pixmaps when window size changes
@@ -269,14 +249,20 @@ class GSMain(QMainWindow):
                     self.statusDisplay[i].setPixmap(self.issuespix_scaled)
                 case self.INACTIVE:
                     self.statusDisplay[i].setPixmap(self.inactivepix_scaled)
+
     def createPlots(self):
         #time plot
         #create Line Series for each sensor
         #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
         self.timeSeries = [QLineSeries() for _ in range(12)]
 
+        self.rebuildSignal = Signal()
+        self.reducePointsSignal = Signal()
+
+        #value tracking for time plots
         self.timeHighestPres = 0
         self.timeHighestTemp = 0
+        self.currentIndex = -1
 
         #create and add Series
         self.timeChart = QChart()
@@ -349,6 +335,7 @@ class GSMain(QMainWindow):
         self.distanceLayout.addWidget(self.distanceChartView)
 
         self.connectItemsToSeries()
+        #self.repaintPlots()
 
     def extendPlots(self, index: int):
         settings = self.collection.settings
@@ -362,11 +349,6 @@ class GSMain(QMainWindow):
 
         
         #distance plot
-        self.distanceChartView.setUpdatesEnabled(False)
-        self.distanceChartView.scene().blockSignals(True)
-        self.timeChartView.setUpdatesEnabled(False)
-        self.timeChartView.blockSignals(True)
-
         self.distancePSeries.clear()
         self.distanceTSeries.clear()
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][2], 0)
@@ -386,74 +368,38 @@ class GSMain(QMainWindow):
             (settings.expandFrom == Settings.SOE and settings.startOfExperimentIndex == -1)
         )):
             #time plot
-            for i in range(12):
-                while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) > settings.scrollingTimeSeconds*1000:
-                    self.timeSeries[i].remove(0)
-                self.timeSeries[i].append(dataAccu.household[index][20], dataAccu.sensorData[index][i])
-                #save highest pressure for scaling of axes
-                if i%2 == 0: #pressure Value
-                    if dataAccu.sensorData[index][i] > self.timeHighestPres:
-                        self.timeHighestPres = dataAccu.sensorData[index][i]
-                else: #temperature Value
-                    if dataAccu.sensorData[index][i] > self.timeHighestTemp:
-                        self.timeHighestTemp = dataAccu.sensorData[index][i]
+            while self.currentIndex < index:
+                self.currentIndex += 1
+                for i in range(12):
+                    while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) > settings.scrollingTimeSeconds*1000:
+                        self.timeSeries[i].remove(0)
+                    self.timeSeries[i].append(dataAccu.household[self.currentIndex][20], dataAccu.sensorData[self.currentIndex][i])
+                    #save highest pressure for scaling of axes
+                    if i%2 == 0: #pressure Value
+                        if dataAccu.sensorData[self.currentIndex][i] > self.timeHighestPres:
+                            self.timeHighestPres = dataAccu.sensorData[self.currentIndex][i]
+                    else: #temperature Value
+                        if dataAccu.sensorData[self.currentIndex][i] > self.timeHighestTemp:
+                            self.timeHighestTemp = dataAccu.sensorData[self.currentIndex][i]
 
             self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
 
         if settings.temperatureAxeMode == Settings.SELFSCALING or settings.pressureAxeMode == Settings.SELFSCALING:
             self.updateAxes()
 
+        #self.repaintPlots()
+
+    def repaintPlots(self):
         self.timeChartView.setUpdatesEnabled(True)
         self.timeChartView.blockSignals(False)
         self.distanceChartView.setUpdatesEnabled(True)
         self.distanceChartView.scene().blockSignals(False)
-
         self.distanceChartView.repaint()
         self.timeChartView.repaint()
-
-    def rebuildPlot(self):
-        settings = self.collection.settings
-        dataAcc = self.collection.dataAccumulation
-        sensorData = dataAcc.sensorData
-        household = dataAcc.household
-        clear = False
-
-        startIndex = 0
-        endIndex = dataAcc.gatherIndex
-        if settings.timespanMode == Settings.EXPANDING:
-            match settings.expandFrom:
-                case Settings.LO:
-                    if settings.liftOffIndex != -1:
-                        startIndex = settings.liftOffIndex
-                    else:
-                        clear = True
-                case Settings.SOE:
-                    if settings.startOfExperimentIndex != -1:
-                        startIndex = self.collection.startOfExperimentIndex
-                    else:
-                        clear = True
-        else:
-            startIndex = max(0, dataAcc.gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
-
-        if endIndex <= startIndex:
-            clear = True
-
-        if clear:
-            for s in self.timeSeries:
-                s.clear()
-            return
-        
-        if startIndex == 0:
-            xValues = household[:endIndex, 20]
-            yMatrix = sensorData[:endIndex, :12]
-        else:
-            xValues = np.ascontiguousarray(household[startIndex:endIndex, 20])
-            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :12])
-
-        for i in range(12):
-            yValues =  yMatrix[:, i]
-            points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
-            self.timeSeries[i].replace(points)
+        self.distanceChartView.setUpdatesEnabled(False)
+        self.distanceChartView.scene().blockSignals(True)
+        self.timeChartView.setUpdatesEnabled(False)
+        self.timeChartView.blockSignals(True)
 
     def updateAxes(self):
         settings = self.collection.settings
@@ -490,20 +436,6 @@ class GSMain(QMainWindow):
     def onNewFrame(self, index: int):
         self.extendPlots(index)
         self.displayStatus(index)
-    @Slot()
-    def modeSwitched(self):
-        if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
-            self.collection.settings.mode = Settings.FLIGHT
-            self.ui.label_mode.setText("Flight Mode")
-            self.ui.actionControl_Panel.setEnabled(False)
-            self.collection.controlPanel.clearPanel()
-            self.collection.controlPanel.hide()
-        else:
-            self.collection.settings.mode = Settings.TEST
-            self.ui.label_mode.setText("Test Mode")
-            self.ui.actionControl_Panel.setEnabled(True)
-        self.collection.telecommand.newTCFrame()
-        self.collection.telecommand.sendInit()
     @Slot()
     def modeSwitched(self):
         if self.modeGroup.checkedAction() == self.ui.actionFlight_Mode:
@@ -749,18 +681,18 @@ class GSControl(QWidget):
         self.EOEDelay = self.ui.EOETimeEdit.time().addMSecs(int(self.ui.EOEMilliEdit.text()))
     # Update the telecommand frame with current control states and durations
     def updateTCFrame(self):
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 1, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 2, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 3, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Valve_Delay, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Delay, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.EoE_Delay, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
         #PowerOffDelay fehlt
         #NozzleOnDelay fehlt
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 6, self.dryRunActive)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 7, self.ledState)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 8, floor(self.servoAngle*10))
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 9, self.valveControl)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Dry_Run, self.dryRunActive)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.LED_Control, self.ledState)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Control, floor(self.servoAngle*10))
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Valve_Control, self.valveControl)
         #Camera control fehlt
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 11, self.testRunStop)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, 12, self.testRunStart)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Test_Abort, self.testRunStop)
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Test_Run, self.testRunStart)
     def clearPanel(self):
         self.valveControl = 0
         self.ledState = 0
@@ -891,6 +823,8 @@ class GSCalibration(QDialog):
         self.updateValue(index)
 
 class GSDiagramSettings(QWidget):
+    rebuildSignal = Signal()
+
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_diagramSettings()
@@ -929,7 +863,7 @@ class GSDiagramSettings(QWidget):
                 self.collection.settings.expandFrom = self.ui.firstShownComboBox.currentIndex()
 
         if plotRebuildNecessary:
-            self.collection.mainWindow.rebuildPlot()
+            self.rebuildSignal.emit()
         self.collection.mainWindow.updateAxes()
 
     def radioButtonClicked(self):
@@ -958,6 +892,7 @@ class GSDiagramSettings(QWidget):
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.applyDiagramSettings.clicked.connect(self.applySettings)
+        self.rebuildSignal.connect(self.collection.plotWorker.rebuildPlot)
 
 class DataAccumulation:
     def __init__(self, collection: ClassCollection):
@@ -968,58 +903,120 @@ class DataAccumulation:
         self.household = np.zeros((self.allocationSize, 27))
 
     def accumulate(self):
-        # if DataHandling.PortIsOpen():
-        #     self.collection.mainWindow.connectionStatus = GSMain.INACTIVE
-        # else:
-        #     self.collection.mainWindow.connectionStatus = GSMain.NOCONNECTION
-        # while True:
-        #     frame = DataHandling.GetNextFrame()
-        #     if DataHandling.FrameIsEmpty(frame):
-        #        break
-        #     else:
-        #         self.gatherIndex += 1
-        #     if DataHandling.FrameHasFlag(frame, Flag.OK):
-        #         self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
-        #     else:
-        #         self.collection.mainWindow.connectionStatus = GSMain.ISSUES
-        ###
-        self.gatherIndex += 1 ###only for testing purposes###
-        ###
+        testData = False
+
+        if not testData:
+            if DataHandling.PortIsOpen():
+                self.collection.mainWindow.connectionStatus = GSMain.INACTIVE
+            else:
+                self.collection.mainWindow.connectionStatus = GSMain.NOCONNECTION
+            while True:
+                frame = DataHandling.GetNextFrame()
+                if DataHandling.FrameIsEmpty(frame):
+                   break
+                else:
+                    self.gatherIndex += 1
+                if DataHandling.FrameHasFlag(frame, Flag.OK):
+                    self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
+                else:
+                    self.collection.mainWindow.connectionStatus = GSMain.ISSUES
+        else:
+            ###
+            self.gatherIndex += 1 ###only for testing purposes###
+            ###
         if self.gatherIndex%self.allocationSize == 0:
             dataExtension = np.zeros((self.allocationSize, 12))
             householdExtension = np.zeros((self.allocationSize, 27))
             self.sensorData = np.concatenate((self.sensorData, dataExtension))
             self.household = np.concatenate((self.household, householdExtension))
         for i in range(12):
+            if testData:
+                ###
+                self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+                ###
+            else:
+                self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
+        if testData:
             ###
-            self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+            self.household[self.gatherIndex][20] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
             ###
-            # self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
-        ###
-        self.household[self.gatherIndex][20] = 500*self.gatherIndex  ###only for testing purposes###
-        ###
-        # for i in range(12):
-        #    self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 12+i)
-        # self.household[self.gatherIndex][12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-        # self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-        # self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-        # self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-        # self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.LEDs)
-        # self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-        # self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-        # self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-        # self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.System_Time)
-        # self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-        # self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-        # self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-        # self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
-        # self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+        else:
+            for i in range(12):
+               self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 12+i)
+            self.household[self.gatherIndex][12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+            self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+            self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+            self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+            self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.LEDs)
+            self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+            self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+            self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+            self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.System_Time)
+            self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+            self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+            self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+            self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
+            self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
-        # if self.gatherIndex > 0:
-        #     if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
-        #         self.collection.settings.liftOffIndex = self.gatherIndex
-        #     if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
-        #         self.collection.settings.startOfExperimentIndex = self.gatherIndex
+            if self.gatherIndex > 0:
+                if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
+                    self.collection.settings.liftOffIndex = self.gatherIndex
+                if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+                    self.collection.settings.startOfExperimentIndex = self.gatherIndex 
+
+class PlotWorker(QThread):
+    def __init__(self, collection: ClassCollection):
+        super().__init__()
+        self.collection = collection
+
+    def rebuildPlot(self):
+        settings = self.collection.settings
+        dataAcc = self.collection.dataAccumulation
+        sensorData = dataAcc.sensorData
+        household = dataAcc.household
+        clear = False
+        mainWindow = self.collection.mainWindow
+
+        startIndex = 0
+        endIndex = dataAcc.gatherIndex
+        if settings.timespanMode == Settings.EXPANDING:
+            match settings.expandFrom:
+                case Settings.LO:
+                    if settings.liftOffIndex != -1:
+                        startIndex = settings.liftOffIndex
+                    else:
+                        clear = True
+                case Settings.SOE:
+                    if settings.startOfExperimentIndex != -1:
+                        startIndex = settings.startOfExperimentIndex
+                    else:
+                        clear = True
+        else:
+            startIndex = max(0, dataAcc.gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
+
+        if endIndex <= startIndex:
+            clear = True
+
+        if clear:
+            for s in mainWindow.timeSeries:
+                s.clear()
+            return
+        
+        if startIndex == 0:
+            xValues = household[:endIndex, 20]
+            yMatrix = sensorData[:endIndex, :12]
+        else:
+            xValues = np.ascontiguousarray(household[startIndex:endIndex, 20])
+            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :12])
+
+        for i in range(12):
+            yValues =  yMatrix[:, i]
+            points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
+            mainWindow.timeSeries[i].replace(points)
+        self.collection.mainWindow.currentIndex = dataAcc.gatherIndex
+        self.collection.mainWindow.timeHighestPres = np.max(yMatrix[startIndex:endIndex, 2:11:2])
+        self.collection.mainWindow.timeHighestTemp = np.max(yMatrix[startIndex:endIndex, 1:12:2])
+        #self.collection.mainWindow.repaintPlots()
 
 class DataHandlingThread(QThread):
     newFrameSignal = Signal(int)
@@ -1027,12 +1024,15 @@ class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
-        self.frequency = 20
+        self.frequency = 2
     def run(self):
         period_ms = 1000 / self.frequency
+        i = 0
+        times = [0]*50
+        DataHandling.Initialize()
         while True:
             clock = time.monotonic_ns()
-            DataHandling.DebugSaveFile()
+            DataHandling.DebugLastFrame()
             DataHandling.UpdateAll()
             # clock2 = time.monotonic_ns()
             # print("DataHandlingUpdate-time: " + str((clock2-clock)/1000000))
@@ -1052,9 +1052,17 @@ class DataHandlingThread(QThread):
             # print(period_ms-(endTime - clock)/1000000)
             if (endTime - clock)/1000000 < period_ms:
                 time.sleep((period_ms - (endTime - clock) / 1000000)/1000)
-            # clock6 = time.monotonic_ns()
+            clock6 = time.monotonic_ns()
             # print("rest-time: " + str((clock6-clock5)/1000000))
-            # print("DataHandling Loop-time: " + str((clock6 - clock) / 1000000) + "\n")
+            times[i] = (clock6-clock)/1000000
+            i += 1
+            if i == 50:
+                average = 0
+                for timeVal in times:
+                    average += timeVal
+                average = average/50
+                print("DataHandling Loop-time average: " + str(average) + " with " + str(self.collection.dataAccumulation.gatherIndex + 1) + " points\n")
+                i = 0
 
 class ClassCollection:
     def __init__(self):
@@ -1070,9 +1078,9 @@ class ClassCollection:
         self.resultsWindow = GSResults(self)
         self.connectionWindow = GSConnection(self)
         self.calibrationWindow = GSCalibration(self)
+        self.plotWorker = PlotWorker(self)
         self.diagramSettingsWindow = GSDiagramSettings(self)
         #DataHandling setup
-        DataHandling.Initialize(b"")
         self.dataHandlingThread = DataHandlingThread(self)
         self.dataHandlingThread.newFrameSignal.connect(self.mainWindow.onNewFrame)
         self.dataHandlingThread.newFrameSignal.connect(self.calibrationWindow.onNewFrame)
