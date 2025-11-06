@@ -9,7 +9,7 @@ PATH_LENGTH = c_int.in_dll(DataHandling, "PathLength").value
 DATA_LENGTH = c_int.in_dll(DataHandling, "DataLength").value
 
 class DataFrame(Structure):
-    _fields_ = [ ("sync", c_uint16), ("flag", c_ubyte), ("data", c_ubyte * DATA_LENGTH), ("chksm", c_uint16) ]
+    _fields_ = [("start", c_ubyte), ("flag", c_ubyte), ("sync", c_uint16), ("data", c_ubyte * DATA_LENGTH), ("chksm", c_uint16) ]
 
 class CalibrationPoint(Structure):
     _fields_ = [ ("digital", c_int64), ("analog", c_float), ("valid", c_byte)]

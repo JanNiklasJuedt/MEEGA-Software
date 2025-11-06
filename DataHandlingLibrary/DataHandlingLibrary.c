@@ -528,8 +528,6 @@ int WriteCalibration()
 			DebugLog("!Could not open Calibration file");
 			return 0;
 		}
-	else {
-		file = fopen(path, "rb");
 	}
 	//DebugLog("Write unneccessary_");
 	return 1;
@@ -1345,7 +1343,7 @@ DataFrame GetTC()
 	SaveFrame* currentFrame = dataHandling.saveFile->lastFrame;
 	for (; currentFrame->previousFrame != NULL; currentFrame = currentFrame->previousFrame) {
 		if (FrameIsTC(currentFrame->data)) {
-			if (!FrameIsEmpty(currentFrame->data) && FrameHasFlag(currentFrame->data, OK)) {
+			if (!FrameIsEmpty(currentFrame->data)) {
 				newestTC = currentFrame->data;
 				break;
 			}
@@ -1846,23 +1844,33 @@ void DebugSaveFile() {
 		DebugLog("!SaveFile not found_");
 		return;
 	}
-	int i;
-	int content[TELEMETRY_AMOUNT];
 	DebugLog("Version#", (int)(dataHandling.saveFile->version * 10));
 	DebugLog("Time of Creation#", dataHandling.saveFile->dateTime);
 	DebugLog("Filename§", dataHandling.saveFile->saveFilePath);
 	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
-		if (FrameIsTC(current->data)) {
-			for (i = 0; i < TELEMETRY_AMOUNT; i++) {
-				if (i < TELECOMMAND_AMOUNT) content[i] = (int) ReadFrame(current->data, i);
-				else content[i] = 0;
-			}
-		}
-		else {
-			for (i = 0; i < TELEMETRY_AMOUNT; i++) content[i] = (int) ReadFrame(current->data, i);
-		}
-		DebugLog("Flag# Sync# Data~ Chksm#", current->data.flag, current->data.sync, TELEMETRY_AMOUNT, content, current->data.chksm);
+		DebugSaveFrame(current->data);
 	}
 	DebugLog("End of SaveFile_");
+}
+void DebugSaveFrame(DataFrame frame)
+{
+	int content[TELEMETRY_AMOUNT], i;
+	if (FrameIsTC(frame)) {
+		for (i = 0; i < TELEMETRY_AMOUNT; i++) {
+			if (i < TELECOMMAND_AMOUNT) content[i] = (int)ReadFrame(frame, i);
+			else content[i] = 0;
+		}
+	}
+	else {
+		for (i = 0; i < TELEMETRY_AMOUNT; i++) content[i] = (int)ReadFrame(frame, i);
+	}
+	DebugLog("Flag# Sync# Data~ Chksm#", frame.flag, frame.sync, TELEMETRY_AMOUNT, content, frame.chksm);
+	return;
+}
+void DebugLastFrame()
+{
+	if (dataHandling.saveFile == NULL || dataHandling.saveFile->lastFrame == NULL) return;
+	DebugSaveFrame(dataHandling.saveFile->lastFrame->data);
+	return;
 }
 //End of DataHandlingLibrary

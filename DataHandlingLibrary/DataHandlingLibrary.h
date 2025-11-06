@@ -27,7 +27,7 @@
 //DataHandling Settings
 #define DATAHANDLINGLIBRARY_OS (WINDOWS_OS)
 #define CALIBRATION_METHOD (NONE)
-#define DEBUG_OUTPUT (LOGFILE)
+#define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
 #define TRANSMISSION_DEBUG 0
@@ -104,8 +104,13 @@ typedef unsigned char byte;
 #define DELAY_LEN 16 //Bits
 #define BASE_LEN 1 //Bits
 #define STM_LEN 2 //Bits
+<<<<<<< HEAD
 #define EXP_LEN 4 //Bits
+#define MAIN_LEN 3 //Bits
+=======
+#define EXP_LEN 3 //Bits
 #define MAIN_LEN 4 //Bits
+>>>>>>> parent of a253526 (Changes to OnBoard from meeting)
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 6 //Bits
 
@@ -335,6 +340,9 @@ DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 /// </summary>
 /// <returns></returns>
 DATAHANDLINGLIBRARY_API void DebugSaveFile();
+
+DATAHANDLINGLIBRARY_API void DebugSaveFrame(DataFrame frame);
+DATAHANDLINGLIBRARY_API void DebugLastFrame();
 
 /// <summary>
 /// Calculates checksum of DataFrames
