@@ -62,14 +62,14 @@ int _SetPositions_()
 		return 0;
 	}
 	for (id = 0, pos = 0; id < TELECOMMAND_AMOUNT; id++) {
-		length = BASE_LEN + 1;
+		length = BASE_LEN;
 		switch (id) {
 		case Power_Off_Delay:
-		case Nozzle_On_Delay: length = 0; break;
+		case Nozzle_On_Delay:
 		case Valve_Delay:
 		case Servo_Delay:
 		case EoE_Delay:
-		case Servo_Control: length = DELAY_LEN + 1; break;
+		case Servo_Control: length = DELAY_LEN; break;
 		}
 		dataHandling.frameLookUp->telecommand_Pos_Len[id][0] = pos;
 		dataHandling.frameLookUp->telecommand_Pos_Len[id][1] = length;
@@ -160,14 +160,14 @@ static SYNC_TYPE _GetSync_()
 
 static byte _ToMSG_(byte type, byte id)
 {
-	if ((id < (1 << MSG_ID_LEN)) & (type < (1 << (8 - MSG_ID_LEN)))) return (type << MSG_ID_LEN) + id;
+	if ((id < (1 << MSG_ID_LEN)) & (type <= 1)) return (id << (8 - MSG_ID_LEN)) + type;
 	return 0;
 }
 
 void _FromMSG_(byte msg, byte* type_out, byte* id_out)
 {
-	*id_out = msg % (1 << MSG_ID_LEN);
-	*type_out = msg >> MSG_ID_LEN;
+	*id_out = msg >> (8 - MSG_ID_LEN);
+	*type_out = msg & 1;
 	return;
 }
 
@@ -200,24 +200,22 @@ int Initialize()
 	}
 	int readExisting = 1;
 	if (dataHandling.failSafe == NULL) readExisting = 0;
-	else readExisting = !(dataHandling.failSafe->nominalExit) && (dataHandling.failSafe->saveFilePath[0] != '\0');
+	else readExisting = !(dataHandling.failSafe->nominalExit) && !(dataHandling.failSafe->complete) && dataHandling.failSafe->saveFilePath[0] != '\0';
 	if (readExisting) {
-		DebugLog("Existing SaveFile found at§", dataHandling.failSafe->saveFilePath);
+		DebugLog("Existing SaveFile found at", dataHandling.failSafe->saveFilePath);
 		ReadSave(dataHandling.failSafe->saveFilePath);
 	}
-	if (USE_DEFAULT_VALUES & (dataHandling.saveFile == NULL)) {
+	if (USE_DEFAULT_VALUES && (dataHandling.saveFile == NULL)) {
 		CreateSave(SAVEFILE_NAME);
 	}
 	if (CALIBRATION_METHOD != NONE) {
 		if (dataHandling.failSafe != NULL) {
 			if (dataHandling.failSafe->calPath[0] != '\0') {
-				DebugLog("Reading Calibration?");
-				if (ReadCalibration(dataHandling.failSafe->calPath)) DebugLog("Calibration read");
+				ReadCalibration(dataHandling.failSafe->calPath);
 			}
 		}
-		if ((dataHandling.calibration == NULL) & USE_DEFAULT_VALUES) {
-			DebugLog("Creating new Calibration:");
-			if (CreateCalibration(CALIBRATION_NAME)) DebugLog("Calibration created_");
+		if ((dataHandling.calibration == NULL) && USE_DEFAULT_VALUES) {
+			CreateCalibration(CALIBRATION_NAME);
 		}
 	}
 	else DebugLog("Skipping Calibration");
@@ -322,13 +320,13 @@ float MapSensorValue(int id, long long value)
 	if ((dataHandling.calibration != NULL) & (id >= 0) & (id < SENSOR_AMOUNT) || (CALIBRATION_POINTS < 2)) {
 		if (!dataHandling.calibration->sorted) _SortCalibration_();
 		CalibrationPoint points[CALIBRATION_POINTS];
-		float out = 0.0f;
+		float out = (float)value;
 		int i, j;
 		for (i = 0; i < CALIBRATION_POINTS; i++) {
 			//reading points
 			points[i] = ReadPoint(id, i);
 			//trivial solution
-			if ((points[i].digital == value) & (points[i].valid)) return points[i].analog;
+			if ((points[i].digital == value) && (points[i].valid)) return points[i].analog;
 			
 		}
 		//test for insufficient calibration points
@@ -486,7 +484,7 @@ int ReadCalibration(const char* path)
 							}
 						}
 						if (!error) {
-							DebugLog("Calibration read from§_", path);
+							DebugLog("Calibration read from$_", path);
 							return 1;
 						}
 					}
@@ -521,7 +519,7 @@ int WriteCalibration()
 				fprintf(file, CALIBRATION_SENSOR_END_STRING);
 			}
 			fclose(file);
-			//DebugLog("Calibration written at§_", calibration.calibrationFilePath);
+			//DebugLog("Calibration written at$_", calibration.calibrationFilePath);
 			return 1;
 		}
 		else {
@@ -537,6 +535,7 @@ DataFrame CreateFrame()
 {
 	DataFrame temp = EmptyFrame();
 	temp.sync = _GetSync_();
+	FrameSetFlag(&temp, Source);
 	return temp;
 }
 
@@ -545,6 +544,7 @@ DataFrame CreateTC()
 	DataFrame temp = EmptyFrame();
 	temp.sync = _GetSync_();
 	FrameSetFlag(&temp, TeleCommand);
+	FrameSetFlag(&temp, Source);
 	return temp;
 }
 
@@ -553,8 +553,7 @@ DataFrame EmptyFrame()
 	DataFrame temp = { 0 };
 	byte* bytePtr = (byte*)&temp;
 	for (int i = 0; i < sizeof(DataFrame); i++) bytePtr[i] = 0;
-	temp.start = -1;
-	FrameSetFlag(&temp, Source);
+	temp.start = START_BYTE;
 	return temp;
 }
 
@@ -694,8 +693,7 @@ int FrameHasFlag(DataFrame frame, int id)
 void FrameSetFlag(DataFrame* frame, int id)
 {
 	if (frame == NULL || id >= 8 || id < 0) return;
-	if ((frame->flag >> id) % (1 << (id + 1)));
-	else frame->flag += 1 << id;
+	frame->flag |= 1 << id;
 	if (id == Partial || id == Biterror) {
 		FrameRemoveFlag(frame, OK);
 		FrameRemoveFlag(frame, Source);
@@ -808,7 +806,7 @@ int FormFrames()
 		_FromMSG_(currentPacket.msg, &type, &id);
 		if (framePtr->sync != currentPacket.sync) {
 			for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames; framePtr++) {
-				if ((framePtr->sync == currentPacket.sync) & (framePtr->chksm == currentPacket.chksm)) {
+				if (framePtr->sync == currentPacket.sync) {
 					foundMatch = 1;
 					break;
 				}
@@ -816,9 +814,9 @@ int FormFrames()
 			if (!foundMatch) {
 				framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
 				framePtr->sync = currentPacket.sync;
+				framePtr->chksm = currentPacket.chksm;
 				if (type) FrameSetFlag(framePtr, TeleCommand);
 				FrameSetFlag(framePtr, OK);
-				framePtr->chksm = currentPacket.chksm;
 			}
 		}
 		dataIndex = id * PAYLOAD_LENGTH;
@@ -881,6 +879,10 @@ DataFrame GetInFrame()
 			break;
 		}
 	}
+	/*
+	if (FrameIsTC(temp)) temp.chksm = ReadFrame(temp, TC_Checksum);
+	else temp.chksm = ReadFrame(temp, TM_Checksum);
+	*/
 	if (temp.chksm != CalculateChecksum(temp)) FrameSetFlag(&temp, Partial);
 	else FrameSetFlag(&temp, OK);
 	return temp;
@@ -909,6 +911,10 @@ int AddOutFrame(DataFrame frame)
 		return -1;
 	}
 	int i = 0;
+	/*
+	if (FrameIsTC(frame)) WriteFrame(&frame, TC_Checksum, frame.chksm);
+	else WriteFrame(&frame, TM_Checksum, frame.chksm);
+	*/
 	for (; i <= BUFFER_LENGTH; i++) {
 		if (FrameIsEmpty(dataHandling.buffer->outFrames[i])) {
 			dataHandling.buffer->outFrames[i] = frame;
@@ -934,51 +940,43 @@ int AddInFrame(DataFrame frame)
 	return i;
 }
 
-#define FAILSAFE_TITLE_STRING "MEEGA FailSafe\n\n"
-#define FAILSAFE_VERSION_STRING "Version: %f;\n"
-#define FAILSAFE_DATE_STRING "Datetime: %lli;\n"
-#define FAILSAFE_SAVEFILE_STRING "Savefile: %s;\n"
-#define FAILSAFE_CALIBRATION_STRING "Calibrationfile: %s;\n"
-#define FAILSAFE_COMPLETE_STRING "Complete: %c;\n"
-#define FAILSAFE_NOMINAL_STRING "Nominal Exit: %c;\n"
+#define FAILSAFE_TITLE_STRING "MEEGA-FailSafe\n\n"
+#define FAILSAFE_VERSION_STRING "Version:%f;\n"
+#define FAILSAFE_DATE_STRING "Datetime:%lli;\n"
+#define FAILSAFE_SAVEFILE_READER "Savefile:%100[^;];\n"
+#define FAILSAFE_SAVEFILE_STRING "Savefile:%s;\n"
+#define FAILSAFE_CALIBRATION_READER "Calibrationfile:%100[^;];\n"
+#define FAILSAFE_CALIBRATION_STRING "Calibrationfile:%s;\n"
+#define FAILSAFE_COMPLETE_STRING "Complete:%c;\n"
+#define FAILSAFE_NOMINAL_STRING "Nominal Exit:%c;\n"
 
 int CreateFailSafe() 
 {
+	DebugLog("Creating FailSafe:");
 	if (dataHandling.failSafe != NULL) {
 		free(dataHandling.failSafe);
 		dataHandling.failSafe = NULL;
 	}
 	FailSafe* new = malloc(sizeof(FailSafe));
 	if (new == NULL) {
-		DebugLog("!Memory allocation failed");
+		DebugLog("!Memory allocation failed_");
 		return 0;
 	}
 	byte* bytePtr = (byte*) new;
 	for (int i = 0; i < sizeof(FailSafe); i++) bytePtr[i] = 0;
 	new->nominalExit = 0;
+	new->complete = 1;
 	new->dateTime = time(NULL);
 	new->version = FAILSAFE_VERSION;
+	new->changed = 1;
 	if (USE_DEFAULT_VALUES) {
 		strcpy(new->saveFilePath, SAVEFILE_NAME);
 		strcpy(new->comPath, DEFAULTCOMPATH);
 		strcpy(new->calPath, CALIBRATION_NAME);
 	}
-	FILE* file;
-	file = fopen(FAILSAFE_NAME, "w");
-	if (file != NULL) {
-		fprintf(file, FAILSAFE_TITLE_STRING);
-		fprintf(file, FAILSAFE_VERSION_STRING, new->version);
-		fprintf(file, FAILSAFE_DATE_STRING, new->dateTime);
-		if (USE_DEFAULT_VALUES) fprintf(file, FAILSAFE_SAVEFILE_STRING, new->saveFilePath);
-		else fprintf(file, FAILSAFE_SAVEFILE_STRING, " ");
-		if ((CALIBRATION_METHOD != NONE) & USE_DEFAULT_VALUES) fprintf(file, FAILSAFE_CALIBRATION_STRING, new->calPath);
-		else fprintf(file, FAILSAFE_CALIBRATION_STRING, " ");
-		fprintf(file, FAILSAFE_COMPLETE_STRING, (new->complete) ? 'y' : 'n');
-		fprintf(file, FAILSAFE_NOMINAL_STRING, (new->nominalExit)? 'y' : 'n');
-		fclose(file);
-	}
-	else DebugLog("!Could not create FailSafe file");
+	DebugLog("FailSafe initialized");
 	dataHandling.failSafe = new;
+	if (WriteFailSafe()) DebugLog("FailSafe file created_");
 	return 1;
 }
 
@@ -994,7 +992,7 @@ int ReadFailSafe()
 	FILE* file = NULL;
 	FailSafe* this = malloc(sizeof(FailSafe));
 	if (this == NULL) {
-		DebugLog("!Memory allocation failed");
+		DebugLog("!Memory allocation failed_");
 		return 0;
 	}
 	dataHandling.failSafe = this;
@@ -1004,6 +1002,7 @@ int ReadFailSafe()
 	this->version = FAILSAFE_VERSION;
 	file = fopen(FAILSAFE_NAME, "r");
 	if (file != NULL) {
+		//char debug[1000] = {""};
 		if (fscanf(file, FAILSAFE_TITLE_STRING) != EOF) {
 			if (fscanf(file, FAILSAFE_VERSION_STRING, &ReadVersion) != EOF) {
 				if (ReadVersion == this->version) {
@@ -1011,8 +1010,9 @@ int ReadFailSafe()
 					char ReadChar;
 					int length = PATH_LENGTH;
 					if (fscanf(file, FAILSAFE_DATE_STRING, &this->dateTime) != EOF) {
-						if (fscanf(file, FAILSAFE_SAVEFILE_STRING, &this->saveFilePath) != EOF) {
-							if (fscanf(file, FAILSAFE_CALIBRATION_STRING, &this->calPath) != EOF) {
+						if (fscanf(file, FAILSAFE_SAVEFILE_READER, &this->saveFilePath) != EOF) {
+							//fscanf(file, "%[^;]s", debug);
+							if (fscanf(file, FAILSAFE_CALIBRATION_READER, &this->calPath) != EOF) {
 								length = 1;
 								if (fscanf(file, FAILSAFE_COMPLETE_STRING, &ReadChar) != EOF) {
 									this->complete = (ReadChar == 'y') ? 1 : 0;
@@ -1057,7 +1057,7 @@ int ReadFailSafe()
 					fclose(file);
 				}
 				else if (ReadVersion = 0.0f) {
-					//Older FileReader:
+					//Even Older FileReader:
 				}
 			}
 		}
@@ -1093,7 +1093,7 @@ int WriteFailSafe()
 		fprintf(file, FAILSAFE_NOMINAL_STRING, (failsafe->nominalExit) ? 'y' : 'n');
 		fclose(file);
 		failsafe->changed = 0;
-		//DebugLog("FailSafe written at§_", FAILSAFE_NAME);
+		//DebugLog("FailSafe written at$_", FAILSAFE_NAME);
 		return 1;
 	}
 	else DebugLog("!Could not open FailSafe file");
@@ -1103,7 +1103,6 @@ int WriteFailSafe()
 int VirtualSave()
 {
 	if (dataHandling.saveFile != NULL) {
-		//DebugLog("Found existing SaveFile");
 		CloseSave();
 		free(dataHandling.saveFile);
 		dataHandling.saveFile = NULL;
@@ -1198,6 +1197,7 @@ int ReadSave(const char path[])
 {
 	DebugLog("Reading SaveFile:");
 	FILE* file;
+	if (!VirtualSave()) return 0;
 	if (path == NULL || path[0] == '\0')
 		if (USE_DEFAULT_VALUES) file = fopen(SAVEFILE_NAME, "rb");
 		else {
@@ -1206,12 +1206,12 @@ int ReadSave(const char path[])
 		}
 	else file = fopen(path, "rb");
 	if (file == NULL) {
-		DebugLog("!SaveFile could not be opened_");
+		DebugLog("!SaveFile file could not be opened_");
 		return 0;
 	}
-	DebugLog("Opened SaveFile");
-	if (!VirtualSave()) return 0;
+	DebugLog("Opened SaveFile file");
 	byte* writePtr = (byte*) &dataHandling.saveFile->dateTime;
+	byte temp = 0;
 	int i = 0;
 	if (fscanf(file, "%f", &dataHandling.saveFile->version) == EOF) {
 		DebugLog("!Unexpected End of File");
@@ -1224,11 +1224,13 @@ int ReadSave(const char path[])
 		}
 	}
 	for (i = 0; 1; i++){
-		if (i % sizeof(DataFrame) == 0) {				
+		if (fscanf(file, "%c", &temp) == EOF) break;
+		if (i % sizeof(DataFrame) == 0 || temp == START_BYTE) {
+			i = 0;
 			AddSaveFrame(CreateFrame(0));
 			writePtr = (byte*)&dataHandling.saveFile->lastFrame->data;
 		}
-		if (fscanf(file, "%c", writePtr) == EOF) break;
+		*writePtr = temp;
 		writePtr++;
 	}
 	if (i++ % sizeof(DataFrame) != 0) DebugLog("!Read incomplete Frame");
@@ -1256,8 +1258,14 @@ int WriteSave()
 	if (dataHandling.saveFile->saveFilePath[0] != '\0') {
 		file = fopen(dataHandling.saveFile->saveFilePath, "ab");
 		if (file != NULL) {
-			GetSaveFrame(dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount);
-			SaveFrame* current = currentFrame;
+			SaveFrame* current = dataHandling.saveFile->firstFrame;
+			for (int i = 0; i < dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount; i++) {
+				if (current == NULL) {
+					DebugLog("!Could not parse Frames");
+					return 0;
+				}
+				current = current->nextFrame;
+			}
 			byte* bytePtr = NULL;
 			int number = 0;
 			while (current != NULL) {
@@ -1268,12 +1276,12 @@ int WriteSave()
 			}
 			fclose(file);
 			if (dataHandling.saveFile->savedAmount < dataHandling.saveFile->frameAmount) DebugLog("!Could not write all frames");
-			//DebugLog("SaveFile written at§_", dataHandling.saveFile->saveFilePath);
+			//DebugLog("SaveFile written at$_", dataHandling.saveFile->saveFilePath);
 			return number;
 		}
 		else DebugLog("!Could not open SaveFile file");
 	}
-	//DebugLog("Could not write SaveFile at§_", dataHandling.saveFile->saveFilePath);
+	//DebugLog("Could not write SaveFile at$_", dataHandling.saveFile->saveFilePath);
 	return 0;
 }
 
@@ -1287,8 +1295,12 @@ DataFrame GetSaveFrame(int index)
 		DebugLog("!SaveFile is empty");
 		return EmptyFrame();
 	}
+	int forward = 1;
 	SaveFrame* frame = NULL;
-	if (index >= dataHandling.saveFile->frameAmount || index < 0) frame = dataHandling.saveFile->lastFrame;
+	if (index >= dataHandling.saveFile->frameAmount || index < 0) {
+		frame = dataHandling.saveFile->lastFrame;
+		forward = 0;
+	}
 	else frame = dataHandling.saveFile->firstFrame;
 	for (int i = 0; i < index;) {
 		if (frame == NULL) return EmptyFrame();
@@ -1297,8 +1309,10 @@ DataFrame GetSaveFrame(int index)
 		if (!FrameIsTC(frame->data)) i++;
 	}
 	while (FrameIsTC(frame->data)) {
-		if (frame->previousFrame != NULL) frame = frame->previousFrame;
-		else return EmptyFrame();
+		if (forward && frame->nextFrame != NULL) frame = frame->nextFrame;
+		else if (forward) forward = 0;
+		if (!forward && frame->previousFrame != NULL) frame = frame->previousFrame;
+		else if (!forward) return EmptyFrame();
 	}
 	currentFrame = frame;
 	return frame->data;
@@ -1365,6 +1379,10 @@ void AddSaveFrame(DataFrame data)
 		return;
 	}
 	newFrame->data = data;
+	/*
+	if (FrameIsTC(data)) WriteFrame(&newFrame->data, TC_Checksum, data.chksm);
+	else WriteFrame(&newFrame, TM_Checksum, data.chksm);
+	*/
 	newFrame->nextFrame = NULL;
 	newFrame->previousFrame = NULL;
 	if (dataHandling.saveFile->lastFrame == NULL) {
@@ -1431,7 +1449,7 @@ void CloseAll()
 	if (dataHandling.failSafe != NULL) {
 		dataHandling.failSafe->nominalExit = 1;
 		dataHandling.failSafe->changed = 1;
-		if (WriteFailSafe() != -1) DebugLog("Nominal exit set");
+		if (WriteFailSafe()) DebugLog("Nominal exit set");
 	}
 	else DebugLog("!Could not find FailSafe");
 	DebugLog("Freeing Memory?");
@@ -1635,7 +1653,6 @@ int Receive()
 			}
 			else {
 				foundStart = 1;
-				writeAmount++;
 			}
 			i = 0;
 		}
@@ -1680,8 +1697,6 @@ CHKSM_TYPE CalculateChecksum(DataFrame data)
 	//sync 2 bytes
 	chksm += (data.sync >> 8) & 0xFF;
 	chksm += data.sync & 0xFF;
-	//flags 1 byte
-	chksm += data.flag;
 	//data 42bytes
 	for (int i = 0; i < DATA_LENGTH; i++) {
 		chksm += data.data[i];
@@ -1799,7 +1814,7 @@ void DebugLog(const char* message, ...)
 			va_arg(args_cpy, void*);
 			break;
 		}
-		case '§': {
+		case '$': {
 			makro = string;
 			va_arg(args_cpy, char*);
 			break;
@@ -1846,12 +1861,15 @@ void DebugSaveFile() {
 	}
 	DebugLog("Version#", (int)(dataHandling.saveFile->version * 10));
 	DebugLog("Time of Creation#", dataHandling.saveFile->dateTime);
-	DebugLog("Filename§", dataHandling.saveFile->saveFilePath);
+	DebugLog("Filename$", dataHandling.saveFile->saveFilePath);
+	DebugLog("Amount of Frames#", dataHandling.saveFile->frameAmount);
+	DebugLog("Amount of Frames saved#", dataHandling.saveFile->savedAmount);
 	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
 		DebugSaveFrame(current->data);
 	}
 	DebugLog("End of SaveFile_");
 }
+
 void DebugSaveFrame(DataFrame frame)
 {
 	int content[TELEMETRY_AMOUNT], i;
@@ -1867,6 +1885,7 @@ void DebugSaveFrame(DataFrame frame)
 	DebugLog("Flag# Sync# Data~ Chksm#", frame.flag, frame.sync, TELEMETRY_AMOUNT, content, frame.chksm);
 	return;
 }
+
 void DebugLastFrame()
 {
 	if (dataHandling.saveFile == NULL || dataHandling.saveFile->lastFrame == NULL) return;
