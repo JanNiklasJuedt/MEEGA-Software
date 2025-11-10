@@ -32,19 +32,19 @@ int main() {
 	pthread_t logThread;
 	//create a thread that runs LogThread function: success->parallel programm; failure->no threads logging and return to NULL
 	//using if to let know if there is/are problem(s)
-	if (pthread_create(&logThread, NULL, LogThread)) {	//Create a thread for logging
+	if (pthread_create(&logThread, NULL, LogThread, NULL)) {	//Create a thread for logging
 		//LED blink for 5 times: logging thread failed to start
 		for (int i = 0;i < 5;i++) {
 			digitalWrite(LEDs_Pin, LEDsOn);
-			delay(500);
+			delay_abortable(500);
 			digitalWrite(LEDs_Pin, LEDsOff);
-			delay(500);
+			delay_abortable(500);
 		}
 		return 1;
 	}
 
 	digitalWrite(LEDs_Pin, LEDsOn);
-	delay(500);
+	delay_abortable(1000);
 	digitalWrite(LEDs_Pin, LEDsOff);
 
 	while (1) {
@@ -53,7 +53,7 @@ int main() {
 		//TestStatus = 0;
 		SoEReceived = 0;
 		digitalWrite(Servo_On, ServoOn);
-		delay(10);
+		delay_abortable(10);
 		ServoRotation(Angle_ServoReset);
 		digitalWrite(Servo_On, ServoOff);
 		digitalWrite(LEDs_Pin, LEDsOff);
@@ -85,9 +85,9 @@ int main() {
 				switch (currentState) {
 				case AFTER_LO:
 #if (MODE == DEBUG)
-					delay(DEBUGstandard.Delay_to_NoseConeSeparation);
+					delay_abortable(DEBUGstandard.Delay_to_NoseConeSeparation);
 #elif (MODE == RELEASE)
-					delay(Delay_to_NoseConeSeparation);	//Wait for 55s after liftoff
+					delay_abortable(Delay_to_NoseConeSeparation);	//Wait for 55s after liftoff
 #endif
 					currentState = NOSECONE_SEPARATION;
 					break;
@@ -100,7 +100,7 @@ int main() {
 #if (EXPERIMENT == TEST)
 					printf("Nose Cone Separation\n");
 #endif
-					delay(Delay_NoseConeSeparation);			//Wait for Nozzle Cone Separation
+					delay_abortable(Delay_NoseConeSeparation);			//Wait for Nozzle Cone Separation
 					digitalWrite(LEDs_Pin, LEDsOff);	//LED off
 					currentState = WAIT_SOE;
 					break;
@@ -118,20 +118,20 @@ int main() {
 					break;
 
 				case AFTER_SOE:
-					ValveRun(Delay_OnGoingValve, flight);
+					ValveRun(Delay_OnGoingValve);
 					currentState = VALVE_CLOSED;
 					break;
 				case VALVE_CLOSED:
-					delay(Delay_to_OpenNozzleCover);
+					delay_abortable(Delay_to_OpenNozzleCover);
 					currentState = SERVO_RUNNING;
 					break;
 				case SERVO_RUNNING:
-					ServoRun(Angle_Servo, flight);
+					ServoRun(Angle_Servo);
 					currentState = NOZZLE_OPENED;
 					break;
 				case NOZZLE_OPENED:
 					digitalWrite(Servo_On, ServoOff);
-					delay(Delay_to_EoE);
+					delay_abortable(Delay_to_EoE);
 					digitalWrite(LEDs_Pin, LEDsOff);			//LED off
 					currentState = END_OF_EXPERIMENT; //End of Experiment
 					break;
@@ -143,7 +143,7 @@ int main() {
 					if (!NozzleOpened) printf("End of Experiment: Error\n");
 #endif
 					EoE = 1;
-					delay(Delay_PowerOff);
+					delay_abortable(Delay_PowerOff);
 					return (NozzleOpened) ? 0 : 404;	//End of Experiment
 				}
 			}
@@ -188,10 +188,10 @@ int main() {
 				if (dryRun == 0) {
 					if (!ValveRun(GS_Delay_OnGoingValve)) continue;
 				}
-				if (!delay(GS_Delay_to_OpenNozzleCover)) continue;
+				if (!delay_abortable(GS_Delay_to_OpenNozzleCover)) continue;
 				if (ServoRun(Test_Angle_Servo) == -1) continue;
 				digitalWrite(Servo_On, ServoOff);
-				delay(GS_Delay_to_EoE);
+				delay_abortable(GS_Delay_to_EoE);
 			}
 			else ExperimentControl();
 #endif
@@ -204,12 +204,13 @@ int main() {
 
 //START OF EXPERIMENT PROGRAM
 
-int delay(int milliseconds) {
+int delay_abortable(int milliseconds) {
 	int abort = 0;
 	DataFrame TC;
-	int time = 0;
+	clock_t start_time = clock();
+	clock_t wait_time = (milliseconds * CLOCKS_PER_SEC) / 1000;
 	//WIP: Implement for Linux
-	while (time < milliseconds) {
+	while (clock() < start_time + wait_time) {
 		if (modeSel == test) {
 			TC = GetTC();
 			if (ReadFrame(TC, Test_Abort)) return 0;
@@ -221,7 +222,7 @@ int delay(int milliseconds) {
 //Valve Control Function
 int ValveRun(int openDelay) {
 	digitalWrite(Valve_Pin, ValveOpen);	//command open valve
-	if (!delay(openDelay)) return 0;
+	if (!delay_abortable(openDelay)) return 0;
 	digitalWrite(Valve_Pin, ValveClose);	//command close valve
 	return 1;
 }
@@ -238,7 +239,7 @@ int ServoRun(int angle) {
 			printf("Command to run Servo\n");
 			printf("Servo run for 90 Degree\n");
 #endif
-			if (!delay(Delay_NozzleCoverFeedback)) return -1;
+			if (!delay_abortable(Delay_NozzleCoverFeedback)) return -1;
 #if (MODE == DEBUG)
 			printf("*Input Nozzle Status 1 for fully open, 0 for stuck close (std: fully open): "); scanf_s("%d", &NozzlePos);
 			if (NozzlePos == 1) {
@@ -270,7 +271,7 @@ int ServoRun(int angle) {
 		return 1;
 #elif (MODE == RELEASE)
 		ServoRotation(angle);
-		if (!delay(Delay_NozzleCoverFeedback)) return -1;
+		if (!delay_abortable(Delay_NozzleCoverFeedback)) return -1;
 		if (digitalRead(Nozzle_Cover_S2) == 1) return 1;
 		else return 0;
 #endif
@@ -295,7 +296,7 @@ void ExperimentControl() {
 		if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) {
 			digitalWrite(Servo_On, ServoOn);
 			ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
-			delay(10);
+			delay_abortable(10);
 			digitalWrite(Servo_On, ServoOff);
 		}
 	}
@@ -343,6 +344,9 @@ void DataAcquisition(DataFrame * frame) {
 	float mainboard_Temp = temp_data();
 	uint8_t Mainboard_TempStat = temp_stat(mainboard_Temp);
 	uint8_t Mainboard_VoltStat = volt_stat();
+
+	LOSignal = digitalRead(RPi_LO);
+	SoESignal = digitalRead(RPi_SOE);
 
 	int SystemTime = clock();	//System Time
 	uint32_t AmbientPressure = pressureRead[0];
@@ -416,7 +420,7 @@ void Log() {
 			clock_t end = clock();
 			long duration = ((end - start) * 1000) / CLOCKS_PER_SEC;
 			long wait = (1000 * 1 / 20) - duration;	//Full Data 20Hz Frequency -> 50ms period
-			if (wait > 0) delay(wait);
+			if (wait > 0) delay_abortable(wait);
 #elif (ONBOARD_OS == LINUX)
 			gettimeofday(&end, NULL);
 			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
@@ -427,7 +431,7 @@ void Log() {
 		else {
 #if (ONBOARD_OS == WINDOWS)
 			//printf("Basic Data Acquisition\n");
-			delay(1000 * 1 / 2);		//Basic Data 2Hz Frequency -> 500ms period
+			delay_abortable(1000 * 1 / 2);		//Basic Data 2Hz Frequency -> 500ms period
 #elif (ONBOARD_OS == LINUX)
 			gettimeofday(&end, NULL);
 			suseconds_t duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
@@ -602,14 +606,14 @@ void FailSafeRecovery() {
 		}
 		if (currentState >= NOZZLE_OPENED) {
 			if (NozzleOpened == 1) currentState = END_OF_EXPERIMENT;
-		}
+		}*/
 	}
-	else {
+	/*else {
 		currentState = WAIT_LO;
 		ValveCompleted = 0;
 		ServoRunning = 0;
-		NozzleOpened = 0;*/
-	}
+		NozzleOpened = 0;
+	}*/
 }
 
 
