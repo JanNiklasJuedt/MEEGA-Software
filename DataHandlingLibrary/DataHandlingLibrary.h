@@ -26,11 +26,11 @@
 
 //DataHandling Settings
 #define DATAHANDLINGLIBRARY_OS (WINDOWS_OS)
-#define CALIBRATION_METHOD (NONE)
-#define DEBUG_OUTPUT (LOGFILE)
+#define CALIBRATION_METHOD (LINEAR)
+#define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
-#define TRANSMISSION_DEBUG 0
+#define TRANSMISSION_DEBUG 1
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -83,8 +83,8 @@
 #define PATH_LENGTH 100 //Chars
 #define BUFFER_LENGTH 10 //DataFrames
 
-#define DATA_LENGTH 42 //Bytes
-#define PAYLOAD_LENGTH 21 //Bytes
+#define DATA_LENGTH 48 //Bytes
+#define PAYLOAD_LENGTH 16 //Bytes
 #define PACKET_BUFFER_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1) //DataPackets
 
 #define CHKSM_TYPE uint16_t
@@ -107,7 +107,7 @@ typedef unsigned char byte;
 #define EXP_LEN 4 //Bits
 #define MAIN_LEN 4 //Bits
 #define TIME_LEN 32 //Bits
-#define MSG_ID_LEN 6 //Bits
+#define MSG_ID_LEN 3 //Bits
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
@@ -131,7 +131,7 @@ DATAHANDLINGLIBRARY_CONSTANT const char DEBUGLOG_NAME[] = "MEEGA_DataHandlingLog
 /// </summary>
 enum DATAHANDLINGLIBRARY_API TMID{
 	//Sensors:
-	Ambient_Pressure, Compare_Temperature, Tank_Pressure, Tank_Temperature, Chamber_Pressure, Chamber_Temperature,
+	Ambient_Pressure, Compare_Temperature, Tank_Pressure, Tank_Temperature, Chamber_Pressure, Chamber_Temperature_1, Chamber_Temperature_2,
 	Nozzle_Pressure_1, Nozzle_Temperature_1, Nozzle_Pressure_2, Nozzle_Temperature_2, Nozzle_Pressure_3, Nozzle_Temperature_3,
 	//Householding Sensors:
 	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_Health,
@@ -182,7 +182,6 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	SYNC_TYPE sync;
 	//Byte Array containing a part of the Frame.data
 	byte payload[PAYLOAD_LENGTH];
-	//Checksum of the corresponding Frame
 	CHKSM_TYPE chksm;
 	//Cyclic Redundancy Check Output
 	CHKSM_TYPE crc;
@@ -335,6 +334,19 @@ DATAHANDLINGLIBRARY_API void DebugLog(const char* message, ...);
 /// </summary>
 /// <returns></returns>
 DATAHANDLINGLIBRARY_API void DebugSaveFile();
+
+/// <summary>
+/// Prints the content of a given DataFrame to the Debug Output
+/// </summary>
+/// <param name="frame"></param>
+/// <returns></returns>
+DATAHANDLINGLIBRARY_API void DebugSaveFrame(DataFrame frame);
+
+/// <summary>
+/// Prints the content of the last DataFrame in the active SaveFile to the Debug Output
+/// </summary>
+/// <returns></returns>
+DATAHANDLINGLIBRARY_API void DebugLastFrame();
 
 /// <summary>
 /// Calculates checksum of DataFrames
