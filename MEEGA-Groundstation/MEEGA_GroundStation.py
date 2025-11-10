@@ -1,7 +1,7 @@
 #imports
 from __future__ import annotations
 from math import floor
-from math import sin, radians, pi
+from math import sin, radians
 import numpy as np
 import sys
 import time
@@ -105,27 +105,28 @@ class GSMain(QMainWindow):
         self.collection = collection
 
         #creating local status list
-        self.statusDisplay = ["" for _ in range(20)]
+        self.statusDisplay = ["" for _ in range(21)]
         self.statusDisplay[0] = self.ui.statusLabelPAmbient
         self.statusDisplay[1] = self.ui.statusLabelTCompare
         self.statusDisplay[2] = self.ui.statusLabelPReservoir
         self.statusDisplay[3] = self.ui.statusLabelTReservoir
         self.statusDisplay[4] = self.ui.statusLabelPAccumulator
-        self.statusDisplay[5] = self.ui.statusLabelTAccumulator
-        self.statusDisplay[6] = self.ui.statusLabelPNozzle1
-        self.statusDisplay[7] = self.ui.statusLabelTNozzle1
-        self.statusDisplay[8] = self.ui.statusLabelPNozzle2
-        self.statusDisplay[9] = self.ui.statusLabelTNozzle2
-        self.statusDisplay[10] = self.ui.statusLabelPNozzle3
-        self.statusDisplay[11] = self.ui.statusLabelTNozzle3
-        self.statusDisplay[12] = self.ui.statusLabelServo
-        self.statusDisplay[13] = self.ui.statusLabelValve
-        self.statusDisplay[14] = self.ui.statusLabelLED
-        self.statusDisplay[15] = self.ui.statusLabelPChip
-        self.statusDisplay[16] = self.ui.statusLabelTChip
-        self.statusDisplay[17] = self.ui.statusLabelMainboard
-        self.statusDisplay[18] = self.ui.statusLabelLiftOff
-        self.statusDisplay[19] = self.ui.statusLabelSOE
+        self.statusDisplay[5] = self.ui.statusLabelTChamber1
+        self.statusDisplay[6] = self.ui.statusLabelTChamber2
+        self.statusDisplay[7] = self.ui.statusLabelPNozzle1
+        self.statusDisplay[8] = self.ui.statusLabelTNozzle1
+        self.statusDisplay[9] = self.ui.statusLabelPNozzle2
+        self.statusDisplay[10] = self.ui.statusLabelTNozzle2
+        self.statusDisplay[11] = self.ui.statusLabelPNozzle3
+        self.statusDisplay[12] = self.ui.statusLabelTNozzle3
+        self.statusDisplay[13] = self.ui.statusLabelServo
+        self.statusDisplay[14] = self.ui.statusLabelValve
+        self.statusDisplay[15] = self.ui.statusLabelLED
+        self.statusDisplay[16] = self.ui.statusLabelPChip
+        self.statusDisplay[17] = self.ui.statusLabelTChip
+        self.statusDisplay[18] = self.ui.statusLabelMainboard
+        self.statusDisplay[19] = self.ui.statusLabelLiftOff
+        self.statusDisplay[20] = self.ui.statusLabelSOE
 
         #creating status pixmaps
         self.activepix = QPixmap("Ressources\\active.png")
@@ -240,7 +241,7 @@ class GSMain(QMainWindow):
         #check for invalid index
         if index is None or index < 0:
             return
-        statusList = np.concatenate((self.collection.dataAccumulation.household[index][0:12], self.collection.dataAccumulation.household[index][14:20], self.collection.dataAccumulation.household[index][21:23]))
+        statusList = np.concatenate((self.collection.dataAccumulation.household[index][0:13], self.collection.dataAccumulation.household[index][15:21], self.collection.dataAccumulation.household[index][22:24]))
         for i in range(len(self.statusDisplay)):
             match statusList[i]:
                 case self.ACTIVE:
@@ -253,8 +254,11 @@ class GSMain(QMainWindow):
     def createPlots(self):
         #time plot
         #create Line Series for each sensor
-        #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
-        self.timeSeries = [QLineSeries() for _ in range(12)]
+        #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature1, chamber temperature 2, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
+        self.timeSeries = [QLineSeries() for _ in range(13)]
+
+        self.pressureIndices = [0,2,4,7,9,11]
+        self.temperatureIndices = [1,3,5,6,8,10,12]
 
         self.rebuildSignal = Signal()
         self.reducePointsSignal = Signal()
@@ -264,8 +268,9 @@ class GSMain(QMainWindow):
         self.timeHighestTemp = 0
         self.currentIndex = -1
 
-        #create and add Series
+        #create chart and add Series
         self.timeChart = QChart()
+        self.timeChart.legend().setVisible(False)
         for s in self.timeSeries:
             self.timeChart.addSeries(s)
 
@@ -282,12 +287,12 @@ class GSMain(QMainWindow):
         self.timeChart.addAxis(self.timeAxis, Qt.AlignBottom)
         self.timeChart.addAxis(self.timePressureAxis, Qt.AlignLeft)
         self.timeChart.addAxis(self.timeTemperatureAxis, Qt.AlignRight)
-        for i in range(len(self.timeSeries)):
-            if i%2 == 0:
-                self.timeSeries[i].attachAxis(self.timePressureAxis)
+        for i, series in enumerate(self.timeSeries):
+            if i in self.pressureIndices:
+                series.attachAxis(self.timePressureAxis)
             else:
-                self.timeSeries[i].attachAxis(self.timeTemperatureAxis)
-            self.timeSeries[i].attachAxis(self.timeAxis)
+                series.attachAxis(self.timeTemperatureAxis)
+            series.attachAxis(self.timeAxis)
             
         #create Layout
         self.timeLayout = QVBoxLayout(self.ui.timePlotGroupBox)
@@ -314,7 +319,7 @@ class GSMain(QMainWindow):
         self.distanceTemperatureAxis = QValueAxis()
         self.distancePressureAxis.setTitleText("pressure in Pa")
         self.distanceTemperatureAxis.setTitleText("temperature in K")
-        self.distanceAxis.setRange(0, 4)
+        self.distanceAxis.setRange(0, 5)
         self.distancePressureAxis.setRange(0, self.collection.settings.pressureAxeValue)
         self.distanceTemperatureAxis.setRange(0, self.collection.settings.temperatureAxeValue)
         self.distanceChart.addAxis(self.distancePressureAxis, Qt.AlignBottom)
@@ -353,14 +358,15 @@ class GSMain(QMainWindow):
         self.distanceTSeries.clear()
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][2], 0)
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][4], 1)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][6], 2)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][8], 3)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][10], 4)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][7], 3)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][9], 4)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][11], 5)
         self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][3], 0)
         self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][5], 1)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][7], 2)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][9], 3)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][11], 4)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][6], 2)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][8], 3)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][10], 4)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][12], 5)
 
         #skip if expandng mode needs an event that hasnt happened yet
         if not (settings.timespanMode == Settings.EXPANDING and(
@@ -370,12 +376,12 @@ class GSMain(QMainWindow):
             #time plot
             while self.currentIndex < index:
                 self.currentIndex += 1
-                for i in range(12):
+                for i in range(13):
                     while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) > settings.scrollingTimeSeconds*1000:
                         self.timeSeries[i].remove(0)
-                    self.timeSeries[i].append(dataAccu.household[self.currentIndex][20], dataAccu.sensorData[self.currentIndex][i])
+                    self.timeSeries[i].append(dataAccu.household[self.currentIndex][21], dataAccu.sensorData[self.currentIndex][i])
                     #save highest pressure for scaling of axes
-                    if i%2 == 0: #pressure Value
+                    if i in self.pressureIndices: #pressure Value
                         if dataAccu.sensorData[self.currentIndex][i] > self.timeHighestPres:
                             self.timeHighestPres = dataAccu.sensorData[self.currentIndex][i]
                     else: #temperature Value
@@ -423,13 +429,14 @@ class GSMain(QMainWindow):
         tree.topLevelItem(0).child(0).child(2).setData(0, Qt.UserRole, 2)  # Accumulator Pressure
         tree.topLevelItem(0).child(1).child(2).setData(0, Qt.UserRole, 3)  # Accumulator Temperature
         tree.topLevelItem(0).child(0).child(1).setData(0, Qt.UserRole, 4)  # Chamber Pressure
-        tree.topLevelItem(0).child(1).child(1).setData(0, Qt.UserRole, 5)  # Chamber Temperature
-        tree.topLevelItem(0).child(0).child(0).child(0).setData(0, Qt.UserRole, 6)  # Nozzle 1 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(0).setData(0, Qt.UserRole, 7)  # Nozzle 1 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(1).setData(0, Qt.UserRole, 8)  # Nozzle 2 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(1).setData(0, Qt.UserRole, 9)  # Nozzle 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(2).setData(0, Qt.UserRole, 10)  # Nozzle 3 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(2).setData(0, Qt.UserRole, 11)  # Nozzle 3 Temperature
+        tree.topLevelItem(0).child(1).child(1).child(0).setData(0, Qt.UserRole, 5)  # Chamber 1 Temperature
+        tree.topLevelItem(0).child(1).child(1).child(1).setData(0,Qt.UserRole,6) #Chamber 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(0).setData(0, Qt.UserRole, 7)  # Nozzle 1 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(0).setData(0, Qt.UserRole, 8)  # Nozzle 1 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(1).setData(0, Qt.UserRole, 9)  # Nozzle 2 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(1).setData(0, Qt.UserRole, 10)  # Nozzle 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(2).setData(0, Qt.UserRole, 11)  # Nozzle 3 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(2).setData(0, Qt.UserRole, 12)  # Nozzle 3 Temperature
 
     #external functions (slots)
     @Slot(int)
@@ -484,7 +491,7 @@ class GSMain(QMainWindow):
             if series not in self.timeChart.series():
                 self.timeChart.addSeries(series)
                 series.attachAxis(self.timeAxis)
-                if seriesIndex%2 == 0:
+                if seriesIndex in self.pressureIndices:
                     series.attachAxis(self.timePressureAxis)
                 else:
                     series.attachAxis(self.timeTemperatureAxis)
@@ -744,7 +751,7 @@ class GSCalibration(QDialog):
         self.selectedSensor = 0
         self.selectedEntry = 0
         self.currentUnit = ""
-        self.calibrationPoints = [[0] * 3 for x in range(12)]
+        self.calibrationPoints = [[0] * 3 for x in range(13)]
 
         #create exclusive button group for radio buttons and add automatic disabling/enabling of lineEdits
         self.buttonGroup = QButtonGroup(self)
@@ -775,7 +782,7 @@ class GSCalibration(QDialog):
         self.ui.lineEdit.setText(str(self.calibrationPoints[self.selectedSensor][0]))
         self.ui.lineEdit_2.setText(str(self.calibrationPoints[self.selectedSensor][1]))
         self.ui.lineEdit_3.setText(str(self.calibrationPoints[self.selectedSensor][2]))
-        if self.selectedSensor in [0,2,4,6,8,10]:
+        if self.selectedSensor in self.collection.mainWindow.pressureIndices:
             self.currentUnit = "Pa"
         else:
             self.currentUnit = "K"
@@ -899,11 +906,11 @@ class DataAccumulation:
         self.collection = collection
         self.gatherIndex = -1
         self.allocationSize = 5000
-        self.sensorData = np.zeros((self.allocationSize, 12))
+        self.sensorData = np.zeros((self.allocationSize, 13))
         self.household = np.zeros((self.allocationSize, 27))
 
     def accumulate(self):
-        testData = False
+        testData = True
 
         if not testData:
             if DataHandling.PortIsOpen():
@@ -925,11 +932,11 @@ class DataAccumulation:
             self.gatherIndex += 1 ###only for testing purposes###
             ###
         if self.gatherIndex%self.allocationSize == 0:
-            dataExtension = np.zeros((self.allocationSize, 12))
+            dataExtension = np.zeros((self.allocationSize, 13))
             householdExtension = np.zeros((self.allocationSize, 27))
             self.sensorData = np.concatenate((self.sensorData, dataExtension))
             self.household = np.concatenate((self.household, householdExtension))
-        for i in range(12):
+        for i in range(13):
             if testData:
                 ###
                 self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
@@ -938,30 +945,30 @@ class DataAccumulation:
                 self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
         if testData:
             ###
-            self.household[self.gatherIndex][20] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
+            self.household[self.gatherIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
             ###
         else:
-            for i in range(12):
-               self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 12+i)
-            self.household[self.gatherIndex][12] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-            self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-            self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-            self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-            self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.LEDs)
-            self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-            self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-            self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-            self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.System_Time)
-            self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-            self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-            self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-            self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.Mode)
-            self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+            for i in range(13):
+               self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 13+i)
+            self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+            self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+            self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+            self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+            self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
+            self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+            self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+            self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+            self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
+            self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+            self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+            self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+            self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
+            self.household[self.gatherIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
             if self.gatherIndex > 0:
-                if self.household[self.gatherIndex - 1][21] == 0 and self.household[self.gatherIndex][21] == 1:
+                if self.household[self.gatherIndex - 1][22] == 0 and self.household[self.gatherIndex][22] == 1:
                     self.collection.settings.liftOffIndex = self.gatherIndex
-                if self.household[self.gatherIndex -1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+                if self.household[self.gatherIndex -1][23] == 0 and self.household[self.gatherIndex][23] == 1:
                     self.collection.settings.startOfExperimentIndex = self.gatherIndex 
 
 class PlotWorker(QThread):
@@ -1003,19 +1010,19 @@ class PlotWorker(QThread):
             return
         
         if startIndex == 0:
-            xValues = household[:endIndex, 20]
-            yMatrix = sensorData[:endIndex, :12]
+            xValues = household[:endIndex, 21]
+            yMatrix = sensorData[:endIndex, :13]
         else:
-            xValues = np.ascontiguousarray(household[startIndex:endIndex, 20])
-            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :12])
+            xValues = np.ascontiguousarray(household[startIndex:endIndex, 21])
+            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :13])
 
-        for i in range(12):
+        for i in range(13):
             yValues =  yMatrix[:, i]
             points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
             mainWindow.timeSeries[i].replace(points)
         self.collection.mainWindow.currentIndex = dataAcc.gatherIndex
-        self.collection.mainWindow.timeHighestPres = np.max(yMatrix[startIndex:endIndex, 2:11:2])
-        self.collection.mainWindow.timeHighestTemp = np.max(yMatrix[startIndex:endIndex, 1:12:2])
+        self.collection.mainWindow.timeHighestPres = np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.pressureIndices])
+        self.collection.mainWindow.timeHighestTemp = np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.temperatureIndices])
         #self.collection.mainWindow.repaintPlots()
 
 class DataHandlingThread(QThread):

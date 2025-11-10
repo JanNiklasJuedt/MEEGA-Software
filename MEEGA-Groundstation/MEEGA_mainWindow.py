@@ -430,16 +430,16 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.statusLabelPAccumulator, 2, 4, 1, 1)
 
-        self.statusLabelTAccumulator = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTAccumulator.setObjectName(u"statusLabelTAccumulator")
-        sizePolicy4.setHeightForWidth(self.statusLabelTAccumulator.sizePolicy().hasHeightForWidth())
-        self.statusLabelTAccumulator.setSizePolicy(sizePolicy4)
-        self.statusLabelTAccumulator.setMinimumSize(QSize(25, 25))
-        self.statusLabelTAccumulator.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTAccumulator.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTAccumulator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelTChamber1 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChamber1.setObjectName(u"statusLabelTChamber1")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChamber1.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChamber1.setSizePolicy(sizePolicy4)
+        self.statusLabelTChamber1.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChamber1.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChamber1.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChamber1.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelTAccumulator, 2, 6, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelTChamber1, 2, 6, 1, 1)
 
         self.statusLabelLiftOff = QLabel(self.groupBox_sensorstatus)
         self.statusLabelLiftOff.setObjectName(u"statusLabelLiftOff")
@@ -589,28 +589,22 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.statusLabelPReservoir, 1, 4, 1, 1)
 
-        self.statusLabelLED = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelLED.setObjectName(u"statusLabelLED")
-        sizePolicy4.setHeightForWidth(self.statusLabelLED.sizePolicy().hasHeightForWidth())
-        self.statusLabelLED.setSizePolicy(sizePolicy4)
-        self.statusLabelLED.setMinimumSize(QSize(25, 25))
-        self.statusLabelLED.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelLED.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelLED.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChamber2.setObjectName(u"statusLabelTChamber2")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChamber2.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChamber2.setSizePolicy(sizePolicy4)
+        self.statusLabelTChamber2.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChamber2.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChamber2.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelLED, 2, 8, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelTChamber2, 2, 8, 1, 1)
 
         self.label_37 = QLabel(self.groupBox_sensorstatus)
         self.label_37.setObjectName(u"label_37")
         self.label_37.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_37, 0, 7, 1, 1)
-
-        self.label_10 = QLabel(self.groupBox_sensorstatus)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_10, 2, 7, 1, 1)
 
         self.statusLabelPNozzle2 = QLabel(self.groupBox_sensorstatus)
         self.statusLabelPNozzle2.setObjectName(u"statusLabelPNozzle2")
@@ -622,6 +616,26 @@ class Ui_MainWindow(object):
         self.statusLabelPNozzle2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.statusLabelPNozzle2, 4, 4, 1, 1)
+
+        self.label_10 = QLabel(self.groupBox_sensorstatus)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_10, 5, 7, 1, 1)
+
+        self.label = QLabel(self.groupBox_sensorstatus)
+        self.label.setObjectName(u"label")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label, 2, 7, 1, 1)
+
+        self.statusLabelLED = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelLED.setObjectName(u"statusLabelLED")
+        sizePolicy4.setHeightForWidth(self.statusLabelLED.sizePolicy().hasHeightForWidth())
+        self.statusLabelLED.setSizePolicy(sizePolicy4)
+        self.statusLabelLED.setMinimumSize(QSize(25, 25))
+
+        self.gridLayout_4.addWidget(self.statusLabelLED, 5, 8, 1, 1)
 
 
         self.horizontalLayout_2.addWidget(self.groupBox_sensorstatus)
@@ -726,14 +740,20 @@ class Ui_MainWindow(object):
         __qtreewidgetitem13.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem13.setCheckState(0, Qt.Checked);
         __qtreewidgetitem14 = QTreeWidgetItem(__qtreewidgetitem9)
-        __qtreewidgetitem14.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem14.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled|Qt.ItemIsAutoTristate);
         __qtreewidgetitem14.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem14)
         __qtreewidgetitem15.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem15.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem14)
         __qtreewidgetitem16.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem16.setCheckState(0, Qt.Checked);
+        __qtreewidgetitem17 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem17.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem17.setCheckState(0, Qt.Checked);
+        __qtreewidgetitem18 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem18.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem18.setCheckState(0, Qt.Checked);
         self.treeWidget.setObjectName(u"treeWidget")
         sizePolicy9 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         sizePolicy9.setHorizontalStretch(0)
@@ -1083,7 +1103,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Chip", None))
         self.statusLabelTCompare.setText("")
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Chip", None))
-        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Chamber", None))
+        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Chamber 1", None))
         self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
         self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
         self.statusLabelTChip.setText("")
@@ -1095,7 +1115,7 @@ class Ui_MainWindow(object):
         self.label_16.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 1", None))
         self.statusLabelPNozzle3.setText("")
         self.statusLabelPAccumulator.setText("")
-        self.statusLabelTAccumulator.setText("")
+        self.statusLabelTChamber1.setText("")
         self.statusLabelLiftOff.setText("")
         self.statusLabelPNozzle1.setText("")
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"Servo", None))
@@ -1112,10 +1132,12 @@ class Ui_MainWindow(object):
         self.statusLabelServo.setText("")
         self.label_17.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 2", None))
         self.statusLabelPReservoir.setText("")
-        self.statusLabelLED.setText("")
+        self.statusLabelTChamber2.setText("")
         self.label_37.setText(QCoreApplication.translate("MainWindow", u"Lift-Off", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"LEDs", None))
         self.statusLabelPNozzle2.setText("")
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"LEDs", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"T Chamber 2", None))
+        self.statusLabelLED.setText("")
         self.label_logo.setText("")
         self.label_mode.setText(QCoreApplication.translate("MainWindow", u"Flight Mode", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Sensor Selection", None))
@@ -1154,10 +1176,14 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem14.setText(0, QCoreApplication.translate("MainWindow", u"3", None));
         ___qtreewidgetitem15 = ___qtreewidgetitem10.child(1)
         ___qtreewidgetitem15.setText(0, QCoreApplication.translate("MainWindow", u"Chamber", None));
-        ___qtreewidgetitem16 = ___qtreewidgetitem10.child(2)
-        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
-        ___qtreewidgetitem17 = ___qtreewidgetitem10.child(3)
-        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
+        ___qtreewidgetitem16 = ___qtreewidgetitem15.child(0)
+        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"1", None));
+        ___qtreewidgetitem17 = ___qtreewidgetitem15.child(1)
+        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"2", None));
+        ___qtreewidgetitem18 = ___qtreewidgetitem10.child(2)
+        ___qtreewidgetitem18.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
+        ___qtreewidgetitem19 = ___qtreewidgetitem10.child(3)
+        ___qtreewidgetitem19.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
         self.timePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Time", None))

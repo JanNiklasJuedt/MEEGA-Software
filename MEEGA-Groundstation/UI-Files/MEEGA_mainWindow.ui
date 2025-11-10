@@ -548,7 +548,7 @@
            <item row="2" column="5">
             <widget class="QLabel" name="label_30">
              <property name="text">
-              <string>T Chamber</string>
+              <string>T Chamber 1</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -765,7 +765,7 @@
             </widget>
            </item>
            <item row="2" column="6">
-            <widget class="QLabel" name="statusLabelTAccumulator">
+            <widget class="QLabel" name="statusLabelTChamber1">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1122,7 +1122,7 @@
             </widget>
            </item>
            <item row="2" column="8">
-            <widget class="QLabel" name="statusLabelLED">
+            <widget class="QLabel" name="statusLabelTChamber2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1159,16 +1159,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="7">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>LEDs</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
            <item row="4" column="4">
             <widget class="QLabel" name="statusLabelPNozzle2">
              <property name="sizePolicy">
@@ -1194,6 +1184,45 @@
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="7">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>LEDs</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="7">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>T Chamber 2</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="8">
+            <widget class="QLabel" name="statusLabelLED">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
              </property>
             </widget>
            </item>
@@ -1552,8 +1581,30 @@
                  <enum>Checked</enum>
                 </property>
                 <property name="flags">
-                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled|ItemIsAutoTristate</set>
                 </property>
+                <item>
+                 <property name="text">
+                  <string>1</string>
+                 </property>
+                 <property name="checkState">
+                  <enum>Checked</enum>
+                 </property>
+                 <property name="flags">
+                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2</string>
+                 </property>
+                 <property name="checkState">
+                  <enum>Checked</enum>
+                 </property>
+                 <property name="flags">
+                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 </property>
+                </item>
                </item>
                <item>
                 <property name="text">
