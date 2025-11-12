@@ -4,8 +4,8 @@
 int main() {
 #if (MODE == RELEASE)
 	wiringPiSetupGpio();
-	wiringPiSPISetup(SPI_PRESSURE, SPI_SPEED);
-	wiringPiSPISetup(SPI_TEMPERATURE, SPI_SPEED);
+	wiringPiSPIxSetup(SPI_PRESSURE, SPI_SPEED);
+	wiringPiSPIxSetup(SPI_TEMPERATURE, SPI_SPEED);
 #endif
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
 	pinMode(Servo_Pin, OUTPUT);
@@ -17,7 +17,11 @@ int main() {
 	pinMode(RPi_SOE, INPUT);			//input should be in wiringPi library as define input 1
 	pinMode(RPi_LO, INPUT);
 
+#if (SERVO_VERSION == SERVO_v1)
+	ServoInit();
+#elif (SERVO_VERSION == SERVO_v2)
 	softPwmCreate(Servo_Pin, 0, 200); //50Hz refresh rate, cycle: 20ms/50Hz
+#endif
 
 #if (MODE == RELEASE)
 	pullUpDnControl(RPi_LO, PUD_UP);
@@ -171,7 +175,7 @@ int main() {
 			int dryRun = ReadFrame(FrameTC, Dry_Run);
 			int testRun = ReadFrame(FrameTC, Test_Run);
 
-			if (testRun == 1 || SoESignal == 1) {
+			if (testRun == 1 || SoESignal == LOW) {
 				SoEReceived = 1;
 				digitalWrite(Servo_On, ServoOn);
 				digitalWrite(LEDs_Pin, LEDsOn);
@@ -483,17 +487,23 @@ int LOSignal() {
 
 //Servo Control Function
  //The servo 90° rotation is 1ms=0° to 2ms=90°
-void ServoRotation(int degree) {
 #if (SERVO_VERSION == SERVO_v1)
+void ServoInit(void) {
+	pwmSetMode(PWM_MODE_MS); //Use Mark-Space mode
+	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
+	pwmSetRange(20000); //Set range to 20ms (50Hz)
+}
+
+void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
 	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
 	int minR = 1000;
 	int maxR = 2000;
 	int pulse_us = minR + degree * (maxR - minR) / 90;
-	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
-	softPwmWrite(Servo_Pin, pwmWidth);
+	pwmWrite(Servo_Pin, pulse_us);
 #elif (SERVO_VERSION == SERVO_v2)
+void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
 	int minR = 1052;
