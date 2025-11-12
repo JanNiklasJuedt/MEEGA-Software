@@ -210,10 +210,12 @@ modeSel = 1;
 typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, AFTER_SOE, VALVE_CLOSED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
 ExperimentState currentState = WAIT_LO;
 
+
 //EXPERIMENT
 //Function receiving the SOE signal from the RPi
 //int SoESignal();
 //Function to SetUp the Servo
+void ServoInit(void);
 void ServoRotation(int degree);
 //Function in Experiment controlling the Valve operation
 int ValveRun(int openDelay);
