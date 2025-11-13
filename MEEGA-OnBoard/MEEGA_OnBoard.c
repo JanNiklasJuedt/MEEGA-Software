@@ -4,10 +4,16 @@
 int main() {
 #if (MODE == RELEASE)
 	wiringPiSetupGpio();
-	wiringPiSPISetup(SPI_PRESSURE, SPI_SPEED);
-	wiringPiSPISetup(SPI_TEMPERATURE, SPI_SPEED);
+#if (SENSORS_SPI_VERSION == WIRINGPISPI)
+	wiringPiSPIxSetupMode(SPI_PRESSURE, 0, SPI_SPEED, 0);
+	wiringPiSPIxSetupMode(SPI_TEMPERATURE, 0, SPI_SPEED, 0);
+#elif (SENSORS_SPI_VERSION == SPIDEV)
+	SPI_fd_P = InitializeSPI(SPI_PRESSURE);
+	SPI_fd_T = InitializeSPI(SPI_TEMPERATURE); 
+#endif
 #endif
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
+	digitalWrite(Valve_Pin, ValveClose); //Set Valve to closed position
 	pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
 	pinMode(Servo_On, OUTPUT);
@@ -194,7 +200,7 @@ int main() {
 			dryRun = ReadFrame(FrameTC, Dry_Run);
 			testRun = ReadFrame(FrameTC, Test_Run);
 
-			if (testRun == 1) {
+			if (testRun == 1 || SoESignal == LOW) {
 				SoEReceived = 1;
 				digitalWrite(Servo_On, ServoOn);
 				digitalWrite(LEDs_Pin, LEDsOn);
@@ -333,7 +339,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 	DataFrame FrameTC = GetTC();
 #endif
 	if (modeSel == flight) {
-		ServoRotation(parameter.Angle_Servo); //command rotate the serve 90° first attempt*
+		ServoRotation(parameter.Angle_Servo); //command rotate the serve 90� first attempt*
 #if (MODE == DEBUG)
 		printf("Command to run Servo\n");
 		printf("Servo run for 90 Degree\n");
@@ -371,7 +377,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 #endif
 #endif
 			//Nozzle Cover Problem: in close position
-			ServoRotation(parameter.Angle_Servo); //command rotate the serve 90° second attempt*
+			ServoRotation(parameter.Angle_Servo); //command rotate the serve 90� second attempt*
 #if (MODE == DEBUG)
 			printf("Second attempt\n");
 			printf("Servo run for 90 Degree\n");
@@ -468,7 +474,7 @@ int ServoRun(struct parameter parameter, int modeSel) {
 			return -1; //abort test
 		}
 		else if (dryRun && parameter.Angle_Servo >= 30) {
-			ServoRotation(Angle_ServoReset); //command rotate the serve 90° first attempt*
+			ServoRotation(Angle_ServoReset); //command rotate the serve 90� first attempt*
 #if (MODE == DEBUG || EXPERIMENT == TEST)
 			printf("End of Experiment: Test Mode\n");
 #endif
@@ -560,13 +566,17 @@ void DataAcquisition(DataFrame * frame) {
 	uint8_t Mainboard_TempStat = temp_stat(mainboard_Temp);
 	uint8_t Mainboard_VoltStat = volt_stat();
 
-	int SystemTime = clock();	//System Time
+	LOSignal = digitalRead(RPi_LO);
+	SoESignal = digitalRead(RPi_SOE);
+
+	int SystemTime = clock() * 1000 / CLOCKS_PER_SEC;	//System Time
 	uint32_t AmbientPressure = pressureRead[0];
-	uint32_t CompareTemperature = temperatureRead[0];
+	uint32_t CompareTemperature = 42;
 	uint32_t TankPressure = pressureRead[1];
 	uint32_t TankTemperature = temperatureRead[1];
 	uint32_t ChamberPressure = pressureRead[2];
-	uint32_t ChamberTemperature = temperatureRead[2];
+	uint32_t ChamberTemperature_1 = temperatureRead[2];
+	uint32_t ChamberTemperature_2 = temperatureRead[0];
 	uint32_t NozzlePressure_1 = pressureRead[3];
 	uint32_t NozzlePressure_2 = pressureRead[4];
 	uint32_t NozzlePressure_3 = pressureRead[5];
@@ -589,7 +599,8 @@ void DataAcquisition(DataFrame * frame) {
 	WriteFrame(frame, Tank_Pressure, TankPressure);
 	WriteFrame(frame, Tank_Temperature, TankTemperature);
 	WriteFrame(frame, Chamber_Pressure, ChamberPressure);
-	WriteFrame(frame, Chamber_Temperature, ChamberTemperature);
+	WriteFrame(frame, Chamber_Temperature_1, ChamberTemperature_1);
+	WriteFrame(frame, Chamber_Temperature_2, ChamberTemperature_2);
 	WriteFrame(frame, Nozzle_Pressure_1, NozzlePressure_1);
 	WriteFrame(frame, Nozzle_Pressure_2, NozzlePressure_2);
 	WriteFrame(frame, Nozzle_Pressure_3, NozzlePressure_3);
@@ -600,13 +611,13 @@ void DataAcquisition(DataFrame * frame) {
 	WriteFrame(frame, Nozzle_Open, NozzleCover_2);
 	WriteFrame(frame, Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, Reservoir_Valve, ReservoirValve);
-	WriteFrame(frame, LEDs, LEDsStat);
+	WriteFrame(frame, LEDs, !LEDsStat);
 	WriteFrame(frame, Sensorboard_P, Sensorboard_Pressure);
 	WriteFrame(frame, Sensorboard_T, Sensorboard_Temperature);
 	WriteFrame(frame, Mainboard, mainboard);
 	WriteFrame(frame, Mode, modeSel);
-	WriteFrame(frame, Lift_Off, LOSignal);
-	WriteFrame(frame, Start_Experiment, SoEReceived);
+	WriteFrame(frame, Lift_Off, !LOSignal);
+	WriteFrame(frame, Start_Experiment, !SoESignal);
 	WriteFrame(frame, End_Experiment, EoE);
 	WriteFrame(frame, Experiment_State, currentState);
 }
@@ -623,7 +634,11 @@ void Log() {
 		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
 		AddFrame(frame);	//func from UPDATED DataHandlingLib
 		UpdateAll();
-
+		DebugLastFrame();
+		if (EoE) { //End Loop in case of End of Experiment
+			CloseAll();
+			break;
+		}
 		if (SoEReceived == 1) {
 #if (ONBOARD_OS == WINDOWS)
 			//printf("Full Data Acquisition\n");
@@ -694,17 +709,22 @@ int LOSignal() {
 
 
 //Servo Control Function
- //The servo 90° rotation is 1ms=0° to 2ms=90°
+ //The servo 90� rotation is 1ms=0� to 2ms=90�
 void ServoRotation(int degree) {
 #if (SERVO_VERSION == SERVO_v1)
 	if (degree < 0) degree = 0;
-	if (degree > 90) degree = 90;
+	if (degree > 100) degree = 100;
 	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
 	int minR = 1000;
+	static int previousPwm = 1000;
 	int maxR = 2000;
-	int pulse_us = minR + degree * (maxR - minR) / 90;
-	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0° to 20 = 90° in x10 of millisecond
-	softPwmWrite(Servo_Pin, pwmWidth);
+	int pulse_us = minR + degree * (maxR - minR) / 100;
+	int pwmWidth = pulse_us / 100;	//pwm Width value from 10 = 0� to 20 = 90� in x10 of millisecond
+	for (int i = 0; i < 10; i++) { //Use small intervals to prevent drawing too much current at once
+		softPwmWrite(Servo_Pin, (pwmWidth - previousPwm) / 10 * i + previousPwm);
+		delay(20);
+	}
+	previousPwm = pwmWidth;
 #elif (SERVO_VERSION == SERVO_v2)
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
@@ -729,12 +749,12 @@ void ServoRotation(int degree) {
 //Sensors Reading Functions
 #if (MODE == RELEASE)
 #if (SENSORS_SPI_VERSION == SPIDEV)
-static int InitializeSPI(const char* device, uint8_t mode, uint32_t speed) {
+int InitializeSPI(const char* device) {
 	int fd = open(device, O_RDWR);
 	uint8_t mode = SPI_MODE_0;
 	uint32_t speed = 1000000;
 
-	if (fd < 0) return -1; // Failed to open device
+	if (fd == -1) return -1; // Failed to open device
 
 	// Set SPI mode
 	if (ioctl(fd, SPI_IOC_WR_MODE, &mode) == -1) { // Failed to set SPI mode
@@ -750,7 +770,7 @@ static int InitializeSPI(const char* device, uint8_t mode, uint32_t speed) {
 	return fd;
 }
 
-static void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length) {
+void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length) {
 	struct spi_ioc_transfer trf = {
 		.tx_buf = (unsigned long)txBuf,
 		.rx_buf = (unsigned long)rxBuf,
@@ -761,20 +781,25 @@ static void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length)
 	};
 	ioctl(fd, SPI_IOC_MESSAGE(1), &trf);
 }
+#endif //SPIDEV
 
-
-#elif (SENSORS_SPI_VERSION == WIRINGPISPI)
 void ReadPressureSensors(uint32_t* Sensors) {
-	uint8_t txBuf = CMD_READ; // Request data from channel 1
-	uint8_t rxBuf[P_TxPACKET_LENGTH];
-	uint8_t rxLatest[P_TxPACKET_LENGTH];
+	uint8_t txBuf[P_TxPACKET_LENGTH + 1]; // Request data from SPI1
+	uint8_t rxBuf[P_TxPACKET_LENGTH + 1];
+	for (int i = 0; i <= P_TxPACKET_LENGTH; i++){
+		if (i == 0) txBuf[i] = CMD_READ;
+		else txBuf[i] = 0;
+		rxBuf[i] = 0;
+	}
 
-	digitalWrite(CS_PSB, HIGH);
-	wiringPiSPIDataRW(SPI_PRESSURE, &txBuf, 1);
-	wiringPiSPIDataRW(SPI_PRESSURE, rxBuf, P_TxPACKET_LENGTH);
 	digitalWrite(CS_PSB, LOW);
-
-	memcpy(rxLatest, rxBuf, P_TxPACKET_LENGTH);
+#if (SENSORS_SPI_VERSION == WIRINGPISPI)
+	wiringPiSPIxDataRW(SPI_PRESSURE, 0, txBuf, 1);
+	wiringPiSPIDxataRW(SPI_PRESSURE, 0, rxBuf, P_TxPACKET_LENGTH);
+#elif (SENSORS_SPI_VERSION == SPIDEV)
+	TransferSPI(SPI_fd_P, txBuf, rxBuf, P_TxPACKET_LENGTH + 1);
+#endif
+	digitalWrite(CS_PSB, HIGH);
 
 	Sensors[0] = (rxBuf[0] << 8) | rxBuf[1];						//TPR280 Ambient Pressure
 	Sensors[1] = (rxBuf[2] << 8) | rxBuf[3];						//PT5494 Accumulator Pressure
@@ -786,16 +811,22 @@ void ReadPressureSensors(uint32_t* Sensors) {
 }
 
 void ReadTemperatureSensors(uint32_t* Sensors) {
-	uint8_t txBuf = CMD_READ; // Request data from channel 0
-	uint8_t rxBuf[T_TxPACKET_LENGTH];
-	uint8_t rxLatest[T_TxPACKET_LENGTH];
+	uint8_t txBuf[T_TxPACKET_LENGTH + 1]; // Request data from SPI0
+	uint8_t rxBuf[T_TxPACKET_LENGTH + 1];
+	for (int i = 0; i <= T_TxPACKET_LENGTH; i++){
+		if (i == 0) txBuf[i] = CMD_READ;
+		else txBuf[i] = 0;
+		rxBuf[i] = 0;
+	}
 
-	digitalWrite(CS_TSB, HIGH);
-	wiringPiSPIDataRW(SPI_TEMPERATURE, &txBuf, 1);
-	wiringPiSPIDataRW(SPI_TEMPERATURE, rxBuf, T_TxPACKET_LENGTH);
 	digitalWrite(CS_TSB, LOW);
-
-	memcpy(rxLatest, rxBuf, T_TxPACKET_LENGTH);
+#if (SENSORS_SPI_VERSION == WIRINGPISPI)
+	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, txBuf, 1);
+	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, rxBuf, P_TxPACKET_LENGTH);
+#elif (SENSORS_SPI_VERSION == SPIDEV)
+	TransferSPI(SPI_fd_T, txBuf, rxBuf, P_TxPACKET_LENGTH + 1);
+#endif
+	digitalWrite(CS_TSB, HIGH);
 
 	Sensors[0] = (rxBuf[0] << 16) | (rxBuf[1] << 8) | rxBuf[2];		//TPR280 Ambient Pressure
 	Sensors[1] = (rxBuf[3] << 16) | (rxBuf[4] << 8) | rxBuf[5];		//PT5494 Accumulator Pressure
@@ -805,7 +836,6 @@ void ReadTemperatureSensors(uint32_t* Sensors) {
 	Sensors[5] = (rxBuf[15] << 16) | (rxBuf[16] << 8) | rxBuf[17];	//P3 Nozzle Exit Pressure
 	Sensors[6] = rxBuf[18];											//Flag
 }
-#endif //SENSORS_SPI_VERSION
 #endif //MODE
 
 

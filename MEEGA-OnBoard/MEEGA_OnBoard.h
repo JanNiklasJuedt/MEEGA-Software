@@ -29,7 +29,7 @@
 #define MODE RELEASE
 #define EXPERIMENT RUN
 #define SERVO_VERSION SERVO_v1
-#define SENSORS_SPI_VERSION WIRINGPISPI
+#define SENSORS_SPI_VERSION SPIDEV
 
 
 //PinOut for CM5
@@ -145,20 +145,8 @@ int delay(int millisecond) {	//1000x Second
 
 #include <wiringPiSPI.h>	//Include wiringPiSPI library for SPI control
 
-//SETUP for Sensors Reading
-#define SPI_SPEED 1000000	//1MHz - MPR_P_SPI max 800kHz; AD7793_ADC max 4MHz; LTC2450_ADC max 2MHz  - Test with 500kHz, 1MHz
-#define CMD_READ 0xA1 //Command to read data from the sensors
-
-#define P_TxPACKET_LENGTH 17 //bytes
-#define SPI_PRESSURE 1	//SPI Channel 1
-#define PRESSURE_SENSORS 6
-
-#define T_TxPACKET_LENGTH 19 //bytes
 #define SPI_TEMPERATURE 0	//SPI Channel 0
-#define TEMPERATURE_SENSORS 6
-
-uint32_t pressureRead[PRESSURE_SENSORS];
-uint32_t temperatureRead[TEMPERATURE_SENSORS];
+#define SPI_PRESSURE 1	//SPI Channel 1
 
 #elif (SENSORS_SPI_VERSION == SPIDEV)
 
@@ -167,19 +155,30 @@ uint32_t temperatureRead[TEMPERATURE_SENSORS];
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
-#define SPI_PRESSURE "/dev/spidev0.1"
+#define SPI_PRESSURE "/dev/spidev1.0"
 #define SPI_TEMPERATURE "/dev/spidev0.0"
+int SPI_fd_T = -1;
+int SPI_fd_P = -1;
 #endif
+
+//SETUP for Sensors Reading
+#define SPI_SPEED 1000000	//1MHz - MPR_P_SPI max 800kHz; AD7793_ADC max 4MHz; LTC2450_ADC max 2MHz  - Test with 500kHz, 1MHz
+#define CMD_READ 0xA1 //Command to read data from the sensors
+
+#define P_TxPACKET_LENGTH 17 //bytes
+#define PRESSURE_SENSORS 6
+
+#define T_TxPACKET_LENGTH 19 //bytes
+#define TEMPERATURE_SENSORS 6
+
+uint32_t pressureRead[PRESSURE_SENSORS];
+uint32_t temperatureRead[TEMPERATURE_SENSORS];
 
 #endif
 
 //Global Variables Declaration
-#if (MODE == DEBUG)
-int NozzlePos = 0,
-SoE = 0;
-#endif
-const int ValveOpen = 0,
-ValveClose = 1,
+const int ValveOpen = 1,
+ValveClose = 0,
 ValveStuck = 3,
 ServoOn = 0,
 ServoOff = 1,
@@ -252,6 +251,8 @@ void* LogThread(void* arg);
 //FailSafe Function to recover the last experiment state
 void FailSafeRecovery();
 
+int InitializeSPI(const char* device);
+void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length);
 //Read Pressure sensors from SPI
 void ReadPressureSensors(uint32_t* Sensors);
 //Read Temperature sensors from SPI
