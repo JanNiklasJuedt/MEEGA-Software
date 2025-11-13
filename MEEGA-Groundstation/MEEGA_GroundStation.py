@@ -695,7 +695,7 @@ class GSControl(QWidget):
         #NozzleOnDelay fehlt
         DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Dry_Run, self.dryRunActive)
         DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.LED_Control, self.ledState)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Control, floor(self.servoAngle*10))
+        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Control, floor(self.servoAngle))
         DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Valve_Control, self.valveControl)
         #Camera control fehlt
         DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Test_Abort, self.testRunStop)
@@ -906,8 +906,8 @@ class DataAccumulation:
         self.collection = collection
         self.gatherIndex = -1
         self.allocationSize = 5000
-        self.sensorData = np.zeros((self.allocationSize, 13))
-        self.household = np.zeros((self.allocationSize, 27))
+        self.sensorData = np.ones((self.allocationSize, 13))
+        self.household = np.ones((self.allocationSize, 27))
 
     def accumulate(self):
         testData = True
@@ -917,59 +917,62 @@ class DataAccumulation:
                 self.collection.mainWindow.connectionStatus = GSMain.INACTIVE
             else:
                 self.collection.mainWindow.connectionStatus = GSMain.NOCONNECTION
-            while True:
+        while True:
+            if not testData:
                 frame = DataHandling.GetNextFrame()
                 if DataHandling.FrameIsEmpty(frame):
-                   break
+                    break
                 else:
                     self.gatherIndex += 1
                 if DataHandling.FrameHasFlag(frame, Flag.OK):
                     self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
                 else:
                     self.collection.mainWindow.connectionStatus = GSMain.ISSUES
-        else:
-            ###
-            self.gatherIndex += 1 ###only for testing purposes###
-            ###
-        if self.gatherIndex%self.allocationSize == 0:
-            dataExtension = np.zeros((self.allocationSize, 13))
-            householdExtension = np.zeros((self.allocationSize, 27))
-            self.sensorData = np.concatenate((self.sensorData, dataExtension))
-            self.household = np.concatenate((self.household, householdExtension))
-        for i in range(13):
+                    break
+            else:
+                ###
+                self.gatherIndex += 1 ###only for testing purposes###
+                ###
+            if self.gatherIndex%self.allocationSize == 0:
+                dataExtension = np.ones((self.allocationSize, 13))
+                householdExtension = np.ones((self.allocationSize, 27))
+                self.sensorData = np.concatenate((self.sensorData, dataExtension))
+                self.household = np.concatenate((self.household, householdExtension))
+            for i in range(13):
+                if testData:
+                    ###
+                    self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+                    ###
+                else:
+                    self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
             if testData:
                 ###
-                self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+                self.household[self.gatherIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
+                break
             else:
-                self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
-        if testData:
-            ###
-            self.household[self.gatherIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
-            ###
-        else:
-            for i in range(13):
-               self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 13+i)
-            self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-            self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-            self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-            self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-            self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
-            self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-            self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-            self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-            self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
-            self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-            self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-            self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-            self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
-            self.household[self.gatherIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+                for i in range(13):
+                    self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 13+i)
+                self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+                self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+                self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+                self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+                self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
+                self.household[self.gatherIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
-            if self.gatherIndex > 0:
-                if self.household[self.gatherIndex - 1][22] == 0 and self.household[self.gatherIndex][22] == 1:
-                    self.collection.settings.liftOffIndex = self.gatherIndex
-                if self.household[self.gatherIndex -1][23] == 0 and self.household[self.gatherIndex][23] == 1:
-                    self.collection.settings.startOfExperimentIndex = self.gatherIndex 
+                if self.gatherIndex > 0:
+                    if self.household[self.gatherIndex - 1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+                        self.collection.settings.liftOffIndex = self.gatherIndex
+                    if self.household[self.gatherIndex -1][23] == 0 and self.household[self.gatherIndex][23] == 1:
+                        self.collection.settings.startOfExperimentIndex = self.gatherIndex 
 
 class PlotWorker(QThread):
     def __init__(self, collection: ClassCollection):

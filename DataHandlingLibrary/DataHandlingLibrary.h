@@ -30,7 +30,7 @@
 #define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
-#define TRANSMISSION_DEBUG 1
+#define TRANSMISSION_DEBUG 0
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -134,7 +134,7 @@ enum DATAHANDLINGLIBRARY_API TMID{
 	Ambient_Pressure, Compare_Temperature, Tank_Pressure, Tank_Temperature, Chamber_Pressure, Chamber_Temperature_1, Chamber_Temperature_2,
 	Nozzle_Pressure_1, Nozzle_Temperature_1, Nozzle_Pressure_2, Nozzle_Temperature_2, Nozzle_Pressure_3, Nozzle_Temperature_3,
 	//Householding Sensors:
-	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_Health,
+	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_1_Health, Chamber_Temperature_2_Health,
 	Nozzle_Pressure_1_Health, Nozzle_Temperature_1_Health, Nozzle_Pressure_2_Health, Nozzle_Temperature_2_Health, Nozzle_Pressure_3_Health, Nozzle_Temperature_3_Health,
 	//Householding Misc:
 	Nozzle_Open, Nozzle_Closed, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_P, Sensorboard_T, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode, Experiment_State
