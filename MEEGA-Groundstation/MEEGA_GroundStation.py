@@ -8,7 +8,7 @@ import time
 
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout)
-from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF)
+from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
 
 from MEEGA_mainWindow import *
@@ -70,18 +70,25 @@ class Telecommand:
     def __init__(self, collection):
         self.collection = collection
         self.sendCounter = 0
+        self.expStartQueue = False
 
     def newTCFrame(self):
         self.tcframe = DataHandling.CreateTC()
         DataHandling.WriteFrame(self.tcframe, 0, self.collection.settings.mode)
 
     def sendInit(self):
+        self.expStartQueue = False
         self.sendCounter = 10
 
     def sendStep(self):
         if self.sendCounter > 0:
             DataHandling.AddFrame(self.tcframe)
             self.sendCounter -= 1
+        #sending another tc after experiment start to turn off experiment start and prevent multiple starts
+        elif self.expStartQueue:
+            self.newTCFrame()
+            self.collection.controlPanel.updateTCFrame()
+            self.sendInit()
 
 #class to define the Main Window
 class GSMain(QMainWindow):
@@ -238,10 +245,8 @@ class GSMain(QMainWindow):
                 self.ui.connectionLabel.setPixmap(self.noconnectionpix_connection)
 
         #sensor / household status
-        #check for invalid index
-        if index is None or index < 0:
-            return
-        statusList = np.concatenate((self.collection.dataAccumulation.household[index][0:13], self.collection.dataAccumulation.household[index][15:21], self.collection.dataAccumulation.household[index][22:24]))
+        gatherIndex = self.collection.dataAccumulation.gatherIndex
+        statusList = np.concatenate((self.collection.dataAccumulation.household[gatherIndex][0:13], self.collection.dataAccumulation.household[gatherIndex][15:21], self.collection.dataAccumulation.household[gatherIndex][22:24]))
         for i in range(len(self.statusDisplay)):
             match statusList[i]:
                 case self.ACTIVE:
@@ -346,47 +351,53 @@ class GSMain(QMainWindow):
         settings = self.collection.settings
         dataAccu = self.collection.dataAccumulation
 
-        #check for invalid index
-        if index is None or index < 0:
-            return
-        if index >= len(dataAccu.sensorData) or index >= len(dataAccu.household):
-            return
-
-        
         #distance plot
         self.distancePSeries.clear()
         self.distanceTSeries.clear()
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][2], 0)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][4], 1)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][7], 3)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][9], 4)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[index][11], 5)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][3], 0)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][5], 1)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][6], 2)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][8], 3)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][10], 4)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[index][12], 5)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][2], 0)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][4], 1)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][7], 3)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][9], 4)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][11], 5)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][3], 0)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][5], 1)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][6], 2)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][8], 3)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][10], 4)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][12], 5)
 
-        #skip if expandng mode needs an event that hasnt happened yet
+        #skip if expanding mode needs an event that hasnt happened yet
         if not (settings.timespanMode == Settings.EXPANDING and(
             (settings.expandFrom == Settings.LO and settings.liftOffIndex == -1) or 
             (settings.expandFrom == Settings.SOE and settings.startOfExperimentIndex == -1)
         )):
             #time plot
-            while self.currentIndex < index:
+            while self.currentIndex < dataAccu.gatherIndex:
                 self.currentIndex += 1
-                for i in range(13):
-                    while settings.timespanMode == Settings.SCROLLING and (self.timeSeries[i].at(self.timeSeries[i].count()-1).x() - self.timeSeries[i].at(0).x()) > settings.scrollingTimeSeconds*1000:
-                        self.timeSeries[i].remove(0)
-                    self.timeSeries[i].append(dataAccu.household[self.currentIndex][21], dataAccu.sensorData[self.currentIndex][i])
+                for i, series in enumerate(self.timeSeries):
+                    while settings.timespanMode == Settings.SCROLLING and (series.at(series.count()-1).x() - series.at(0).x()) > settings.scrollingTimeSeconds*1000:
+                        series.remove(0)
+                    if index == self.currentIndex:
+                        series.append(dataAccu.household[index][21], dataAccu.sensorData[index][i])
+                    else:
+                        insertIndex = -1
+                        if settings.timespanMode == Settings.EXPANDING and index > settings.liftOffIndex:
+                            insertIndex = index - settings.liftOffIndex
+                        elif settings.timespanMode == Settings.EXPANDING and index > settings.startOfExperimentIndex:
+                            insertIndex = index - settings.startOfExperimentIndex
+                        elif settings.timespandMode == Settings.SCROLLING:
+                            insertIndex = index - (dataAccu.gatherIndex - series.count())
+                        else:
+                            insertIndex = index
+                        if insertIndex >= 0:
+                            series.insert(insertIndex, QPointF(dataAccu.household[index][21], dataAccu.sensorData[index][i]))
                     #save highest pressure for scaling of axes
                     if i in self.pressureIndices: #pressure Value
-                        if dataAccu.sensorData[self.currentIndex][i] > self.timeHighestPres:
-                            self.timeHighestPres = dataAccu.sensorData[self.currentIndex][i]
+                        if dataAccu.sensorData[index][i] > self.timeHighestPres:
+                            self.timeHighestPres = dataAccu.sensorData[index][i]
                     else: #temperature Value
-                        if dataAccu.sensorData[self.currentIndex][i] > self.timeHighestTemp:
-                            self.timeHighestTemp = dataAccu.sensorData[self.currentIndex][i]
+                        if dataAccu.sensorData[index][i] > self.timeHighestTemp:
+                            self.timeHighestTemp = dataAccu.sensorData[index][i]
 
             self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
 
@@ -771,9 +782,8 @@ class GSCalibration(QDialog):
 
     #update the displayed sensor value
     def updateValue(self, index: int):
-        digitalValue = self.collection.dataAccumulation.sensorData[index][self.selectedSensor]
-        mappedValue = str(DataHandling.MapSensorValue(self.selectedSensor, int(digitalValue)))
-        self.ui.label.setText(mappedValue + " " + self.currentUnit)
+        mappedValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
+        self.ui.label.setText(str(mappedValue) + " " + self.currentUnit)
     
     #select sensor and display already existing calibration points, according Units
     @Slot()
@@ -901,10 +911,14 @@ class GSDiagramSettings(QWidget):
         self.ui.applyDiagramSettings.clicked.connect(self.applySettings)
         self.rebuildSignal.connect(self.collection.plotWorker.rebuildPlot)
 
-class DataAccumulation:
+class DataAccumulation(QObject):
+    newFrameSignal = Signal(int)
+
     def __init__(self, collection: ClassCollection):
+        super().__init__()
         self.collection = collection
         self.gatherIndex = -1
+        self.newIndex = -1
         self.allocationSize = 5000
         self.sensorData = np.ones((self.allocationSize, 13))
         self.household = np.ones((self.allocationSize, 27))
@@ -912,6 +926,7 @@ class DataAccumulation:
     def accumulate(self):
         testData = True
 
+        #Get Frame and check connection status
         if not testData:
             if DataHandling.PortIsOpen():
                 self.collection.mainWindow.connectionStatus = GSMain.INACTIVE
@@ -922,10 +937,9 @@ class DataAccumulation:
                 frame = DataHandling.GetNextFrame()
                 if DataHandling.FrameIsEmpty(frame):
                     break
-                else:
-                    self.gatherIndex += 1
                 if DataHandling.FrameHasFlag(frame, Flag.OK):
                     self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
+                    self.gatherIndex += 1
                 else:
                     self.collection.mainWindow.connectionStatus = GSMain.ISSUES
                     break
@@ -933,46 +947,60 @@ class DataAccumulation:
                 ###
                 self.gatherIndex += 1 ###only for testing purposes###
                 ###
+            #extend arrays if necessary
             if self.gatherIndex%self.allocationSize == 0:
                 dataExtension = np.ones((self.allocationSize, 13))
                 householdExtension = np.ones((self.allocationSize, 27))
                 self.sensorData = np.concatenate((self.sensorData, dataExtension))
                 self.household = np.concatenate((self.household, householdExtension))
+            if not testData:
+                if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.household[self.gatherIndex][21]:
+                    self.newIndex = self.gatherIndex
+                else:
+                    self.newIndex = np.searchsorted(self.household[:self.gatherIndex, 21], DataHandling.ReadFrame(frame, TMID.System_Time))
+            else:
+                ###
+                self.newIndex = self.gatherIndex ###only for testing purposes###
+                ###
             for i in range(13):
                 if testData:
                     ###
-                    self.sensorData[self.gatherIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+                    self.sensorData[self.newIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
                     ###
                 else:
-                    self.sensorData[self.gatherIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
+                    self.sensorData[self.newIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
             if testData:
                 ###
-                self.household[self.gatherIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
+                self.household[self.newIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
-                break
             else:
                 for i in range(13):
-                    self.household[self.gatherIndex][i] = DataHandling.ReadFrame(frame, 13+i)
-                self.household[self.gatherIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-                self.household[self.gatherIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-                self.household[self.gatherIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-                self.household[self.gatherIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-                self.household[self.gatherIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
-                self.household[self.gatherIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-                self.household[self.gatherIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-                self.household[self.gatherIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-                self.household[self.gatherIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
-                self.household[self.gatherIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-                self.household[self.gatherIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-                self.household[self.gatherIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-                self.household[self.gatherIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
-                self.household[self.gatherIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+                    self.household[self.newIndex][i] = DataHandling.ReadFrame(frame, 13+i)
+                self.household[self.newIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+                self.household[self.newIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+                self.household[self.newIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                self.household[self.newIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                self.household[self.newIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                self.household[self.newIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                self.household[self.newIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                self.household[self.newIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
+                self.household[self.newIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                self.household[self.newIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                self.household[self.newIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                self.household[self.newIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+                self.household[self.newIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
+                self.household[self.newIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
                 if self.gatherIndex > 0:
                     if self.household[self.gatherIndex - 1][22] == 0 and self.household[self.gatherIndex][22] == 1:
                         self.collection.settings.liftOffIndex = self.gatherIndex
                     if self.household[self.gatherIndex -1][23] == 0 and self.household[self.gatherIndex][23] == 1:
-                        self.collection.settings.startOfExperimentIndex = self.gatherIndex 
+                        self.collection.settings.startOfExperimentIndex = self.gatherIndex
+            self.newFrameSignal.emit(int(self.newIndex))
+            if testData:
+                ###
+                break ###only for testing purposes###
+                ###
 
 class PlotWorker(QThread):
     def __init__(self, collection: ClassCollection):
@@ -1029,8 +1057,6 @@ class PlotWorker(QThread):
         #self.collection.mainWindow.repaintPlots()
 
 class DataHandlingThread(QThread):
-    newFrameSignal = Signal(int)
-
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
@@ -1052,7 +1078,6 @@ class DataHandlingThread(QThread):
             self.collection.telecommand.sendStep()
             # clock4 = time.monotonic_ns()
             # print("tc-time: " + str((clock4-clock3)/1000000))
-            self.newFrameSignal.emit(int(self.collection.dataAccumulation.gatherIndex))
             # clock5 = time.monotonic_ns()
             # print("signal-emit-time: " + str((clock5-clock4)/1000000))
             if self.isInterruptionRequested():
@@ -1090,10 +1115,11 @@ class ClassCollection:
         self.calibrationWindow = GSCalibration(self)
         self.plotWorker = PlotWorker(self)
         self.diagramSettingsWindow = GSDiagramSettings(self)
+        #connect onNewFrame signals
+        self.dataAccumulation.newFrameSignal.connect(self.mainWindow.onNewFrame)
+        self.dataAccumulation.newFrameSignal.connect(self.calibrationWindow.onNewFrame)
         #DataHandling setup
         self.dataHandlingThread = DataHandlingThread(self)
-        self.dataHandlingThread.newFrameSignal.connect(self.mainWindow.onNewFrame)
-        self.dataHandlingThread.newFrameSignal.connect(self.calibrationWindow.onNewFrame)
         self.dataHandlingThread.start()
         #lateInit
         self.mainWindow.connect()
