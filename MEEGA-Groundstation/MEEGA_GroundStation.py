@@ -660,6 +660,7 @@ class GSControl(QWidget):
         self.updateTCFrame()
         self.collection.telecommand.sendInit()
         self.testRunStart = 0
+        self.collection.telecommand.expStartQueue = True
     @Slot()
     def stopTest(self):
         self.testRunStop = 1
@@ -936,12 +937,14 @@ class DataAccumulation(QObject):
             if not testData:
                 frame = DataHandling.GetNextFrame()
                 if DataHandling.FrameIsEmpty(frame):
+                    self.newFrameSignal.emit(int(self.newIndex))
                     break
                 if DataHandling.FrameHasFlag(frame, Flag.OK):
                     self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
                     self.gatherIndex += 1
                 else:
                     self.collection.mainWindow.connectionStatus = GSMain.ISSUES
+                    self.newFrameSignal.emit(int(self.newIndex))
                     break
             else:
                 ###
