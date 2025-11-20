@@ -256,6 +256,15 @@ class GSMain(QMainWindow):
                 case self.INACTIVE:
                     self.statusDisplay[i].setPixmap(self.inactivepix_scaled)
 
+            mbHealth = self.collection.dataAccumulation.household[gatherIndex][20]
+            mbHealth -= 8
+            if mbHealth <= 0:
+                self.statusDisplay[18].setPixmap(self.inactivepix_scaled)
+            elif mbHealth <= 2:
+                self.statusDisplay[18].setPixmap(self.issuespix_scaled)
+            else:
+                self.statusDisplay[18].setPixmap(self.activepix_scaled)
+
     def createPlots(self):
         #time plot
         #create Line Series for each sensor
@@ -399,7 +408,7 @@ class GSMain(QMainWindow):
                         if dataAccu.sensorData[index][i] > self.timeHighestTemp:
                             self.timeHighestTemp = dataAccu.sensorData[index][i]
 
-            self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
+                self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
 
         if settings.temperatureAxeMode == Settings.SELFSCALING or settings.pressureAxeMode == Settings.SELFSCALING:
             self.updateAxes()
@@ -925,7 +934,7 @@ class DataAccumulation(QObject):
         self.household = np.ones((self.allocationSize, 27))
 
     def accumulate(self):
-        testData = True
+        testData = False
 
         #Get Frame and check connection status
         if not testData:
@@ -1063,7 +1072,7 @@ class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
-        self.frequency = 2
+        self.frequency = 20
     def run(self):
         period_ms = 1000 / self.frequency
         i = 0
