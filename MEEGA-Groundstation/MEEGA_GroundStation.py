@@ -112,7 +112,7 @@ class GSMain(QMainWindow):
         self.collection = collection
 
         #creating local status list
-        self.statusDisplay = ["" for _ in range(21)]
+        self.statusDisplay = ["" for _ in range(20)]
         self.statusDisplay[0] = self.ui.statusLabelPAmbient
         self.statusDisplay[1] = self.ui.statusLabelTCompare
         self.statusDisplay[2] = self.ui.statusLabelPReservoir
@@ -131,9 +131,8 @@ class GSMain(QMainWindow):
         self.statusDisplay[15] = self.ui.statusLabelLED
         self.statusDisplay[16] = self.ui.statusLabelPChip
         self.statusDisplay[17] = self.ui.statusLabelTChip
-        self.statusDisplay[18] = self.ui.statusLabelMainboard
-        self.statusDisplay[19] = self.ui.statusLabelLiftOff
-        self.statusDisplay[20] = self.ui.statusLabelSOE
+        self.statusDisplay[18] = self.ui.statusLabelLiftOff
+        self.statusDisplay[19] = self.ui.statusLabelSOE
 
         #creating status pixmaps
         self.activepix = QPixmap("Ressources\\active.png")
@@ -246,7 +245,7 @@ class GSMain(QMainWindow):
 
         #sensor / household status
         gatherIndex = self.collection.dataAccumulation.gatherIndex
-        statusList = np.concatenate((self.collection.dataAccumulation.household[gatherIndex][0:13], self.collection.dataAccumulation.household[gatherIndex][15:21], self.collection.dataAccumulation.household[gatherIndex][22:24]))
+        statusList = np.concatenate((self.collection.dataAccumulation.household[gatherIndex][0:13], self.collection.dataAccumulation.household[gatherIndex][15:20], self.collection.dataAccumulation.household[gatherIndex][22:24]))
         for i in range(len(self.statusDisplay)):
             match statusList[i]:
                 case self.ACTIVE:
@@ -259,11 +258,20 @@ class GSMain(QMainWindow):
             mbHealth = self.collection.dataAccumulation.household[gatherIndex][20]
             mbHealth -= 8
             if mbHealth <= 0:
-                self.statusDisplay[18].setPixmap(self.inactivepix_scaled)
+                self.ui.statusLabelMainboard.setPixmap(self.inactivepix_scaled)
             elif mbHealth <= 2:
-                self.statusDisplay[18].setPixmap(self.issuespix_scaled)
+                self.ui.statusLabelMainboard.setPixmap(self.issuespix_scaled)
             else:
-                self.statusDisplay[18].setPixmap(self.activepix_scaled)
+                self.ui.statusLabelMainboard.setPixmap(self.activepix_scaled)
+
+            coverOpen = self.collection.dataAccumulation.household[gatherIndex][13]
+            coverClosed = self.collection.dataAccumulation.household[gatherIndex][14]
+            if coverOpen and not coverClosed:
+                self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
+            elif not coverOpen and coverClosed:
+                self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
+            else:
+                self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
 
     def createPlots(self):
         #time plot
