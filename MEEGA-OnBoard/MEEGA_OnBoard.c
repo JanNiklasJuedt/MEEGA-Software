@@ -14,7 +14,7 @@ int main() {
 #endif
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
 	digitalWrite(Valve_Pin, ValveClose); //Set Valve to closed position
-	pinMode(Servo_Pin, OUTPUT);
+	//pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
 	pinMode(Servo_On, OUTPUT);
 
@@ -185,7 +185,7 @@ int main() {
 				SoEReceived = 1;
 				digitalWrite(Servo_On, ServoOn);
 				digitalWrite(LEDs_Pin, LEDsOn);
-				int Test_Angle_Servo = (dryRun == 1) ? 30 : 90;
+				int Test_Angle_Servo = (dryRun == 1) ? 60 : 0;
 				
 				int GS_Delay_OnGoingValve = ReadFrame(FrameTC, Valve_Delay); //Changeable Valve Delay from Ground Station
 				int GS_Delay_to_OpenNozzleCover = ReadFrame(FrameTC, Servo_Delay); //Changeable Servo Delay from Ground Station
@@ -303,10 +303,10 @@ void ExperimentControl() {
 		else if (ReadFrame(FrameTC, LED_Control) == 0) digitalWrite(LEDs_Pin, LEDsOff);	//command close valve
 
 		//Servo Control
-		if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 90) {
+		if (ReadFrame(FrameTC, Servo_Control) >= 0 && ReadFrame(FrameTC, Servo_Control) <= 100) {
 			digitalWrite(Servo_On, ServoOn);
 			ServoRotation(ReadFrame(FrameTC, Servo_Control));	//command rotate the servo to the specified degree
-			delay_abortable(10);
+			delay_abortable(1000);
 			digitalWrite(Servo_On, ServoOff);
 		}
 	}
@@ -373,7 +373,7 @@ void DataAcquisition(DataFrame * frame) {
 	uint32_t NozzleTemperature_2 = temperatureRead[4];
 	uint32_t NozzleTemperature_3 = temperatureRead[5];
 	int NozzleCover_1 = digitalRead(Nozzle_Cover_S1);	//Nozzle Cover Feedback: fully close
-	int NozzleServo = digitalRead(Servo_Pin);	//Nozzle Servo Switch
+	int NozzleServo = digitalRead(Servo_On);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
 	int LEDsStat = digitalRead(LEDs_Pin);
 	int Sensorboard_Pressure = pressureRead[6];
@@ -395,8 +395,8 @@ void DataAcquisition(DataFrame * frame) {
 	WriteFrame(frame, Nozzle_Temperature_1, NozzleTemperature_1);
 	WriteFrame(frame, Nozzle_Temperature_2, NozzleTemperature_2);
 	WriteFrame(frame, Nozzle_Temperature_3, NozzleTemperature_3);
-	WriteFrame(frame, Nozzle_Closed, NozzleCover_1);
-	WriteFrame(frame, Nozzle_Open, NozzleOpened);
+	WriteFrame(frame, Nozzle_Closed, !NozzleCover_1);
+	WriteFrame(frame, Nozzle_Open, !NozzleOpened);
 	WriteFrame(frame, Nozzle_Servo, NozzleServo);
 	WriteFrame(frame, Reservoir_Valve, ReservoirValve);
 	WriteFrame(frame, LEDs, !LEDsStat);
@@ -498,9 +498,11 @@ int LOSignal() {
  //The servo 90° rotation is 1ms=0° to 2ms=90°
 #if (SERVO_VERSION == SERVO_v1)
 void ServoInit(void) {
+	pinMode(Servo_Pin, PWM_OUTPUT);
+	pwmWrite(Servo_Pin, 0);
 	pwmSetMode(PWM_MODE_MS); //Use Mark-Space mode
 	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
-	pwmSetRange(20000); //Set range to 20ms (50Hz)
+	pwmSetRange(2000); //Set range to 20ms (50Hz)
 }
 
 void ServoRotation(int degree) {
@@ -510,8 +512,8 @@ void ServoRotation(int degree) {
 	int minR = 1000;
 	static int previousPwm = 1000;
 	int maxR = 2000;
-	int pulse_us = minR + degree * (maxR - minR) / 90;
-	pwmWrite(Servo_Pin, pulse_us);
+	int pulse_us = minR + degree * (maxR - minR) / 100;
+	pwmWrite(Servo_Pin, pulse_us / 10);
 #elif (SERVO_VERSION == SERVO_v2)
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;

@@ -36,7 +36,7 @@
 #define LEDs_Pin 4	//pin
 #define Valve_Pin 16	//pin
 #define ValveSwitch 01	//pin
-#define Servo_Pin 12	//pin
+#define Servo_Pin 13	//pin
 #define Servo_On 5	//pin
 #define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
 #define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
@@ -172,8 +172,8 @@ uint32_t temperatureRead[TEMPERATURE_SENSORS];
 const int ValveOpen = 1,
 ValveClose = 0,
 ValveStuck = 3,
-ServoOn = 0,
-ServoOff = 1,
+ServoOn = 1,
+ServoOff = 0,
 ServoStuck = 3,
 NozzleStuck = 3,
 NozzleOpen = 1,
@@ -198,8 +198,8 @@ modeSel = 1;
 #define Delay_to_EoE 30000
 #define Delay_PowerOff 1000
 #define Delay_NozzleCoverFeedback 1500
-#define Angle_ServoReset 0
-#define Angle_Servo 90
+#define Angle_ServoReset 91
+#define Angle_Servo 0
 #define Delay_ServoRetry 3000
 #if (MODE == DEBUG)
 #define Delay_to_NoseConeSeparation 5000
