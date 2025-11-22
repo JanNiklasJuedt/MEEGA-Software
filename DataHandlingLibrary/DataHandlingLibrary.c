@@ -196,7 +196,7 @@ int Initialize()
 {
 	DebugLog("Setting up DataHandling:");
 	if (!ReadFailSafe()) {
-		CreateFailSafe();
+		if (!CreateFailSafe()) return 0;
 	}
 	int readExisting = 1;
 	if (dataHandling.failSafe == NULL) readExisting = 0;
@@ -206,16 +206,17 @@ int Initialize()
 		ReadSave(dataHandling.failSafe->saveFilePath);
 	}
 	if (USE_DEFAULT_VALUES && (dataHandling.saveFile == NULL)) {
-		CreateSave(SAVEFILE_NAME);
+		if (!CreateSave(SAVEFILE_NAME)) return 0;
 	}
 	if (CALIBRATION_METHOD != NONE) {
 		if (dataHandling.failSafe != NULL) {
 			if (dataHandling.failSafe->calPath[0] != '\0') {
-				ReadCalibration(dataHandling.failSafe->calPath);
+				if (ReadCalibration(dataHandling.failSafe->calPath) == -1)
+					CreateCalibration(dataHandling.failSafe->calPath);
 			}
-		}
-		if ((dataHandling.calibration == NULL) && USE_DEFAULT_VALUES) {
-			CreateCalibration(CALIBRATION_NAME);
+			else if (USE_DEFAULT_VALUES) {
+				CreateCalibration(CALIBRATION_NAME);
+			}
 		}
 	}
 	else DebugLog("Skipping Calibration");
@@ -425,7 +426,7 @@ int CreateCalibration(const char* path)
 #define CALIBRATION_POINT_HEADER_STRING "CalibrationPoints:\n"
 #define CALIBRATION_SENSOR_START_STRING "%02i: {"
 #define CALIBRATION_SENSOR_END_STRING "}\n"
-#define CALIBRATION_POINT_STRING "{%lli,%f,%c}"
+#define CALIBRATION_POINT_STRING "{%lli,%f,%i}"
 
 int ReadCalibration(const char* path)
 {
@@ -438,7 +439,7 @@ int ReadCalibration(const char* path)
 			defaultpath = 1;
 		}
 		else {
-			DebugLog("!Invalid path passed to ReadCalibration()");
+			DebugLog("!Empty string passed to ReadCalibration()");
 			return 0;
 		}
 	else {
@@ -446,7 +447,7 @@ int ReadCalibration(const char* path)
 	}
 	if (file == NULL) {
 		DebugLog("!Calibration could not be opened_");
-		return 0;
+		return -1;
 	}
 	if (defaultpath) CreateCalibration(CALIBRATION_NAME);
 	else CreateCalibration(path);
@@ -459,6 +460,7 @@ int ReadCalibration(const char* path)
 	if (fscanf(file, CALIBRATION_HEADER_STRING) != EOF) {
 		if (fscanf(file, CALIBRATION_VERSION_STRING, &calibration->version) != EOF) {
 			if (calibration->version == CALIBRATION_VERSION) {
+				//Newest FileReader:
 				if (fscanf(file, CALIBRATION_TIME_STRING, &calibration->dateTime) != EOF) {
 					if (fscanf(file, CALIBRATION_POINT_HEADER_STRING) != EOF) {
 						for (i = 0; i < SENSOR_AMOUNT; i++) {
@@ -490,6 +492,14 @@ int ReadCalibration(const char* path)
 					}
 				}
 			}
+			else if (calibration->version == 1.0f) {
+				//Older FileReader:
+				//None
+			}
+			else {
+				DebugLog("!Calibration Version is unhandled_");
+				return 0;
+			}
 		}
 	}
 	DebugLog("!Calibration File could not be parsed_");
@@ -508,6 +518,7 @@ int WriteCalibration()
 	if (calibration.changed) {
 		FILE* file = fopen(calibration.calibrationFilePath, "w");
 		if (file != NULL) {
+			fprintf(file, CALIBRATION_HEADER_STRING);
 			fprintf(file, CALIBRATION_VERSION_STRING, calibration.version);
 			fprintf(file, CALIBRATION_TIME_STRING, calibration.dateTime);
 			fprintf(file, CALIBRATION_POINT_HEADER_STRING);
@@ -535,6 +546,7 @@ DataFrame CreateFrame()
 {
 	DataFrame temp = EmptyFrame();
 	temp.sync = _GetSync_();
+	FrameSetFlag(&temp, TeleMetry);
 	FrameSetFlag(&temp, Source);
 	return temp;
 }
@@ -687,7 +699,7 @@ int FrameIsTC(DataFrame frame)
 int FrameHasFlag(DataFrame frame, int id)
 {
 	if (id >= 8 || id < 0) return 0;
-	return (frame.flag >> id) % (1 << (id + 1));
+	return (frame.flag & (1 << id)) != 0;
 }
 
 void FrameSetFlag(DataFrame* frame, int id)
@@ -699,13 +711,15 @@ void FrameSetFlag(DataFrame* frame, int id)
 		FrameRemoveFlag(frame, Source);
 	}
 	else if (id == OK) FrameRemoveFlag(frame, Source);
+	if (id == TeleCommand) FrameRemoveFlag(frame, TeleMetry);
+	else if (id == TeleMetry) FrameRemoveFlag(frame, TeleCommand);
 	return;
 }
 
 void FrameRemoveFlag(DataFrame* frame, int id)
 {
 	if (frame == NULL || id >= 8 || id < 0) return;
-	if ((frame->flag >> id) % (1 << (id + 1))) frame->flag -= 1 << id;
+	frame->flag &= ~(1 << id);
 	return;
 }
 
@@ -716,7 +730,7 @@ DataPacket CreatePacket(SYNC_TYPE sync)
 	for (int i = 0; i < sizeof(out); i++)
 		bytePtr[i] = 0;
 	out.sync = sync;
-	out.start = -1;
+	out.start = START_BYTE;
 	return out;
 }
 
@@ -1197,18 +1211,21 @@ int ReadSave(const char path[])
 {
 	DebugLog("Reading SaveFile:");
 	FILE* file;
+	char filePath[PATH_LENGTH] = "";
 	if (!VirtualSave()) return 0;
 	if (path == NULL || path[0] == '\0')
-		if (USE_DEFAULT_VALUES) file = fopen(SAVEFILE_NAME, "rb");
+		if (USE_DEFAULT_VALUES) strcpy(filePath, SAVEFILE_NAME);
 		else {
-			DebugLog("!Invalid path passed to ReadSave()");
+			DebugLog("!Empty string passed to ReadSave()");
 			return 0;
 		}
-	else file = fopen(path, "rb");
+	else strcpy(filePath, path);
+	file = fopen(filePath, "rb");
 	if (file == NULL) {
 		DebugLog("!SaveFile file could not be opened_");
 		return 0;
 	}
+	strcpy(dataHandling.saveFile->saveFilePath, filePath);
 	DebugLog("Opened SaveFile file");
 	byte* writePtr = (byte*) &dataHandling.saveFile->dateTime;
 	byte temp = 0;
@@ -1239,6 +1256,10 @@ int ReadSave(const char path[])
 	}
 	DebugLog("Amount of Frames read#_", dataHandling.saveFile->frameAmount);
 	dataHandling.saveFile->savedAmount = dataHandling.saveFile->frameAmount;
+	if (dataHandling.failSafe != NULL) {
+		strcpy(dataHandling.failSafe->saveFilePath, filePath);
+		dataHandling.failSafe->changed = 1;
+	}
 	return 1;
 }
 
