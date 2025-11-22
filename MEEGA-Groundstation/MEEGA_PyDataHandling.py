@@ -60,12 +60,14 @@ class TMID(c_enum):
     Sensorboard_P = 32
     Sensorboard_T = 33
     Mainboard = 34
-    System_Time = 35
-    Lift_Off = 36
-    Start_Experiment = 37
-    End_Experiment = 38
-    Mode = 39
-    Experiment_State = 40
+    Mainboard_T = 35
+    Mainboard_V = 36
+    System_Time = 37
+    Lift_Off = 38
+    Start_Experiment = 39
+    End_Experiment = 40
+    Mode = 41
+    Experiment_State = 42
 
 class TCID(c_enum):
     Mode_Change = 0
@@ -87,7 +89,8 @@ class Flag(c_enum):
     OK = 1
     Biterror = 2
     Partial = 3
-    TeleCommand = 4
+    TeleMetry = 4
+    TeleCommand = 5
 
 DataHandling.DebugLog.argtypes = [c_char_p]
 

@@ -49,7 +49,9 @@ int _SetPositions_()
 		case Experiment_State: length = EXP_LEN; break;
 		case Sensorboard_P:
 		case Sensorboard_T: length = STM_LEN; break;
-		case Mainboard: length = MAIN_LEN; break;
+		case Mainboard: length = 0; break;
+		case Mainboard_T: length = MAIN_T_LEN; break;
+		case Mainboard_V: length = MAIN_V_LEN; break;
 		case System_Time: length = TIME_LEN; break;
 		}
 		dataHandling.frameLookUp->telemetry_Pos_Len[id][0] = pos;
@@ -432,7 +434,7 @@ int ReadCalibration(const char* path)
 {
 	DebugLog("Reading Calibration:");
 	FILE* file;
-	int i, j, sensor, defaultpath = 0, error = 0;
+	int i, j, sensor, defaultpath = 0, error = 0, validBuffer = 0;
 	if (path == NULL || path[0] == '\0')
 		if (USE_DEFAULT_VALUES) {
 			file = fopen(CALIBRATION_NAME, "rb");
@@ -470,10 +472,11 @@ int ReadCalibration(const char* path)
 									break;
 								}
 								for (j = 0; j < CALIBRATION_POINTS; j++) {
-									if (fscanf(file, CALIBRATION_POINT_STRING, &calibration->points[sensor][j].digital, &calibration->points[sensor][j].analog, &calibration->points[sensor][j].valid) == EOF) {
+									if (fscanf(file, CALIBRATION_POINT_STRING, &calibration->points[sensor][j].digital, &calibration->points[sensor][j].analog, &validBuffer) == EOF) {
 										error = 1;
 										break;
 									}
+									calibration->points[sensor][j].valid = validBuffer;
 								}
 								if (fscanf(file, CALIBRATION_SENSOR_END_STRING) == EOF) {
 									error = 1;
