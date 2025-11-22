@@ -142,7 +142,7 @@ enum DATAHANDLINGLIBRARY_API TMID{
 	Ambient_Pressure_Health, Compare_Temperature_Health, Tank_Pressure_Health, Tank_Temperature_Health, Chamber_Pressure_Health, Chamber_Temperature_1_Health, Chamber_Temperature_2_Health,
 	Nozzle_Pressure_1_Health, Nozzle_Temperature_1_Health, Nozzle_Pressure_2_Health, Nozzle_Temperature_2_Health, Nozzle_Pressure_3_Health, Nozzle_Temperature_3_Health,
 	//Householding Misc:
-	Nozzle_Open, Nozzle_Closed, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_P, Sensorboard_T, Mainboard, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode, Experiment_State
+	Nozzle_Open, Nozzle_Closed, Nozzle_Servo, Reservoir_Valve, Camera, LEDs, Sensorboard_P, Sensorboard_T, Mainboard, Mainboard_T, Mainboard_V, System_Time, Lift_Off, Start_Experiment, End_Experiment, Mode, Experiment_State
 };
 
 /// <summary>
