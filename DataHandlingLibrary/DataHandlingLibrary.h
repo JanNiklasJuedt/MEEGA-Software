@@ -24,13 +24,16 @@
 #define QUADRATIC 0b00000010
 #define CUBIC 0b00000100
 
-//DataHandling Settings
+
+//<-------------------------------------DataHandling Settings------------------------------------->//
 #define DATAHANDLINGLIBRARY_OS (WINDOWS_OS)
 #define CALIBRATION_METHOD (LINEAR)
 #define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
 #define TRANSMISSION_DEBUG 0
+//<----------------------------------------------------------------------------------------------->//
+
 
 //OS related stuff
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
@@ -106,6 +109,8 @@ typedef unsigned char byte;
 #define STM_LEN 2 //Bits
 #define EXP_LEN 4 //Bits
 #define MAIN_LEN 4 //Bits
+#define MAIN_V_LEN 1 //Bits
+#define MAIN_T_LEN 3 //Bits
 #define TIME_LEN 32 //Bits
 #define MSG_ID_LEN 3 //Bits
 
@@ -115,7 +120,7 @@ DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.1f;
 DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFE_NAME[] = "MEEGA_FailSafe.txt";
 
-DATAHANDLINGLIBRARY_CONSTANT const float CALIBRATION_VERSION = 1.0f;
+DATAHANDLINGLIBRARY_CONSTANT const float CALIBRATION_VERSION = 1.1f;
 DATAHANDLINGLIBRARY_CONSTANT const char CALIBRATION_NAME[] = "MEEGA_Calibration.txt";
 
 DATAHANDLINGLIBRARY_CONSTANT const float SAVEFILE_VERSION = 1.0f;
@@ -151,7 +156,7 @@ enum DATAHANDLINGLIBRARY_API TCID {
 /// DataFrame annotation flags
 /// </summary>
 enum DATAHANDLINGLIBRARY_API Flag {
-	Source, OK, Biterror, Partial, TeleCommand
+	Source, OK, Biterror, Partial, TeleMetry, TeleCommand
 };
 
 /// <summary>
@@ -435,14 +440,14 @@ DATAHANDLINGLIBRARY_API int ReadCalibration(const char* path);
 /// <summary>
 /// Writes the SensorCalibration structure to a file
 /// </summary>
-/// <returns>Whether successful</returns>
+/// <returns>{1} if successful, {0} if file could not be read, {-1} if file was not found</returns>
 DATAHANDLINGLIBRARY_API int WriteCalibration();
 
 /// <summary>
 /// Creates a new SensorCalibration structure
 /// </summary>
 /// <param name="path">String with system path and name</param>
-/// <returns></returns>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 
 /// <summary>
