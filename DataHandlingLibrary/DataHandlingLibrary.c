@@ -202,12 +202,12 @@ void _CloseBuffer_()
 	if (dataHandling.buffer == NULL) return;
 	int i = 0;
 	for (; i < BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inFrames[i] != NULL) free(dataHandling.buffer->inFrames);
-		if (dataHandling.buffer->outFrames[i] != NULL) free(dataHandling.buffer->outFrames);
+		if (dataHandling.buffer->inFrames[i] != NULL) free(dataHandling.buffer->inFrames[i]);
+		if (dataHandling.buffer->outFrames[i] != NULL) free(dataHandling.buffer->outFrames[i]);
 	}
 	for (i = 0; i < PACKET_BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inPackets[i] != NULL) free(dataHandling.buffer->inPackets);
-		if (dataHandling.buffer->outPackets[i] != NULL) free(dataHandling.buffer->outPackets);
+		if (dataHandling.buffer->inPackets[i] != NULL) free(dataHandling.buffer->inPackets[i]);
+		if (dataHandling.buffer->outPackets[i] != NULL) free(dataHandling.buffer->outPackets[i]);
 	}
 	return;
 }

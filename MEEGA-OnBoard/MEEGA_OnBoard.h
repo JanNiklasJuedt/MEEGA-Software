@@ -186,7 +186,7 @@ ServoStuck = 3,
 NozzleStuck = 3,
 NozzleOpen = 1,
 LEDsOn = 0,
-LEDsOff = 1;
+LEDsOff = 1,
 flight = 1,
 test = 0;
 
@@ -231,7 +231,7 @@ ExperimentState currentState = WAIT_LO;
 
 //EXPERIMENT
 //Function receiving the SOE signal from the RPi
-int SoESignal();
+//int SoESignal();
 //Function to SetUp the Servo
 void ServoRotation(int degree);
 //Function in Experiment controlling the Valve operation

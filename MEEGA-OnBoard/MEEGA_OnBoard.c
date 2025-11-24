@@ -590,7 +590,7 @@ void DataAcquisition(DataFrame * frame) {
 	int LEDsStat = digitalRead(LEDs_Pin);
 	int Sensorboard_Pressure = pressureRead[6];
 	int Sensorboard_Temperature = temperatureRead[6];
-	uint8_t mainboard = mainboardStatus(Mainboard_TempStat, Mainboard_VoltStat);
+	//uint8_t mainboard = mainboardStatus(Mainboard_TempStat, Mainboard_VoltStat);
 #endif //MODE
 
 	WriteFrame(frame, System_Time, SystemTime);
@@ -614,7 +614,8 @@ void DataAcquisition(DataFrame * frame) {
 	WriteFrame(frame, LEDs, !LEDsStat);
 	WriteFrame(frame, Sensorboard_P, Sensorboard_Pressure);
 	WriteFrame(frame, Sensorboard_T, Sensorboard_Temperature);
-	WriteFrame(frame, Mainboard, mainboard);
+	WriteFrame(frame, Mainboard_V, Mainboard_VoltStat);
+	WriteFrame(frame, Mainboard_T, Mainboard_TempStat);
 	WriteFrame(frame, Mode, modeSel);
 	WriteFrame(frame, Lift_Off, !LOSignal);
 	WriteFrame(frame, Start_Experiment, !SoESignal);
@@ -784,20 +785,20 @@ void TransferSPI(int fd, uint8_t * txBuf, uint8_t * rxBuf, size_t length) {
 #endif //SPIDEV
 
 void ReadPressureSensors(uint32_t* Sensors) {
-	uint8_t txBuf[P_TxPACKET_LENGTH + 1]; // Request data from SPI1
-	uint8_t rxBuf[P_TxPACKET_LENGTH + 1];
+	uint8_t txBuf[P_TxPACKET_LENGTH]; // Request data from SPI1
+	uint8_t rxBuf[P_TxPACKET_LENGTH];
 	for (int i = 0; i <= P_TxPACKET_LENGTH; i++){
-		if (i == 0) txBuf[i] = CMD_READ;
-		else txBuf[i] = 0;
+		txBuf[i] = 0;
 		rxBuf[i] = 0;
 	}
+	txBuf[0] = CMD_READ;
 
 	digitalWrite(CS_PSB, LOW);
 #if (SENSORS_SPI_VERSION == WIRINGPISPI)
 	wiringPiSPIxDataRW(SPI_PRESSURE, 0, txBuf, 1);
 	wiringPiSPIDxataRW(SPI_PRESSURE, 0, rxBuf, P_TxPACKET_LENGTH);
 #elif (SENSORS_SPI_VERSION == SPIDEV)
-	TransferSPI(SPI_fd_P, txBuf, rxBuf, P_TxPACKET_LENGTH + 1);
+	TransferSPI(SPI_fd_P, txBuf, rxBuf, P_TxPACKET_LENGTH);
 #endif
 	digitalWrite(CS_PSB, HIGH);
 
@@ -811,20 +812,20 @@ void ReadPressureSensors(uint32_t* Sensors) {
 }
 
 void ReadTemperatureSensors(uint32_t* Sensors) {
-	uint8_t txBuf[T_TxPACKET_LENGTH + 1]; // Request data from SPI0
-	uint8_t rxBuf[T_TxPACKET_LENGTH + 1];
+	uint8_t txBuf[T_TxPACKET_LENGTH]; // Request data from SPI0
+	uint8_t rxBuf[T_TxPACKET_LENGTH];
 	for (int i = 0; i <= T_TxPACKET_LENGTH; i++){
-		if (i == 0) txBuf[i] = CMD_READ;
-		else txBuf[i] = 0;
+		txBuf[i] = 0;
 		rxBuf[i] = 0;
 	}
+	txBuf[0] = CMD_READ;
 
 	digitalWrite(CS_TSB, LOW);
 #if (SENSORS_SPI_VERSION == WIRINGPISPI)
 	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, txBuf, 1);
 	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, rxBuf, P_TxPACKET_LENGTH);
 #elif (SENSORS_SPI_VERSION == SPIDEV)
-	TransferSPI(SPI_fd_T, txBuf, rxBuf, P_TxPACKET_LENGTH + 1);
+	TransferSPI(SPI_fd_T, txBuf, rxBuf, P_TxPACKET_LENGTH);
 #endif
 	digitalWrite(CS_TSB, HIGH);
 
