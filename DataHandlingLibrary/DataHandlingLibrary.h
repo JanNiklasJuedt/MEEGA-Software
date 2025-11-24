@@ -196,10 +196,10 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 /// Input/output buffer for transmissions
 /// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
-	struct DataPacket* inPackets[PACKET_BUFFER_LENGTH];
-	struct DataPacket* outPackets[PACKET_BUFFER_LENGTH];
-	struct DataFrame* inFrames[BUFFER_LENGTH];
-	struct DataFrame* outFrames[BUFFER_LENGTH];
+	struct DataPacket inPackets[PACKET_BUFFER_LENGTH];
+	struct DataPacket outPackets[PACKET_BUFFER_LENGTH];
+	struct DataFrame inFrames[BUFFER_LENGTH];
+	struct DataFrame outFrames[BUFFER_LENGTH];
 } DataBuffer;
 
 /// <summary>
@@ -542,6 +542,12 @@ DATAHANDLINGLIBRARY_API int AddOutFrame(DataFrame frame);
 /// <param name="frame">DataFrame to add</param>
 /// <returns></returns>
 DATAHANDLINGLIBRARY_API void AddFrame(DataFrame frame);
+
+/// <summary>
+/// Initializes new Buffer-Arrays
+/// </summary>
+/// <returns>Whether successful</returns>
+DATAHANDLINGLIBRARY_API int CreateBuffer();
 
 /// <summary>
 /// Creates a new Failsafe structure from default values

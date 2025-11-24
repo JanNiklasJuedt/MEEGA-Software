@@ -15,23 +15,19 @@ static byte _ToMSG_(byte type, byte id); //Encodes the MSG-byte
 static void _FromMSG_(byte msg, byte* type_out, byte* id_out); //Decodes the MSG-byte
 static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount); //Shifts values inside an array
 static int _SetPortConfig_(); //Configures Port settings, needs an opened Port
-static void _CloseBuffer_(); //Frees allocated memory of the buffer
 
 //EX-EXPORT (INTERNAL) Declarations:
-DataPacket GetInPacket(); //Returns the first incoming Packet
-DataPacket GetOutPacket(); //Returns the first outgoing Packet
+DataPacket GetInPacket(); //Returns the latest incoming Packet
 int AddOutPacket(DataPacket data); //Adds a Packet to the outgoing buffer
-int AddInPacket(DataPacket data); //Adds a Packet to the incoming buffer
 int VirtualSave(); //Creates a SaveFile-struct in memory
 DataPacket CreatePacket(SYNC_TYPE sync); //Creates a Packet with the designated sync-value
 DataPacket EmptyPacket(); //Creates an empty Packet
 int FormPackets(); //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
 int FormFrames(); //Converts all buffered incoming DataPackets into buffered DataFrames (with {0} values if parts are missing), returns the amount converted
-DataFrame GetOutFrame(); //Returns the first buffered outgoing DataFrame and removes it from the buffer
+DataFrame GetOutFrame(); //Returns the latest buffered outgoing DataFrame and removes it from the buffer
 int AddInFrame(DataFrame frame); //Adds an incoming DataFrame to the Buffer, returns the corresponding index
-DataFrame GetInFrame(); //Returns the first buffered incoming DataFrame and removes it from the buffer
+DataFrame GetInFrame(); //Returns the latest buffered incoming DataFrame and removes it from the buffer
 int LoadPort(); //Configures and opens the communication port
-int CreateBuffer(); //Initializes new Buffer-Arrays
 
 //Internal Implementations:
 int _SetPositions_()
@@ -193,21 +189,6 @@ void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
 			if (i >= (offsetAmount * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
 			else byteArray[i] = 0;
 		}
-	}
-	return;
-}
-
-void _CloseBuffer_()
-{
-	if (dataHandling.buffer == NULL) return;
-	int i = 0;
-	for (; i < BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inFrames[i] != NULL) free(dataHandling.buffer->inFrames);
-		if (dataHandling.buffer->outFrames[i] != NULL) free(dataHandling.buffer->outFrames);
-	}
-	for (i = 0; i < PACKET_BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inPackets[i] != NULL) free(dataHandling.buffer->inPackets);
-		if (dataHandling.buffer->outPackets[i] != NULL) free(dataHandling.buffer->outPackets);
 	}
 	return;
 }
@@ -832,7 +813,7 @@ int FormFrames()
 		return 0;
 	}
 	DataPacket currentPacket = GetInPacket();
-	DataFrame** framePtr = dataHandling.buffer->inFrames;
+	DataFrame* framePtr = dataHandling.buffer->inFrames;
 	int number = 0;
 	int payloadIndex = 0, dataIndex = 0;
 	byte id, type, foundMatch, faulty;
@@ -840,27 +821,29 @@ int FormFrames()
 		faulty = 0, foundMatch = 0;
 		if (CalculateCRC(&currentPacket)) faulty = 1;
 		_FromMSG_(currentPacket.msg, &type, &id);
-		for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames && *framePtr != NULL; framePtr++) {
-			if ((*framePtr)->sync == currentPacket.sync) {
-				foundMatch = 1;
-				break;
+		if (framePtr->sync != currentPacket.sync) {
+			for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames; framePtr++) {
+				if (framePtr->sync == currentPacket.sync) {
+					foundMatch = 1;
+					break;
+				}
 			}
-		}
-		if (!foundMatch) {
-			framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
-			(*framePtr)->sync = currentPacket.sync;
-			(*framePtr)->chksm = currentPacket.chksm;
-			if (type) FrameSetFlag(*framePtr, TeleCommand);
-			FrameSetFlag(*framePtr, OK);
+			if (!foundMatch) {
+				framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
+				framePtr->sync = currentPacket.sync;
+				framePtr->chksm = currentPacket.chksm;
+				if (type) FrameSetFlag(framePtr, TeleCommand);
+				FrameSetFlag(framePtr, OK);
+			}
 		}
 		dataIndex = id * PAYLOAD_LENGTH;
 		for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
 			if (dataIndex < DATA_LENGTH) {
-				if ((*framePtr)->data[dataIndex] != 0) break;
-				(*framePtr)->data[dataIndex] = currentPacket.payload[payloadIndex];
+				if (framePtr->data[dataIndex] != 0) break;
+				framePtr->data[dataIndex] = currentPacket.payload[payloadIndex];
 			}
 		}
-		if (faulty) FrameSetFlag(*framePtr, Biterror);
+		if (faulty) FrameSetFlag(framePtr, Biterror);
 	}
 	return number;
 }
@@ -871,30 +854,15 @@ DataPacket GetInPacket()
 		DebugLog("!Uninitialized DataHandling");
 		return EmptyPacket();
 	}
-	DataPacket* temp = dataHandling.buffer->inPackets[0];
-	DataPacket out = EmptyPacket();
-	if (temp != NULL) {
-		out = *temp;
-		free(temp);
-		_ShiftArray_(dataHandling.buffer->inPackets, sizeof(DataPacket*), PACKET_BUFFER_LENGTH, -1);
+	DataPacket temp = EmptyPacket();
+	for (int i = PACKET_BUFFER_LENGTH; i > 0; i--) {
+		temp = dataHandling.buffer->inPackets[i - 1];
+		if (!PacketIsEmpty(temp)) {
+			dataHandling.buffer->inPackets[i - 1] = EmptyPacket();
+			break;
+		}
 	}
-	return out;
-}
-
-DataPacket GetOutPacket()
-{
-	if (dataHandling.buffer == NULL) {
-		DebugLog("!Uninitialized DataHandling");
-		return EmptyPacket();
-	}
-	DataPacket* temp = dataHandling.buffer->outPackets[0];
-	DataPacket out = EmptyPacket();
-	if (temp != NULL) {
-		out = *temp;
-		free(temp);
-		_ShiftArray_(dataHandling.buffer->outPackets, sizeof(DataPacket*), PACKET_BUFFER_LENGTH, -1);
-	}
-	return out;
+	return temp;
 }
 
 DataFrame GetOutFrame()
@@ -903,14 +871,15 @@ DataFrame GetOutFrame()
 		DebugLog("!Uninitialized DataHandling");
 		return EmptyFrame();
 	}
-	DataFrame out = EmptyFrame();
-	DataFrame *temp = dataHandling.buffer->outFrames[0];
-	if (temp != NULL) {
-		out = *temp;
-		free(temp);
-		_ShiftArray_(dataHandling.buffer->outFrames, sizeof(DataFrame*), BUFFER_LENGTH, -1);
+	DataFrame temp = EmptyFrame();
+	for (int i = BUFFER_LENGTH; i > 0; i--) {
+		temp = dataHandling.buffer->outFrames[i - 1];
+		if (!FrameIsEmpty(temp)) {
+			dataHandling.buffer->outFrames[i - 1] = EmptyFrame();
+			break;
+		}
 	}
-	return out;
+	return temp;
 }
 
 DataFrame GetInFrame()
@@ -919,16 +888,21 @@ DataFrame GetInFrame()
 		DebugLog("!Uninitialized DataHandling");
 		return EmptyFrame();
 	}
-	DataFrame out = EmptyFrame();
-	DataFrame* temp = dataHandling.buffer->inFrames[0];
-	if (temp != NULL) {
-		out = *temp;
-		free(temp);
-		_ShiftArray_(dataHandling.buffer->inFrames, sizeof(DataFrame*), BUFFER_LENGTH, -1);
+	DataFrame temp = EmptyFrame();
+	for (int i = BUFFER_LENGTH; i > 0; i--) {
+		temp = dataHandling.buffer->inFrames[i - 1];
+		if (!FrameIsEmpty(temp)) {
+			dataHandling.buffer->inFrames[i - 1] = EmptyFrame();
+			break;
+		}
 	}
-	if (out.chksm != CalculateChecksum(out)) FrameSetFlag(&out, Partial);
-	else FrameSetFlag(&out, OK);
-	return out;
+	/*
+	if (FrameIsTC(temp)) temp.chksm = ReadFrame(temp, TC_Checksum);
+	else temp.chksm = ReadFrame(temp, TM_Checksum);
+	*/
+	if (temp.chksm != CalculateChecksum(temp)) FrameSetFlag(&temp, Partial);
+	else FrameSetFlag(&temp, OK);
+	return temp;
 }
 
 int AddOutPacket(DataPacket data)
@@ -937,32 +911,10 @@ int AddOutPacket(DataPacket data)
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-	DataPacket* new = malloc(PACKET_LENGTH);
-	if (new == NULL) return -1;
-	*new = data;
 	int i = 0;
 	for (; i <= PACKET_BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->outPackets[i] == NULL) {
-			dataHandling.buffer->outPackets[i] = new;
-			break;
-		}
-	}
-	return i;
-}
-
-int AddInPacket(DataPacket data)
-{
-	if (dataHandling.buffer == NULL) {
-		DebugLog("!Uninitialized DataHandling");
-		return -1;
-	}
-	DataPacket* new = malloc(PACKET_LENGTH);
-	if (new == NULL) return -1;
-	*new = data;
-	int i = 0;
-	for (; i <= PACKET_BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inPackets[i] == NULL) {
-			dataHandling.buffer->inPackets[i] = new;
+		if (PacketIsEmpty(dataHandling.buffer->outPackets[i])) {
+			dataHandling.buffer->outPackets[i] = data;
 			break;
 		}
 	}
@@ -975,13 +927,14 @@ int AddOutFrame(DataFrame frame)
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-	DataFrame* new = malloc(FRAME_LENGTH);
-	if (new == NULL) return -1;
-	*new = frame;
 	int i = 0;
+	/*
+	if (FrameIsTC(frame)) WriteFrame(&frame, TC_Checksum, frame.chksm);
+	else WriteFrame(&frame, TM_Checksum, frame.chksm);
+	*/
 	for (; i <= BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->outFrames[i] == NULL) {
-			dataHandling.buffer->outFrames[i] = new;
+		if (FrameIsEmpty(dataHandling.buffer->outFrames[i])) {
+			dataHandling.buffer->outFrames[i] = frame;
 			break;
 		}
 	}
@@ -994,13 +947,10 @@ int AddInFrame(DataFrame frame)
 		DebugLog("!Uninitialized DataHandling");
 		return -1;
 	}
-	DataFrame* new = malloc(FRAME_LENGTH);
-	if (new == NULL) return -1;
-	*new = frame;
 	int i = 0;
 	for (; i <= BUFFER_LENGTH; i++) {
-		if (dataHandling.buffer->inFrames[i] == NULL) {
-			dataHandling.buffer->inFrames[i] = new;
+		if (FrameIsEmpty(dataHandling.buffer->inFrames[i])) {
+			dataHandling.buffer->inFrames[i] = frame;
 			break;
 		}
 	}
@@ -1527,10 +1477,7 @@ void CloseAll()
 	}
 	else DebugLog("!Could not find FailSafe");
 	DebugLog("Freeing Memory?");
-	if (dataHandling.buffer != NULL) {
-		_CloseBuffer_();
-		free(dataHandling.buffer);
-	}
+	if (dataHandling.buffer != NULL) free(dataHandling.buffer);
 	if (dataHandling.calibration != NULL) free(dataHandling.calibration);
 	if (dataHandling.failSafe != NULL) free(dataHandling.failSafe);
 	if (dataHandling.frameLookUp != NULL) free(dataHandling.frameLookUp);
@@ -1671,7 +1618,7 @@ int Send()
 		return -1;
 	}
 	int number = 0, amount = 0;
-	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (dataHandling.buffer->outPackets[amount] == NULL) break;
+	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (PacketIsEmpty(dataHandling.buffer->outPackets[amount])) break;
 	amount *= PACKET_LENGTH;
 	
 #if (TRANSMISSION_DEBUG)
@@ -1706,8 +1653,8 @@ int Receive()
 #if (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	clock_t start_time = 0;
 #endif
-	DataPacket** current = dataHandling.buffer->inPackets;
-	byte readByte = 0, *writePtr = (byte*)*current;
+	DataPacket* current = dataHandling.buffer->inPackets;
+	byte readByte = 0, *writePtr = (byte*)current;
 #if (TRANSMISSION_DEBUG)
 	int readIndex = 0;
 	for (int i = 0; i <= PACKET_LENGTH; i++, readIndex++) {
@@ -1726,7 +1673,7 @@ int Receive()
 		if (readByte == START_BYTE) {
 			if (foundStart) {
 				current++;
-				writePtr = (byte*)*current;
+				writePtr = (byte*)current;
 			}
 			else {
 				foundStart = 1;
