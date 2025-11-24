@@ -315,6 +315,8 @@ class GSMain(QMainWindow):
             else:
                 series.attachAxis(self.timeTemperatureAxis)
             series.attachAxis(self.timeAxis)
+        self.timePressureAxis.setRange(0, 1)
+        self.timeTemperatureAxis.setRange(0, 1)
             
         #create Layout
         self.timeLayout = QVBoxLayout(self.ui.timePlotGroupBox)
@@ -351,6 +353,8 @@ class GSMain(QMainWindow):
         self.distancePSeries.attachAxis(self.distanceAxis)
         self.distanceTSeries.attachAxis(self.distanceTemperatureAxis)
         self.distanceTSeries.attachAxis(self.distanceAxis)
+        self.distancePressureAxis.setRange(0, 1)
+        self.distanceTemperatureAxis.setRange(0, 1)
         
         #create Layout
         self.distanceLayout = QVBoxLayout(self.ui.distancePlotGroupBox)
@@ -858,8 +862,6 @@ class GSCalibration(QDialog):
         self.updateValue(index)
 
 class GSDiagramSettings(QWidget):
-    rebuildSignal = Signal()
-
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_diagramSettings()
@@ -898,7 +900,8 @@ class GSDiagramSettings(QWidget):
                 self.collection.settings.expandFrom = self.ui.firstShownComboBox.currentIndex()
 
         if plotRebuildNecessary:
-            self.rebuildSignal.emit()
+            self.collection.plotWorker.rebuildPlot = True
+            self.collection.plotWorker.start()
         self.collection.mainWindow.updateAxes()
 
     def radioButtonClicked(self):
@@ -927,7 +930,6 @@ class GSDiagramSettings(QWidget):
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.applyDiagramSettings.clicked.connect(self.applySettings)
-        self.rebuildSignal.connect(self.collection.plotWorker.rebuildPlot)
 
 class DataAccumulation(QObject):
     newFrameSignal = Signal(int)
@@ -1026,8 +1028,16 @@ class PlotWorker(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
+        self.rebuildPlot = False
+        self.reduceArray = False
 
-    def rebuildPlot(self):
+    def run(self):
+        if self.rebuildPlot:
+            self.doRebuildPlot()
+        if self.reduceArray:
+            self.doReduceArray()
+
+    def doRebuildPlot(self):
         settings = self.collection.settings
         dataAcc = self.collection.dataAccumulation
         sensorData = dataAcc.sensorData
@@ -1075,6 +1085,11 @@ class PlotWorker(QThread):
         self.collection.mainWindow.timeHighestPres = np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.pressureIndices])
         self.collection.mainWindow.timeHighestTemp = np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.temperatureIndices])
         #self.collection.mainWindow.repaintPlots()
+        self.rebuildPlot = False
+
+    def doReduceArray(self):
+        self.reduceArray = False
+        pass
 
 class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
