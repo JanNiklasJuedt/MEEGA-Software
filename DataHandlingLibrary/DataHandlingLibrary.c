@@ -14,6 +14,7 @@ static SYNC_TYPE _GetSync_(); //Returns a new, usable sync value
 static byte _ToMSG_(byte type, byte id); //Encodes the MSG-byte
 static void _FromMSG_(byte msg, byte* type_out, byte* id_out); //Decodes the MSG-byte
 static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount); //Shifts values inside an array
+static void _ShiftBuffer_(void** buffer, int bufferLength, int offset);
 static int _SetPortConfig_(); //Configures Port settings, needs an opened Port
 static void _CloseBuffer_(); //Frees allocated memory of the buffer
 
@@ -183,7 +184,7 @@ void _FromMSG_(byte msg, byte* type_out, byte* id_out)
 	return;
 }
 
-void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
+static void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
 {
 	if (elementSize < 0 || arraySize < 0 || array == NULL) return;
 	int i;
@@ -198,6 +199,23 @@ void _ShiftArray_(void* array, int elementSize, int arraySize, int offsetAmount)
 		for (i = (arraySize * elementSize) - 1; i >= 0; i--) {
 			if (i >= (offsetAmount * elementSize)) byteArray[i] = byteArray[i - offsetAmount * elementSize];
 			else byteArray[i] = 0;
+		}
+	}
+	return;
+}
+
+static void _ShiftBuffer_(void** buffer, int bufferLength, int offset) {
+	if (buffer == NULL) return;
+	if (offset < 0) {
+		for (int i = 0; i < bufferLength; i++) {
+			if (i < bufferLength + offset) buffer[i] = buffer[i - offset];
+			else buffer[i] = 0;
+		}
+	}
+	else if (offset > 0) {
+		for (int i = bufferLength - 1; i >= 0; i--) {
+			if (i > bufferLength + offset) buffer[i] = buffer[i - offset];
+			else buffer[i] = 0;
 		}
 	}
 	return;
@@ -272,7 +290,7 @@ int UpdateAll()
 
 int UpdateBuffer()
 {
-	DebugLog("Updating Buffer");
+	DebugLog("Updating Buffer?");
 	if (dataHandling.buffer == NULL) {
 		DebugLog("!Uninitiated DataHandling");
 		return 0;
@@ -293,7 +311,7 @@ int UpdateBuffer()
 
 int UpdateFiles()
 {
-	DebugLog("Updating Files");
+	DebugLog("Updating Files?");
 	int out = 0;
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile");
@@ -319,11 +337,6 @@ int UpdateFiles()
 		out--;
 	}
 	return out;
-}
-
-DataHandlingHub* GetDataHandling()
-{
-	return &dataHandling;
 }
 
 FailSafe* GetFailSafe()
@@ -441,7 +454,7 @@ int CreateCalibration(const char* path)
 #define CALIBRATION_VERSION_STRING "Version: %f;\n"
 #define CALIBRATION_TIME_STRING "Datetime: %lli;\n"
 #define CALIBRATION_POINT_HEADER_STRING "CalibrationPoints:\n"
-#define CALIBRATION_SENSOR_START_STRING "%02i: {"
+#define CALIBRATION_SENSOR_START_STRING "%i: {"
 #define CALIBRATION_SENSOR_END_STRING "}\n"
 #define CALIBRATION_POINT_STRING "{%lli,%f,%i}"
 
@@ -503,10 +516,6 @@ int ReadCalibration(const char* path)
 								break;
 							}
 						}
-						if (!error) {
-							DebugLog("Calibration read from$_", path);
-							return 1;
-						}
 					}
 				}
 			}
@@ -519,6 +528,10 @@ int ReadCalibration(const char* path)
 				return 0;
 			}
 		}
+	}
+	if (!error) {
+		DebugLog("Calibration read from$_", path);
+		return 1;
 	}
 	DebugLog("!Calibration File could not be parsed_");
 	return 0;
@@ -582,7 +595,7 @@ DataFrame EmptyFrame()
 {
 	DataFrame temp = { 0 };
 	byte* bytePtr = (byte*)&temp;
-	for (int i = 0; i < sizeof(DataFrame); i++) bytePtr[i] = 0;
+	for (int i = 0; i < FRAME_LENGTH; i++) bytePtr[i] = 0;
 	temp.start = START_BYTE;
 	return temp;
 }
@@ -906,7 +919,7 @@ DataPacket GetInPacket()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftArray_(dataHandling.buffer->inPackets, sizeof(DataPacket*), PACKET_BUFFER_LENGTH, -1);
+		_ShiftBuffer_(dataHandling.buffer->inPackets, PACKET_BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -922,7 +935,7 @@ DataPacket GetOutPacket()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftArray_(dataHandling.buffer->outPackets, sizeof(DataPacket*), PACKET_BUFFER_LENGTH, -1);
+		_ShiftBuffer_(dataHandling.buffer->outPackets, PACKET_BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -938,7 +951,7 @@ DataFrame GetOutFrame()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftArray_(dataHandling.buffer->outFrames, sizeof(DataFrame*), BUFFER_LENGTH, -1);
+		_ShiftBuffer_(dataHandling.buffer->outFrames, BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -954,7 +967,7 @@ DataFrame GetInFrame()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftArray_(dataHandling.buffer->inFrames, sizeof(DataFrame*), BUFFER_LENGTH, -1);
+		_ShiftBuffer_(dataHandling.buffer->inFrames, BUFFER_LENGTH, -1);
 	}
 	if (out.chksm != CalculateChecksum(out)) FrameSetFlag(&out, Partial);
 	else FrameSetFlag(&out, OK);
@@ -1341,7 +1354,7 @@ int ReadSave(const char path[])
 	}
 	for (i = 0; 1; i++){
 		if (fscanf(file, "%c", &temp) == EOF) break;
-		if (i % sizeof(DataFrame) == 0 || temp == START_BYTE) {
+		if (i % FRAME_LENGTH == 0 || temp == START_BYTE) {
 			i = 0;
 			AddSaveFrame(CreateFrame(0));
 			writePtr = (byte*)&dataHandling.saveFile->lastFrame->data;
@@ -1349,7 +1362,7 @@ int ReadSave(const char path[])
 		*writePtr = temp;
 		writePtr++;
 	}
-	if (i++ % sizeof(DataFrame) != 0) DebugLog("!Read incomplete Frame");
+	if (i++ % FRAME_LENGTH != 0) DebugLog("!Read incomplete Frame");
 	for (SaveFrame* current = dataHandling.saveFile->firstFrame; current != NULL; current = current->nextFrame) {
 		if (CalculateChecksum(current->data) != current->data.chksm) FrameSetFlag(&current->data, Partial);
 	}
@@ -1390,13 +1403,14 @@ int WriteSave()
 			int number = 0;
 			while (current != NULL) {
 				bytePtr = (byte*)&(current->data);
-				number += (int)fwrite(bytePtr, sizeof(DataFrame), 1, file);
+				number += (int)fwrite(bytePtr, FRAME_LENGTH, 1, file) * FRAME_LENGTH;
 				current = current->nextFrame;
 				dataHandling.saveFile->savedAmount++;
 			}
 			fclose(file);
 			if (dataHandling.saveFile->savedAmount < dataHandling.saveFile->frameAmount) DebugLog("!Could not write all frames");
 			//DebugLog("SaveFile written at$_", dataHandling.saveFile->saveFilePath);
+			DebugLog("Wrote# Bytes", number);
 			return number;
 		}
 		else DebugLog("!Could not open SaveFile file");

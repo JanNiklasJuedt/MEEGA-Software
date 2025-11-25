@@ -392,11 +392,6 @@ DATAHANDLINGLIBRARY_API int UpdateFiles();
 
 /// <summary>
 /// </summary>
-/// <returns>A pointer to access all DataHandling structures</returns>
-DATAHANDLINGLIBRARY_API DataHandlingHub* GetDataHandling();
-
-/// <summary>
-/// </summary>
 /// <returns>A pointer to the FailSafe structure</returns>
 DATAHANDLINGLIBRARY_API FailSafe* GetFailSafe();
 
