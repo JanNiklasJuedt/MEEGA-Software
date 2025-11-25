@@ -989,6 +989,7 @@ class DataAccumulation(QObject):
                 ###
                 self.household[self.newIndex][PyID.System_Time] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
+                break
             else:
                 for i in range(self.sensorSize):
                     self.household[self.newIndex][i] = DataHandling.ReadFrame(frame, self.sensorSize+i)
