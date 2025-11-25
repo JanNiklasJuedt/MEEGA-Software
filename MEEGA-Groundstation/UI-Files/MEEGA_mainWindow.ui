@@ -421,18 +421,8 @@
            <property name="spacing">
             <number>10</number>
            </property>
-           <item row="5" column="2">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>P Nozzle 3</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="6">
-            <widget class="QLabel" name="statusLabelTNozzle2">
+           <item row="4" column="4">
+            <widget class="QLabel" name="statusLabelPNozzle1">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -459,7 +449,91 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="5">
+           <item row="2" column="6">
+            <widget class="QLabel" name="statusLabelTChamber1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="6">
+            <widget class="QLabel" name="statusLabelTNozzle1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="4">
+            <widget class="QLabel" name="statusLabelPNozzle2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="5">
             <widget class="QLabel" name="label_31">
              <property name="text">
               <string>T Nozzle 1</string>
@@ -469,99 +543,10 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="6">
-            <widget class="QLabel" name="statusLabelTNozzle3">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
+           <item row="5" column="5">
+            <widget class="QLabel" name="label_32">
              <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>P Chip</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="6">
-            <widget class="QLabel" name="statusLabelTCompare">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>T Chip</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="5">
-            <widget class="QLabel" name="label_30">
-             <property name="text">
-              <string>T Chamber</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_temp_6">
-             <property name="locale">
-              <locale language="English" country="Germany"/>
-             </property>
-             <property name="text">
-              <string>P Accumulator</string>
+              <string>T Nozzle 2</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -578,8 +563,18 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="statusLabelTChip">
+           <item row="6" column="5">
+            <widget class="QLabel" name="label_33">
+             <property name="text">
+              <string>T Nozzle 3</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="8">
+            <widget class="QLabel" name="statusLabelLED">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -592,22 +587,13 @@
                <height>25</height>
               </size>
              </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
              <property name="text">
               <string/>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="statusLabelMainboard">
+           <item row="2" column="4">
+            <widget class="QLabel" name="statusLabelPAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -662,54 +648,8 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_temp_2">
-             <property name="locale">
-              <locale language="English" country="Germany"/>
-             </property>
-             <property name="text">
-              <string>Mainboard</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="5">
-            <widget class="QLabel" name="label_temp_7">
-             <property name="locale">
-              <locale language="English" country="Germany"/>
-             </property>
-             <property name="text">
-              <string>T Compare</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_13">
-             <property name="text">
-              <string>Valve</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>P Nozzle 1</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="4">
-            <widget class="QLabel" name="statusLabelPNozzle3">
+           <item row="1" column="4">
+            <widget class="QLabel" name="statusLabelPReservoir">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -736,8 +676,28 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="4">
-            <widget class="QLabel" name="statusLabelPAccumulator">
+           <item row="0" column="7">
+            <widget class="QLabel" name="label_37">
+             <property name="text">
+              <string>Lift-Off</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>P Chamber</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="6">
+            <widget class="QLabel" name="statusLabelTReservoir">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -764,8 +724,8 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="6">
-            <widget class="QLabel" name="statusLabelTAccumulator">
+           <item row="0" column="6">
+            <widget class="QLabel" name="statusLabelTCompare">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -820,8 +780,31 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="4">
-            <widget class="QLabel" name="statusLabelPNozzle1">
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_temp_6">
+             <property name="locale">
+              <locale language="English" country="Germany"/>
+             </property>
+             <property name="text">
+              <string>P Accumulator</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="7">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>LEDs</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="4">
+            <widget class="QLabel" name="statusLabelPNozzle3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -848,25 +831,28 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
+           <item row="0" column="5">
+            <widget class="QLabel" name="label_temp_7">
+             <property name="locale">
+              <locale language="English" country="Germany"/>
+             </property>
+             <property name="text">
+              <string>T Compare</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
             <widget class="Line" name="line">
              <property name="orientation">
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="text">
-              <string>Servo</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="statusLabelPChip">
+           <item row="0" column="4">
+            <widget class="QLabel" name="statusLabelPAmbient">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -893,20 +879,51 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="5">
-            <widget class="QLabel" name="label_32">
+           <item row="5" column="1">
+            <widget class="QLabel" name="statusLabelServo">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
              <property name="text">
-              <string>T Nozzle 2</string>
+              <string/>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
-           <item row="5" column="5">
-            <widget class="QLabel" name="label_33">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_temp_2">
+             <property name="locale">
+              <locale language="English" country="Germany"/>
+             </property>
              <property name="text">
-              <string>T Nozzle 3</string>
+              <string>T Mainboard</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="5">
+            <widget class="QLabel" name="label_30">
+             <property name="text">
+              <string>T Chamber 1</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -923,46 +940,28 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="label_14">
+           <item row="6" column="2">
+            <widget class="QLabel" name="label_18">
              <property name="text">
-              <string>P Chamber</string>
+              <string>P Nozzle 3</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
-           <item row="3" column="6">
-            <widget class="QLabel" name="statusLabelTNozzle1">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_12">
              <property name="text">
-              <string/>
+              <string>Servo</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
-           <item row="1" column="6">
-            <widget class="QLabel" name="statusLabelTReservoir">
+           <item row="0" column="1">
+            <widget class="QLabel" name="statusLabelMainboardT">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -999,7 +998,45 @@
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
+           <item row="5" column="6">
+            <widget class="QLabel" name="statusLabelTNozzle2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Valve</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
             <widget class="QLabel" name="statusLabelValve">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1027,8 +1064,8 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="4">
-            <widget class="QLabel" name="statusLabelPAmbient">
+           <item row="6" column="6">
+            <widget class="QLabel" name="statusLabelTNozzle3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1055,8 +1092,28 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
-            <widget class="QLabel" name="statusLabelServo">
+           <item row="5" column="2">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>P Nozzle 2</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="5">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>T Chamber 2</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="6">
+            <widget class="QLabel" name="statusLabelTChamber2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1084,17 +1141,56 @@
             </widget>
            </item>
            <item row="4" column="2">
-            <widget class="QLabel" name="label_17">
+            <widget class="QLabel" name="label_16">
              <property name="text">
-              <string>P Nozzle 2</string>
+              <string>P Nozzle 1</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
-           <item row="1" column="4">
-            <widget class="QLabel" name="statusLabelPReservoir">
+           <item row="5" column="7">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Cover Status</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="8">
+            <widget class="QLabel" name="statusLabelCover">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>T Chip</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="statusLabelTChip">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1121,8 +1217,18 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="8">
-            <widget class="QLabel" name="statusLabelLED">
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>P Chip</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="statusLabelPChip">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1149,28 +1255,21 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="7">
-            <widget class="QLabel" name="label_37">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_temp_3">
+             <property name="locale">
+              <locale language="English" country="Germany"/>
+             </property>
              <property name="text">
-              <string>Lift-Off</string>
+              <string>V Mainboard</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
-           <item row="2" column="7">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>LEDs</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="4">
-            <widget class="QLabel" name="statusLabelPNozzle2">
+           <item row="1" column="1">
+            <widget class="QLabel" name="statusLabelMainboardV">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1552,8 +1651,30 @@
                  <enum>Checked</enum>
                 </property>
                 <property name="flags">
-                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled|ItemIsAutoTristate</set>
                 </property>
+                <item>
+                 <property name="text">
+                  <string>1</string>
+                 </property>
+                 <property name="checkState">
+                  <enum>Checked</enum>
+                 </property>
+                 <property name="flags">
+                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2</string>
+                 </property>
+                 <property name="checkState">
+                  <enum>Checked</enum>
+                 </property>
+                 <property name="flags">
+                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+                 </property>
+                </item>
                </item>
                <item>
                 <property name="text">

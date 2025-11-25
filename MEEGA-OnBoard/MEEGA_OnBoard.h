@@ -36,7 +36,7 @@
 #define LEDs_Pin 4	//pin
 #define Valve_Pin 16	//pin
 #define ValveSwitch 01	//pin
-#define Servo_Pin 12	//pin
+#define Servo_Pin 13	//pin
 #define Servo_On 5	//pin
 #define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
 #define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
@@ -126,14 +126,6 @@ static inline int analogRead(int pin) {
 	printf("[DEBUG] Reading analog value from pin %d\n", pin);
 	return 0;	//return 0 for debug testing
 }
-//Delay function for milliseconds
-int Abort = 0;
-int delay(int millisecond) {	//1000x Second
-	clock_t start_time = clock();
-	clock_t wait_time = (millisecond * CLOCKS_PER_SEC) / 1000;
-	while (clock() < start_time + wait_time) if (Abort) return 1;
-	return 0;
-}
 
 #elif (ONBOARD_OS == LINUX)
 
@@ -180,8 +172,8 @@ uint32_t temperatureRead[TEMPERATURE_SENSORS];
 const int ValveOpen = 1,
 ValveClose = 0,
 ValveStuck = 3,
-ServoOn = 0,
-ServoOff = 1,
+ServoOn = 1,
+ServoOff = 0,
 ServoStuck = 3,
 NozzleStuck = 3,
 NozzleOpen = 1,
@@ -190,56 +182,49 @@ LEDsOff = 1,
 flight = 1,
 test = 0;
 
-int ExperimentStatus,
-valveStatus = 0,
-ValvePos = 0,
-ValveCompleted = 0,
-servoStatus = 0,
-ServoRunning = 0,
-nozzleStatus = 0,
+int
 NozzleOpened = 0,
-TestStatus = 0,
-LOSignal,
-SoESignal,
+LOSignal = 0,
+SoESignal = 0,
 SoEReceived = 0,
 EoE = 0,
-modeSel,
-dryRun,
-testRun;
+modeSel = 1;
 
-//Parameters Declaration
-struct parameter {
-	int Delay_OnGoingValve, Delay_to_OpenNozzleCover, Delay_to_EoE, Delay_NoseConeSeparation, Delay_to_NoseConeSeparation, Angle_Servo;
-};
-#define DEFAULT_PARAMETER \
-	.Delay_OnGoingValve = 5000, \
-	.Delay_to_OpenNozzleCover = 6000, \
-	.Delay_to_EoE = 30000
-//Unchangeable Parameters
+//Parameters
+#define Delay_OnGoingValve 5000
+#define Delay_to_OpenNozzleCover 6000
+#define Delay_NoseConeSeparation 10000
+#define Delay_to_NoseConeSeparation 55000
+#define Delay_to_EoE 30000
 #define Delay_PowerOff 1000
 #define Delay_NozzleCoverFeedback 1500
-#define Angle_ServoReset 0
+#define Angle_ServoReset 91
+#define Angle_Servo 0
 #define Delay_ServoRetry 3000
-
-//Default Parameters
-struct parameter Standard = { DEFAULT_PARAMETER, .Delay_NoseConeSeparation = 10000, .Delay_to_NoseConeSeparation = 55000, .Angle_Servo = 90 };
-struct parameter DEBUGstandard = { .Delay_to_NoseConeSeparation = 5000, .Delay_to_EoE = 3000 }; //For Debug Mode only
+#if (MODE == DEBUG)
+#define Delay_to_NoseConeSeparation 5000
+#define Delay_to_EoE 3000
+#endif
 
 //FailSafe Experiment Status
-typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, VALVE_OPENED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
+typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, AFTER_SOE, VALVE_CLOSED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
 ExperimentState currentState = WAIT_LO;
+
 
 //EXPERIMENT
 //Function receiving the SOE signal from the RPi
 //int SoESignal();
 //Function to SetUp the Servo
+void ServoInit(void);
 void ServoRotation(int degree);
 //Function in Experiment controlling the Valve operation
-int ValveRun(struct parameter parameter, int modeSel);
+int ValveRun(int openDelay);
 //Function in Experiment controlling the Servo operation
-int ServoRun(struct parameter parameter, int modeSel);
+int ServoRun(int angle);
 //Functiong in Test Mode manually controlling the Experiment from the Ground Station
-int ExperimentControl();
+void ExperimentControl();
+//Waits or aborts if modeSel == test and Test_Abort in TC is true
+int delay_abortable(int milliseconds);
 
 //DATA LOGGING
 //Function acquiring the Data from the Sensors and writing it into a DataFrame
@@ -247,7 +232,7 @@ void DataAcquisition(DataFrame* frame);
 //Function running the Data Logging in a thread
 void Log();
 //Thread function for Data Logging
-void* LogThread(void* arg);
+void* LogThread();
 //FailSafe Function to recover the last experiment state
 void FailSafeRecovery();
 

@@ -273,75 +273,61 @@ class Ui_MainWindow(object):
         self.gridLayout_4 = QGridLayout(self.groupBox_sensorstatus)
         self.gridLayout_4.setSpacing(10)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.label_18 = QLabel(self.groupBox_sensorstatus)
-        self.label_18.setObjectName(u"label_18")
-        self.label_18.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelPNozzle1 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelPNozzle1.setObjectName(u"statusLabelPNozzle1")
+        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle1.sizePolicy().hasHeightForWidth())
+        self.statusLabelPNozzle1.setSizePolicy(sizePolicy4)
+        self.statusLabelPNozzle1.setMinimumSize(QSize(25, 25))
+        self.statusLabelPNozzle1.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelPNozzle1.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelPNozzle1.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_18, 5, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelPNozzle1, 4, 4, 1, 1)
 
-        self.statusLabelTNozzle2 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTNozzle2.setObjectName(u"statusLabelTNozzle2")
-        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle2.sizePolicy().hasHeightForWidth())
-        self.statusLabelTNozzle2.setSizePolicy(sizePolicy4)
-        self.statusLabelTNozzle2.setMinimumSize(QSize(25, 25))
-        self.statusLabelTNozzle2.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTNozzle2.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTNozzle2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelTChamber1 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChamber1.setObjectName(u"statusLabelTChamber1")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChamber1.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChamber1.setSizePolicy(sizePolicy4)
+        self.statusLabelTChamber1.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChamber1.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChamber1.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChamber1.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelTNozzle2, 4, 6, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelTChamber1, 2, 6, 1, 1)
+
+        self.statusLabelTNozzle1 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTNozzle1.setObjectName(u"statusLabelTNozzle1")
+        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle1.sizePolicy().hasHeightForWidth())
+        self.statusLabelTNozzle1.setSizePolicy(sizePolicy4)
+        self.statusLabelTNozzle1.setMinimumSize(QSize(25, 25))
+        self.statusLabelTNozzle1.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTNozzle1.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTNozzle1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelTNozzle1, 4, 6, 1, 1)
+
+        self.statusLabelPNozzle2 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelPNozzle2.setObjectName(u"statusLabelPNozzle2")
+        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle2.sizePolicy().hasHeightForWidth())
+        self.statusLabelPNozzle2.setSizePolicy(sizePolicy4)
+        self.statusLabelPNozzle2.setMinimumSize(QSize(25, 25))
+        self.statusLabelPNozzle2.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelPNozzle2.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelPNozzle2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelPNozzle2, 5, 4, 1, 1)
 
         self.label_31 = QLabel(self.groupBox_sensorstatus)
         self.label_31.setObjectName(u"label_31")
         self.label_31.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_31, 3, 5, 1, 1)
+        self.gridLayout_4.addWidget(self.label_31, 4, 5, 1, 1)
 
-        self.statusLabelTNozzle3 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTNozzle3.setObjectName(u"statusLabelTNozzle3")
-        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle3.sizePolicy().hasHeightForWidth())
-        self.statusLabelTNozzle3.setSizePolicy(sizePolicy4)
-        self.statusLabelTNozzle3.setMinimumSize(QSize(25, 25))
-        self.statusLabelTNozzle3.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTNozzle3.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTNozzle3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_32 = QLabel(self.groupBox_sensorstatus)
+        self.label_32.setObjectName(u"label_32")
+        self.label_32.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelTNozzle3, 5, 6, 1, 1)
-
-        self.label_2 = QLabel(self.groupBox_sensorstatus)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_2, 1, 0, 1, 1)
-
-        self.statusLabelTCompare = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTCompare.setObjectName(u"statusLabelTCompare")
-        sizePolicy4.setHeightForWidth(self.statusLabelTCompare.sizePolicy().hasHeightForWidth())
-        self.statusLabelTCompare.setSizePolicy(sizePolicy4)
-        self.statusLabelTCompare.setMinimumSize(QSize(25, 25))
-        self.statusLabelTCompare.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTCompare.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTCompare.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelTCompare, 0, 6, 1, 1)
-
-        self.label_11 = QLabel(self.groupBox_sensorstatus)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_11, 2, 0, 1, 1)
-
-        self.label_30 = QLabel(self.groupBox_sensorstatus)
-        self.label_30.setObjectName(u"label_30")
-        self.label_30.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_30, 2, 5, 1, 1)
-
-        self.label_temp_6 = QLabel(self.groupBox_sensorstatus)
-        self.label_temp_6.setObjectName(u"label_temp_6")
-        self.label_temp_6.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_temp_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_temp_6, 1, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.label_32, 5, 5, 1, 1)
 
         self.label_29 = QLabel(self.groupBox_sensorstatus)
         self.label_29.setObjectName(u"label_29")
@@ -349,75 +335,19 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.label_29, 1, 5, 1, 1)
 
-        self.statusLabelTChip = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTChip.setObjectName(u"statusLabelTChip")
-        sizePolicy4.setHeightForWidth(self.statusLabelTChip.sizePolicy().hasHeightForWidth())
-        self.statusLabelTChip.setSizePolicy(sizePolicy4)
-        self.statusLabelTChip.setMinimumSize(QSize(25, 25))
-        self.statusLabelTChip.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTChip.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTChip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_33 = QLabel(self.groupBox_sensorstatus)
+        self.label_33.setObjectName(u"label_33")
+        self.label_33.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelTChip, 2, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label_33, 6, 5, 1, 1)
 
-        self.statusLabelMainboard = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelMainboard.setObjectName(u"statusLabelMainboard")
-        sizePolicy4.setHeightForWidth(self.statusLabelMainboard.sizePolicy().hasHeightForWidth())
-        self.statusLabelMainboard.setSizePolicy(sizePolicy4)
-        self.statusLabelMainboard.setMinimumSize(QSize(25, 25))
-        self.statusLabelMainboard.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelMainboard.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelMainboard.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelLED = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelLED.setObjectName(u"statusLabelLED")
+        sizePolicy4.setHeightForWidth(self.statusLabelLED.sizePolicy().hasHeightForWidth())
+        self.statusLabelLED.setSizePolicy(sizePolicy4)
+        self.statusLabelLED.setMinimumSize(QSize(25, 25))
 
-        self.gridLayout_4.addWidget(self.statusLabelMainboard, 0, 1, 1, 1)
-
-        self.statusLabelSOE = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelSOE.setObjectName(u"statusLabelSOE")
-        sizePolicy4.setHeightForWidth(self.statusLabelSOE.sizePolicy().hasHeightForWidth())
-        self.statusLabelSOE.setSizePolicy(sizePolicy4)
-        self.statusLabelSOE.setMinimumSize(QSize(25, 25))
-        self.statusLabelSOE.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelSOE.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelSOE.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelSOE, 1, 8, 1, 1)
-
-        self.label_temp_2 = QLabel(self.groupBox_sensorstatus)
-        self.label_temp_2.setObjectName(u"label_temp_2")
-        self.label_temp_2.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_temp_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_temp_2, 0, 0, 1, 1)
-
-        self.label_temp_7 = QLabel(self.groupBox_sensorstatus)
-        self.label_temp_7.setObjectName(u"label_temp_7")
-        self.label_temp_7.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_temp_7.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_temp_7, 0, 5, 1, 1)
-
-        self.label_13 = QLabel(self.groupBox_sensorstatus)
-        self.label_13.setObjectName(u"label_13")
-        self.label_13.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_13, 5, 0, 1, 1)
-
-        self.label_16 = QLabel(self.groupBox_sensorstatus)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_16, 3, 2, 1, 1)
-
-        self.statusLabelPNozzle3 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelPNozzle3.setObjectName(u"statusLabelPNozzle3")
-        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle3.sizePolicy().hasHeightForWidth())
-        self.statusLabelPNozzle3.setSizePolicy(sizePolicy4)
-        self.statusLabelPNozzle3.setMinimumSize(QSize(25, 25))
-        self.statusLabelPNozzle3.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelPNozzle3.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelPNozzle3.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelPNozzle3, 5, 4, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelLED, 6, 8, 1, 1)
 
         self.statusLabelPAccumulator = QLabel(self.groupBox_sensorstatus)
         self.statusLabelPAccumulator.setObjectName(u"statusLabelPAccumulator")
@@ -430,97 +360,39 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.statusLabelPAccumulator, 2, 4, 1, 1)
 
-        self.statusLabelTAccumulator = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTAccumulator.setObjectName(u"statusLabelTAccumulator")
-        sizePolicy4.setHeightForWidth(self.statusLabelTAccumulator.sizePolicy().hasHeightForWidth())
-        self.statusLabelTAccumulator.setSizePolicy(sizePolicy4)
-        self.statusLabelTAccumulator.setMinimumSize(QSize(25, 25))
-        self.statusLabelTAccumulator.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTAccumulator.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTAccumulator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelSOE = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelSOE.setObjectName(u"statusLabelSOE")
+        sizePolicy4.setHeightForWidth(self.statusLabelSOE.sizePolicy().hasHeightForWidth())
+        self.statusLabelSOE.setSizePolicy(sizePolicy4)
+        self.statusLabelSOE.setMinimumSize(QSize(25, 25))
+        self.statusLabelSOE.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelSOE.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelSOE.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelTAccumulator, 2, 6, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelSOE, 1, 8, 1, 1)
 
-        self.statusLabelLiftOff = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelLiftOff.setObjectName(u"statusLabelLiftOff")
-        sizePolicy4.setHeightForWidth(self.statusLabelLiftOff.sizePolicy().hasHeightForWidth())
-        self.statusLabelLiftOff.setSizePolicy(sizePolicy4)
-        self.statusLabelLiftOff.setMinimumSize(QSize(25, 25))
-        self.statusLabelLiftOff.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelLiftOff.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelLiftOff.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelPReservoir = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelPReservoir.setObjectName(u"statusLabelPReservoir")
+        sizePolicy4.setHeightForWidth(self.statusLabelPReservoir.sizePolicy().hasHeightForWidth())
+        self.statusLabelPReservoir.setSizePolicy(sizePolicy4)
+        self.statusLabelPReservoir.setMinimumSize(QSize(25, 25))
+        self.statusLabelPReservoir.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelPReservoir.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelPReservoir.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelLiftOff, 0, 8, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelPReservoir, 1, 4, 1, 1)
 
-        self.statusLabelPNozzle1 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelPNozzle1.setObjectName(u"statusLabelPNozzle1")
-        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle1.sizePolicy().hasHeightForWidth())
-        self.statusLabelPNozzle1.setSizePolicy(sizePolicy4)
-        self.statusLabelPNozzle1.setMinimumSize(QSize(25, 25))
-        self.statusLabelPNozzle1.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelPNozzle1.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelPNozzle1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_37 = QLabel(self.groupBox_sensorstatus)
+        self.label_37.setObjectName(u"label_37")
+        self.label_37.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelPNozzle1, 3, 4, 1, 1)
-
-        self.line = QFrame(self.groupBox_sensorstatus)
-        self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.Shape.HLine)
-        self.line.setFrameShadow(QFrame.Shadow.Sunken)
-
-        self.gridLayout_4.addWidget(self.line, 3, 0, 1, 1)
-
-        self.label_12 = QLabel(self.groupBox_sensorstatus)
-        self.label_12.setObjectName(u"label_12")
-        self.label_12.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_12, 4, 0, 1, 1)
-
-        self.statusLabelPChip = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelPChip.setObjectName(u"statusLabelPChip")
-        sizePolicy4.setHeightForWidth(self.statusLabelPChip.sizePolicy().hasHeightForWidth())
-        self.statusLabelPChip.setSizePolicy(sizePolicy4)
-        self.statusLabelPChip.setMinimumSize(QSize(25, 25))
-        self.statusLabelPChip.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelPChip.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelPChip.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelPChip, 1, 1, 1, 1)
-
-        self.label_32 = QLabel(self.groupBox_sensorstatus)
-        self.label_32.setObjectName(u"label_32")
-        self.label_32.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_32, 4, 5, 1, 1)
-
-        self.label_33 = QLabel(self.groupBox_sensorstatus)
-        self.label_33.setObjectName(u"label_33")
-        self.label_33.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_33, 5, 5, 1, 1)
-
-        self.label_9 = QLabel(self.groupBox_sensorstatus)
-        self.label_9.setObjectName(u"label_9")
-        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_9, 1, 7, 1, 1)
+        self.gridLayout_4.addWidget(self.label_37, 0, 7, 1, 1)
 
         self.label_14 = QLabel(self.groupBox_sensorstatus)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_14, 2, 2, 1, 1)
-
-        self.statusLabelTNozzle1 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTNozzle1.setObjectName(u"statusLabelTNozzle1")
-        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle1.sizePolicy().hasHeightForWidth())
-        self.statusLabelTNozzle1.setSizePolicy(sizePolicy4)
-        self.statusLabelTNozzle1.setMinimumSize(QSize(25, 25))
-        self.statusLabelTNozzle1.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTNozzle1.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTNozzle1.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelTNozzle1, 3, 6, 1, 1)
 
         self.statusLabelTReservoir = QLabel(self.groupBox_sensorstatus)
         self.statusLabelTReservoir.setObjectName(u"statusLabelTReservoir")
@@ -533,22 +405,65 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.statusLabelTReservoir, 1, 6, 1, 1)
 
-        self.label_15 = QLabel(self.groupBox_sensorstatus)
-        self.label_15.setObjectName(u"label_15")
-        self.label_15.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelTCompare = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTCompare.setObjectName(u"statusLabelTCompare")
+        sizePolicy4.setHeightForWidth(self.statusLabelTCompare.sizePolicy().hasHeightForWidth())
+        self.statusLabelTCompare.setSizePolicy(sizePolicy4)
+        self.statusLabelTCompare.setMinimumSize(QSize(25, 25))
+        self.statusLabelTCompare.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTCompare.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTCompare.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_15, 0, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelTCompare, 0, 6, 1, 1)
 
-        self.statusLabelValve = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelValve.setObjectName(u"statusLabelValve")
-        sizePolicy4.setHeightForWidth(self.statusLabelValve.sizePolicy().hasHeightForWidth())
-        self.statusLabelValve.setSizePolicy(sizePolicy4)
-        self.statusLabelValve.setMinimumSize(QSize(25, 25))
-        self.statusLabelValve.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelValve.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelValve.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelLiftOff = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelLiftOff.setObjectName(u"statusLabelLiftOff")
+        sizePolicy4.setHeightForWidth(self.statusLabelLiftOff.sizePolicy().hasHeightForWidth())
+        self.statusLabelLiftOff.setSizePolicy(sizePolicy4)
+        self.statusLabelLiftOff.setMinimumSize(QSize(25, 25))
+        self.statusLabelLiftOff.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelLiftOff.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelLiftOff.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelValve, 5, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelLiftOff, 0, 8, 1, 1)
+
+        self.label_temp_6 = QLabel(self.groupBox_sensorstatus)
+        self.label_temp_6.setObjectName(u"label_temp_6")
+        self.label_temp_6.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_temp_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_temp_6, 1, 2, 1, 1)
+
+        self.label_10 = QLabel(self.groupBox_sensorstatus)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_10, 6, 7, 1, 1)
+
+        self.statusLabelPNozzle3 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelPNozzle3.setObjectName(u"statusLabelPNozzle3")
+        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle3.sizePolicy().hasHeightForWidth())
+        self.statusLabelPNozzle3.setSizePolicy(sizePolicy4)
+        self.statusLabelPNozzle3.setMinimumSize(QSize(25, 25))
+        self.statusLabelPNozzle3.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelPNozzle3.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelPNozzle3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelPNozzle3, 6, 4, 1, 1)
+
+        self.label_temp_7 = QLabel(self.groupBox_sensorstatus)
+        self.label_temp_7.setObjectName(u"label_temp_7")
+        self.label_temp_7.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_temp_7.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_temp_7, 0, 5, 1, 1)
+
+        self.line = QFrame(self.groupBox_sensorstatus)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.HLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.gridLayout_4.addWidget(self.line, 4, 0, 1, 1)
 
         self.statusLabelPAmbient = QLabel(self.groupBox_sensorstatus)
         self.statusLabelPAmbient.setObjectName(u"statusLabelPAmbient")
@@ -570,58 +485,189 @@ class Ui_MainWindow(object):
         self.statusLabelServo.setFrameShadow(QFrame.Shadow.Sunken)
         self.statusLabelServo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelServo, 4, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelServo, 5, 1, 1, 1)
+
+        self.label_temp_2 = QLabel(self.groupBox_sensorstatus)
+        self.label_temp_2.setObjectName(u"label_temp_2")
+        self.label_temp_2.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_temp_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_temp_2, 0, 0, 1, 1)
+
+        self.label_30 = QLabel(self.groupBox_sensorstatus)
+        self.label_30.setObjectName(u"label_30")
+        self.label_30.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_30, 2, 5, 1, 1)
+
+        self.label_9 = QLabel(self.groupBox_sensorstatus)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_9, 1, 7, 1, 1)
+
+        self.label_18 = QLabel(self.groupBox_sensorstatus)
+        self.label_18.setObjectName(u"label_18")
+        self.label_18.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_18, 6, 2, 1, 1)
+
+        self.label_12 = QLabel(self.groupBox_sensorstatus)
+        self.label_12.setObjectName(u"label_12")
+        self.label_12.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_12, 5, 0, 1, 1)
+
+        self.statusLabelMainboardT = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelMainboardT.setObjectName(u"statusLabelMainboardT")
+        sizePolicy4.setHeightForWidth(self.statusLabelMainboardT.sizePolicy().hasHeightForWidth())
+        self.statusLabelMainboardT.setSizePolicy(sizePolicy4)
+        self.statusLabelMainboardT.setMinimumSize(QSize(25, 25))
+        self.statusLabelMainboardT.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelMainboardT.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelMainboardT.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelMainboardT, 0, 1, 1, 1)
+
+        self.label_15 = QLabel(self.groupBox_sensorstatus)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_15, 0, 2, 1, 1)
+
+        self.statusLabelTNozzle2 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTNozzle2.setObjectName(u"statusLabelTNozzle2")
+        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle2.sizePolicy().hasHeightForWidth())
+        self.statusLabelTNozzle2.setSizePolicy(sizePolicy4)
+        self.statusLabelTNozzle2.setMinimumSize(QSize(25, 25))
+        self.statusLabelTNozzle2.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTNozzle2.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTNozzle2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelTNozzle2, 5, 6, 1, 1)
+
+        self.label_13 = QLabel(self.groupBox_sensorstatus)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_13, 6, 0, 1, 1)
+
+        self.statusLabelValve = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelValve.setObjectName(u"statusLabelValve")
+        sizePolicy4.setHeightForWidth(self.statusLabelValve.sizePolicy().hasHeightForWidth())
+        self.statusLabelValve.setSizePolicy(sizePolicy4)
+        self.statusLabelValve.setMinimumSize(QSize(25, 25))
+        self.statusLabelValve.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelValve.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelValve.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelValve, 6, 1, 1, 1)
+
+        self.statusLabelTNozzle3 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTNozzle3.setObjectName(u"statusLabelTNozzle3")
+        sizePolicy4.setHeightForWidth(self.statusLabelTNozzle3.sizePolicy().hasHeightForWidth())
+        self.statusLabelTNozzle3.setSizePolicy(sizePolicy4)
+        self.statusLabelTNozzle3.setMinimumSize(QSize(25, 25))
+        self.statusLabelTNozzle3.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTNozzle3.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTNozzle3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelTNozzle3, 6, 6, 1, 1)
 
         self.label_17 = QLabel(self.groupBox_sensorstatus)
         self.label_17.setObjectName(u"label_17")
         self.label_17.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_17, 4, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.label_17, 5, 2, 1, 1)
 
-        self.statusLabelPReservoir = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelPReservoir.setObjectName(u"statusLabelPReservoir")
-        sizePolicy4.setHeightForWidth(self.statusLabelPReservoir.sizePolicy().hasHeightForWidth())
-        self.statusLabelPReservoir.setSizePolicy(sizePolicy4)
-        self.statusLabelPReservoir.setMinimumSize(QSize(25, 25))
-        self.statusLabelPReservoir.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelPReservoir.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelPReservoir.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label = QLabel(self.groupBox_sensorstatus)
+        self.label.setObjectName(u"label")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelPReservoir, 1, 4, 1, 1)
+        self.gridLayout_4.addWidget(self.label, 3, 5, 1, 1)
 
-        self.statusLabelLED = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelLED.setObjectName(u"statusLabelLED")
-        sizePolicy4.setHeightForWidth(self.statusLabelLED.sizePolicy().hasHeightForWidth())
-        self.statusLabelLED.setSizePolicy(sizePolicy4)
-        self.statusLabelLED.setMinimumSize(QSize(25, 25))
-        self.statusLabelLED.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelLED.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelLED.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChamber2.setObjectName(u"statusLabelTChamber2")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChamber2.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChamber2.setSizePolicy(sizePolicy4)
+        self.statusLabelTChamber2.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChamber2.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChamber2.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.statusLabelLED, 2, 8, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelTChamber2, 3, 6, 1, 1)
 
-        self.label_37 = QLabel(self.groupBox_sensorstatus)
-        self.label_37.setObjectName(u"label_37")
-        self.label_37.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_16 = QLabel(self.groupBox_sensorstatus)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_37, 0, 7, 1, 1)
+        self.gridLayout_4.addWidget(self.label_16, 4, 2, 1, 1)
 
-        self.label_10 = QLabel(self.groupBox_sensorstatus)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_3 = QLabel(self.groupBox_sensorstatus)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_10, 2, 7, 1, 1)
+        self.gridLayout_4.addWidget(self.label_3, 5, 7, 1, 1)
 
-        self.statusLabelPNozzle2 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelPNozzle2.setObjectName(u"statusLabelPNozzle2")
-        sizePolicy4.setHeightForWidth(self.statusLabelPNozzle2.sizePolicy().hasHeightForWidth())
-        self.statusLabelPNozzle2.setSizePolicy(sizePolicy4)
-        self.statusLabelPNozzle2.setMinimumSize(QSize(25, 25))
-        self.statusLabelPNozzle2.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelPNozzle2.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelPNozzle2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.statusLabelCover = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelCover.setObjectName(u"statusLabelCover")
+        sizePolicy4.setHeightForWidth(self.statusLabelCover.sizePolicy().hasHeightForWidth())
+        self.statusLabelCover.setSizePolicy(sizePolicy4)
+        self.statusLabelCover.setMinimumSize(QSize(25, 25))
 
-        self.gridLayout_4.addWidget(self.statusLabelPNozzle2, 4, 4, 1, 1)
+        self.gridLayout_4.addWidget(self.statusLabelCover, 5, 8, 1, 1)
+
+        self.label_11 = QLabel(self.groupBox_sensorstatus)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_11, 3, 0, 1, 1)
+
+        self.statusLabelTChip = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChip.setObjectName(u"statusLabelTChip")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChip.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChip.setSizePolicy(sizePolicy4)
+        self.statusLabelTChip.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChip.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChip.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelTChip, 3, 1, 1, 1)
+
+        self.label_2 = QLabel(self.groupBox_sensorstatus)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_2, 2, 0, 1, 1)
+
+        self.statusLabelPChip = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelPChip.setObjectName(u"statusLabelPChip")
+        sizePolicy4.setHeightForWidth(self.statusLabelPChip.sizePolicy().hasHeightForWidth())
+        self.statusLabelPChip.setSizePolicy(sizePolicy4)
+        self.statusLabelPChip.setMinimumSize(QSize(25, 25))
+        self.statusLabelPChip.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelPChip.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelPChip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelPChip, 2, 1, 1, 1)
+
+        self.label_temp_3 = QLabel(self.groupBox_sensorstatus)
+        self.label_temp_3.setObjectName(u"label_temp_3")
+        self.label_temp_3.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_temp_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_temp_3, 1, 0, 1, 1)
+
+        self.statusLabelMainboardV = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelMainboardV.setObjectName(u"statusLabelMainboardV")
+        sizePolicy4.setHeightForWidth(self.statusLabelMainboardV.sizePolicy().hasHeightForWidth())
+        self.statusLabelMainboardV.setSizePolicy(sizePolicy4)
+        self.statusLabelMainboardV.setMinimumSize(QSize(25, 25))
+        self.statusLabelMainboardV.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelMainboardV.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelMainboardV.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelMainboardV, 1, 1, 1, 1)
 
 
         self.horizontalLayout_2.addWidget(self.groupBox_sensorstatus)
@@ -726,14 +772,20 @@ class Ui_MainWindow(object):
         __qtreewidgetitem13.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem13.setCheckState(0, Qt.Checked);
         __qtreewidgetitem14 = QTreeWidgetItem(__qtreewidgetitem9)
-        __qtreewidgetitem14.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem14.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled|Qt.ItemIsAutoTristate);
         __qtreewidgetitem14.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem14)
         __qtreewidgetitem15.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem15.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem14)
         __qtreewidgetitem16.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem16.setCheckState(0, Qt.Checked);
+        __qtreewidgetitem17 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem17.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem17.setCheckState(0, Qt.Checked);
+        __qtreewidgetitem18 = QTreeWidgetItem(__qtreewidgetitem9)
+        __qtreewidgetitem18.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
+        __qtreewidgetitem18.setCheckState(0, Qt.Checked);
         self.treeWidget.setObjectName(u"treeWidget")
         sizePolicy9 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         sizePolicy9.setHorizontalStretch(0)
@@ -1076,46 +1128,52 @@ class Ui_MainWindow(object):
         self.connectionLabel.setText(QCoreApplication.translate("MainWindow", u"Status", None))
         self.distancePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Distance", None))
         self.groupBox_sensorstatus.setTitle(QCoreApplication.translate("MainWindow", u"System Status", None))
-        self.label_18.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 3", None))
-        self.statusLabelTNozzle2.setText("")
-        self.label_31.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 1", None))
-        self.statusLabelTNozzle3.setText("")
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Chip", None))
-        self.statusLabelTCompare.setText("")
-        self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Chip", None))
-        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Chamber", None))
-        self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
-        self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
-        self.statusLabelTChip.setText("")
-        self.statusLabelMainboard.setText("")
-        self.statusLabelSOE.setText("")
-        self.label_temp_2.setText(QCoreApplication.translate("MainWindow", u"Mainboard", None))
-        self.label_temp_7.setText(QCoreApplication.translate("MainWindow", u"T Compare", None))
-        self.label_13.setText(QCoreApplication.translate("MainWindow", u"Valve", None))
-        self.label_16.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 1", None))
-        self.statusLabelPNozzle3.setText("")
-        self.statusLabelPAccumulator.setText("")
-        self.statusLabelTAccumulator.setText("")
-        self.statusLabelLiftOff.setText("")
         self.statusLabelPNozzle1.setText("")
-        self.label_12.setText(QCoreApplication.translate("MainWindow", u"Servo", None))
-        self.statusLabelPChip.setText("")
-        self.label_32.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 2", None))
-        self.label_33.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 3", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
-        self.label_14.setText(QCoreApplication.translate("MainWindow", u"P Chamber", None))
+        self.statusLabelTChamber1.setText("")
         self.statusLabelTNozzle1.setText("")
+        self.statusLabelPNozzle2.setText("")
+        self.label_31.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 1", None))
+        self.label_32.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 2", None))
+        self.label_29.setText(QCoreApplication.translate("MainWindow", u"T Accumulator", None))
+        self.label_33.setText(QCoreApplication.translate("MainWindow", u"T Nozzle 3", None))
+        self.statusLabelLED.setText("")
+        self.statusLabelPAccumulator.setText("")
+        self.statusLabelSOE.setText("")
+        self.statusLabelPReservoir.setText("")
+        self.label_37.setText(QCoreApplication.translate("MainWindow", u"Lift-Off", None))
+        self.label_14.setText(QCoreApplication.translate("MainWindow", u"P Chamber", None))
         self.statusLabelTReservoir.setText("")
-        self.label_15.setText(QCoreApplication.translate("MainWindow", u"P Ambient", None))
-        self.statusLabelValve.setText("")
+        self.statusLabelTCompare.setText("")
+        self.statusLabelLiftOff.setText("")
+        self.label_temp_6.setText(QCoreApplication.translate("MainWindow", u"P Accumulator", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"LEDs", None))
+        self.statusLabelPNozzle3.setText("")
+        self.label_temp_7.setText(QCoreApplication.translate("MainWindow", u"T Compare", None))
         self.statusLabelPAmbient.setText("")
         self.statusLabelServo.setText("")
+        self.label_temp_2.setText(QCoreApplication.translate("MainWindow", u"T Mainboard", None))
+        self.label_30.setText(QCoreApplication.translate("MainWindow", u"T Chamber 1", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
+        self.label_18.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 3", None))
+        self.label_12.setText(QCoreApplication.translate("MainWindow", u"Servo", None))
+        self.statusLabelMainboardT.setText("")
+        self.label_15.setText(QCoreApplication.translate("MainWindow", u"P Ambient", None))
+        self.statusLabelTNozzle2.setText("")
+        self.label_13.setText(QCoreApplication.translate("MainWindow", u"Valve", None))
+        self.statusLabelValve.setText("")
+        self.statusLabelTNozzle3.setText("")
         self.label_17.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 2", None))
-        self.statusLabelPReservoir.setText("")
-        self.statusLabelLED.setText("")
-        self.label_37.setText(QCoreApplication.translate("MainWindow", u"Lift-Off", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"LEDs", None))
-        self.statusLabelPNozzle2.setText("")
+        self.label.setText(QCoreApplication.translate("MainWindow", u"T Chamber 2", None))
+        self.statusLabelTChamber2.setText("")
+        self.label_16.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 1", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Cover Status", None))
+        self.statusLabelCover.setText("")
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"T Chip", None))
+        self.statusLabelTChip.setText("")
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"P Chip", None))
+        self.statusLabelPChip.setText("")
+        self.label_temp_3.setText(QCoreApplication.translate("MainWindow", u"V Mainboard", None))
+        self.statusLabelMainboardV.setText("")
         self.label_logo.setText("")
         self.label_mode.setText(QCoreApplication.translate("MainWindow", u"Flight Mode", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Sensor Selection", None))
@@ -1154,10 +1212,14 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem14.setText(0, QCoreApplication.translate("MainWindow", u"3", None));
         ___qtreewidgetitem15 = ___qtreewidgetitem10.child(1)
         ___qtreewidgetitem15.setText(0, QCoreApplication.translate("MainWindow", u"Chamber", None));
-        ___qtreewidgetitem16 = ___qtreewidgetitem10.child(2)
-        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
-        ___qtreewidgetitem17 = ___qtreewidgetitem10.child(3)
-        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
+        ___qtreewidgetitem16 = ___qtreewidgetitem15.child(0)
+        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"1", None));
+        ___qtreewidgetitem17 = ___qtreewidgetitem15.child(1)
+        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"2", None));
+        ___qtreewidgetitem18 = ___qtreewidgetitem10.child(2)
+        ___qtreewidgetitem18.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
+        ___qtreewidgetitem19 = ___qtreewidgetitem10.child(3)
+        ___qtreewidgetitem19.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
         self.timePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Time", None))
