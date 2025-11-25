@@ -1,5 +1,6 @@
 #imports
 from __future__ import annotations
+from enum import IntEnum
 from math import floor
 from math import sin, radians
 import numpy as np
@@ -94,6 +95,7 @@ class Telecommand:
 class GSMain(QMainWindow):
     ACTIVE = 1
     ISSUES = 2
+    ISSUESSTM = 3
     INACTIVE = 0
     NOCONNECTION = 3
     def __init__(self, collection: ClassCollection):
@@ -104,15 +106,11 @@ class GSMain(QMainWindow):
         self.ui.setupUi(self)
 
         #creating variables
-        self.ACTIVE = 1
-        self.ISSUES = 2
-        self.INACTIVE = 0
-        self.NOCONNECTION = 3
         self.connectionStatus = self.NOCONNECTION
         self.collection = collection
 
         #creating local status list
-        self.statusDisplay = ["" for _ in range(20)]
+        self.statusDisplay = [None]*22
         self.statusDisplay[0] = self.ui.statusLabelPAmbient
         self.statusDisplay[1] = self.ui.statusLabelTCompare
         self.statusDisplay[2] = self.ui.statusLabelPReservoir
@@ -131,8 +129,10 @@ class GSMain(QMainWindow):
         self.statusDisplay[15] = self.ui.statusLabelLED
         self.statusDisplay[16] = self.ui.statusLabelPChip
         self.statusDisplay[17] = self.ui.statusLabelTChip
-        self.statusDisplay[18] = self.ui.statusLabelLiftOff
-        self.statusDisplay[19] = self.ui.statusLabelSOE
+        self.statusDisplay[18] = self.ui.statusLabelMainboardT
+        self.statusDisplay[19] = self.ui.statusLabelMainboardV
+        self.statusDisplay[20] = self.ui.statusLabelLiftOff
+        self.statusDisplay[21] = self.ui.statusLabelSOE
 
         #creating status pixmaps
         self.activepix = QPixmap("Ressources\\active.png")
@@ -188,7 +188,7 @@ class GSMain(QMainWindow):
         super().closeEvent(event)
     def scalePixmaps(self):
             #Pixmaps an die aktuelle Label-Groesse anpassen
-            label_size = self.ui.statusLabelMainboard.size()
+            label_size = self.statusDisplay[0].size()
             circle_diameter = min(label_size.width(), label_size.height())
             self.activepix_scaled = self.activepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -244,40 +244,32 @@ class GSMain(QMainWindow):
                 self.ui.connectionLabel.setPixmap(self.noconnectionpix_connection)
 
         #sensor / household status
+        dataAccu = self.collection.dataAccumulation
         gatherIndex = self.collection.dataAccumulation.gatherIndex
-        statusList = np.concatenate((self.collection.dataAccumulation.household[gatherIndex][0:13], self.collection.dataAccumulation.household[gatherIndex][15:20], self.collection.dataAccumulation.household[gatherIndex][22:24]))
-        for i in range(len(self.statusDisplay)):
+        statusList = np.concatenate((dataAccu.household[gatherIndex][0:DataAccumulation.sensorSize], dataAccu.household[gatherIndex][PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[gatherIndex][PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[gatherIndex][PyID.Lift_Off:PyID.Start_Experiment+1]))
+        for i, display in enumerate(self.statusDisplay):
             match statusList[i]:
                 case self.ACTIVE:
-                    self.statusDisplay[i].setPixmap(self.activepix_scaled)
+                    display.setPixmap(self.activepix_scaled)
                 case self.ISSUES:
-                    self.statusDisplay[i].setPixmap(self.issuespix_scaled)
+                    display.setPixmap(self.issuespix_scaled)
                 case self.INACTIVE:
-                    self.statusDisplay[i].setPixmap(self.inactivepix_scaled)
+                    display.setPixmap(self.inactivepix_scaled)
 
-            mbHealth = self.collection.dataAccumulation.household[gatherIndex][20]
-            mbHealth -= 8
-            if mbHealth <= 0:
-                self.ui.statusLabelMainboard.setPixmap(self.inactivepix_scaled)
-            elif mbHealth <= 2:
-                self.ui.statusLabelMainboard.setPixmap(self.issuespix_scaled)
-            else:
-                self.ui.statusLabelMainboard.setPixmap(self.activepix_scaled)
-
-            coverOpen = self.collection.dataAccumulation.household[gatherIndex][13]
-            coverClosed = self.collection.dataAccumulation.household[gatherIndex][14]
-            if coverOpen and not coverClosed:
-                self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
-            elif not coverOpen and coverClosed:
-                self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
-            else:
-                self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
+        coverOpen = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Open]
+        coverClosed = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Closed]
+        if coverOpen and not coverClosed:
+            self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
+        elif not coverOpen and coverClosed:
+            self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
+        else:
+            self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
 
     def createPlots(self):
         #time plot
         #create Line Series for each sensor
         #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature1, chamber temperature 2, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
-        self.timeSeries = [QLineSeries() for _ in range(13)]
+        self.timeSeries = [QLineSeries() for _ in range(DataAccumulation.sensorSize)]
 
         self.pressureIndices = [0,2,4,7,9,11]
         self.temperatureIndices = [1,3,5,6,8,10,12]
@@ -375,17 +367,17 @@ class GSMain(QMainWindow):
         #distance plot
         self.distancePSeries.clear()
         self.distanceTSeries.clear()
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][2], 0)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][4], 1)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][7], 3)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][9], 4)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][11], 5)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][3], 0)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][5], 1)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][6], 2)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][8], 3)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][10], 4)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][12], 5)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Pressure], 0)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Pressure], 1)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Pressure], 3)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Pressure], 4)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Pressure], 5)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Temperature], 0)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_1], 1)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_2], 2)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Temperature], 3)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Temperature], 4)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Temperature], 5)
 
         #skip if expanding mode needs an event that hasnt happened yet
         if not (settings.timespanMode == Settings.EXPANDING and(
@@ -399,7 +391,7 @@ class GSMain(QMainWindow):
                     while settings.timespanMode == Settings.SCROLLING and (series.at(series.count()-1).x() - series.at(0).x()) > settings.scrollingTimeSeconds*1000:
                         series.remove(0)
                     if index == self.currentIndex:
-                        series.append(dataAccu.household[index][21], dataAccu.sensorData[index][i])
+                        series.append(dataAccu.household[index][PyID.System_Time], dataAccu.sensorData[index][i])
                     else:
                         insertIndex = -1
                         if settings.timespanMode == Settings.EXPANDING and index > settings.liftOffIndex:
@@ -411,7 +403,7 @@ class GSMain(QMainWindow):
                         else:
                             insertIndex = index
                         if insertIndex >= 0:
-                            series.insert(insertIndex, QPointF(dataAccu.household[index][21], dataAccu.sensorData[index][i]))
+                            series.insert(insertIndex, QPointF(dataAccu.household[index][PyID.System_Time], dataAccu.sensorData[index][i]))
                     #save highest pressure for scaling of axes
                     if i in self.pressureIndices: #pressure Value
                         if dataAccu.sensorData[index][i] > self.timeHighestPres:
@@ -784,7 +776,7 @@ class GSCalibration(QDialog):
         self.selectedSensor = 0
         self.selectedEntry = 0
         self.currentUnit = ""
-        self.calibrationPoints = [[0] * 3 for x in range(13)]
+        self.calibrationPoints = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
 
         #create exclusive button group for radio buttons and add automatic disabling/enabling of lineEdits
         self.buttonGroup = QButtonGroup(self)
@@ -933,6 +925,8 @@ class GSDiagramSettings(QWidget):
 
 class DataAccumulation(QObject):
     newFrameSignal = Signal(int)
+    sensorSize = 13
+    householdSize = 29
 
     def __init__(self, collection: ClassCollection):
         super().__init__()
@@ -940,11 +934,11 @@ class DataAccumulation(QObject):
         self.gatherIndex = -1
         self.newIndex = -1
         self.allocationSize = 5000
-        self.sensorData = np.ones((self.allocationSize, 13))
-        self.household = np.ones((self.allocationSize, 27))
+        self.sensorData = np.ones((self.allocationSize, self.sensorSize))
+        self.household = np.ones((self.allocationSize, self.householdSize))
 
     def accumulate(self):
-        testData = False
+        testData = True
 
         #Get Frame and check connection status
         if not testData:
@@ -971,15 +965,15 @@ class DataAccumulation(QObject):
                 ###
             #extend arrays if necessary
             if self.gatherIndex%self.allocationSize == 0:
-                dataExtension = np.ones((self.allocationSize, 13))
-                householdExtension = np.ones((self.allocationSize, 27))
+                dataExtension = np.ones((self.allocationSize, self.sensorSize))
+                householdExtension = np.ones((self.allocationSize, self.householdSize))
                 self.sensorData = np.concatenate((self.sensorData, dataExtension))
                 self.household = np.concatenate((self.household, householdExtension))
             if not testData:
                 if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.household[self.gatherIndex][21]:
                     self.newIndex = self.gatherIndex
                 else:
-                    self.newIndex = np.searchsorted(self.household[:self.gatherIndex, 21], DataHandling.ReadFrame(frame, TMID.System_Time))
+                    self.newIndex = np.searchsorted(self.household[:self.gatherIndex, PyID.System_Time], DataHandling.ReadFrame(frame, TMID.System_Time))
             else:
                 ###
                 self.newIndex = self.gatherIndex ###only for testing purposes###
@@ -993,36 +987,68 @@ class DataAccumulation(QObject):
                     self.sensorData[self.newIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
             if testData:
                 ###
-                self.household[self.newIndex][21] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
+                self.household[self.newIndex][PyID.System_Time] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
             else:
-                for i in range(13):
-                    self.household[self.newIndex][i] = DataHandling.ReadFrame(frame, 13+i)
-                self.household[self.newIndex][13] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-                self.household[self.newIndex][14] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-                self.household[self.newIndex][15] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-                self.household[self.newIndex][16] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-                self.household[self.newIndex][17] = DataHandling.ReadFrame(frame, TMID.LEDs)
-                self.household[self.newIndex][18] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-                self.household[self.newIndex][19] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-                self.household[self.newIndex][20] = DataHandling.ReadFrame(frame, TMID.Mainboard)
-                self.household[self.newIndex][21] = DataHandling.ReadFrame(frame, TMID.System_Time)
-                self.household[self.newIndex][22] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-                self.household[self.newIndex][23] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-                self.household[self.newIndex][24] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-                self.household[self.newIndex][25] = DataHandling.ReadFrame(frame, TMID.Mode)
-                self.household[self.newIndex][26] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+                for i in range(self.sensorSize):
+                    self.household[self.newIndex][i] = DataHandling.ReadFrame(frame, self.sensorSize+i)
+                self.household[self.newIndex][PyID.Nozzle_Open] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+                self.household[self.newIndex][PyID.Nozzle_Closed] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+                self.household[self.newIndex][PyID.Nozzle_Servo] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                self.household[self.newIndex][PyID.Reservoir_Valve] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                self.household[self.newIndex][PyID.LEDs] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                self.household[self.newIndex][PyID.Sensorboard_P] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                self.household[self.newIndex][PyID.Sensorboard_T] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                self.household[self.newIndex][PyID.Mainboard_T] = DataHandling.ReadFrame(frame, TMID.Mainboard_T)
+                self.household[self.newIndex][PyID.Mainboard_V] = DataHandling.ReadFrame(frame, TMID.Mainboard_V)
+                self.household[self.newIndex][PyID.System_Time] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                self.household[self.newIndex][PyID.Lift_Off] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                self.household[self.newIndex][PyID.Start_Experiment] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                self.household[self.newIndex][PyID.End_Experiment] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+                self.household[self.newIndex][PyID.Mode] = DataHandling.ReadFrame(frame, TMID.Mode)
+                self.household[self.newIndex][PyID.Experiment_State] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
                 if self.gatherIndex > 0:
-                    if self.household[self.gatherIndex - 1][22] == 0 and self.household[self.gatherIndex][22] == 1:
+                    if self.household[self.gatherIndex - 1][PyID.Lift_Off] == 0 and self.household[self.gatherIndex][PyID.Lift_Off] == 1:
                         self.collection.settings.liftOffIndex = self.gatherIndex
-                    if self.household[self.gatherIndex -1][23] == 0 and self.household[self.gatherIndex][23] == 1:
+                    if self.household[self.gatherIndex -1][PyID.Start_Experiment] == 0 and self.household[self.gatherIndex][PyID.Start_Experiment] == 1:
                         self.collection.settings.startOfExperimentIndex = self.gatherIndex
             self.newFrameSignal.emit(int(self.newIndex))
             if testData:
                 ###
                 break ###only for testing purposes###
                 ###
+
+class PyID(IntEnum):
+    Ambient_Pressure = 0
+    Compare_Temperature = 1
+    Accumulator_Pressure = 2
+    Accumulator_Temperature = 3
+    Chamber_Pressure = 4
+    Chamber_Temperature_1 = 5
+    Chamber_Temperature_2 = 6
+    Nozzle_1_Pressure = 7
+    Nozzle_1_Temperature = 8
+    Nozzle_2_Pressure = 9
+    Nozzle_2_Temperature = 10
+    Nozzle_3_Pressure = 11
+    Nozzle_3_Temperature = 12
+    Nozzle_Open = 13
+    Nozzle_Closed = 14
+    Nozzle_Servo = 15
+    Reservoir_Valve = 16
+    LEDs = 17
+    Sensorboard_P = 18
+    Sensorboard_T = 19
+    Mainboard = 20
+    Mainboard_T = 21
+    Mainboard_V = 22
+    System_Time = 23
+    Lift_Off = 24
+    Start_Experiment = 25
+    End_Experiment = 26
+    Mode = 27
+    Experiment_State = 28
 
 class PlotWorker(QThread):
     def __init__(self, collection: ClassCollection):
@@ -1071,13 +1097,13 @@ class PlotWorker(QThread):
             return
         
         if startIndex == 0:
-            xValues = household[:endIndex, 21]
-            yMatrix = sensorData[:endIndex, :13]
+            xValues = household[:endIndex, PyID.System_Time]
+            yMatrix = sensorData[:endIndex, :DataAccumulation.sensorSize]
         else:
-            xValues = np.ascontiguousarray(household[startIndex:endIndex, 21])
-            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :13])
+            xValues = np.ascontiguousarray(household[startIndex:endIndex, PyID.System_Time])
+            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :DataAccumulation.sensorSize])
 
-        for i in range(13):
+        for i in range(DataAccumulation.sensorSize):
             yValues =  yMatrix[:, i]
             points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
             mainWindow.timeSeries[i].replace(points)
