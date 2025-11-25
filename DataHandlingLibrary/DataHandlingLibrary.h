@@ -31,7 +31,7 @@
 #define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
-#define TRANSMISSION_DEBUG 0
+#define TRANSMISSION_DEBUG 1
 //<----------------------------------------------------------------------------------------------->//
 
 
@@ -88,6 +88,8 @@
 
 #define DATA_LENGTH 48 //Bytes
 #define PAYLOAD_LENGTH 16 //Bytes
+#define DATA_REDUCTION_LENGTH (DATA_LENGTH / 8 + (DATA_LENGTH % 8 != 0))
+#define PAYLOAD_REDUCTION_LENGTH (PAYLOAD_LENGTH / 8 + (PAYLOAD_LENGTH % 8 != 0))
 #define PACKET_BUFFER_LENGTH (DATA_LENGTH / PAYLOAD_LENGTH * BUFFER_LENGTH + 1) //DataPackets
 
 #define CHKSM_TYPE uint16_t
@@ -163,7 +165,7 @@ enum DATAHANDLINGLIBRARY_API Flag {
 /// Stores all data pertaining one timestep, exactly as it will be saved on the harddrive
 /// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataFrame {
-	//Signals the beginning of a new Frame (= -1)
+	//Signals the beginning of a new Frame
 	byte start;
 	//Used to mark DataFrames for faulty or missing data and TeleCommand
 	byte flag;
@@ -171,6 +173,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 	SYNC_TYPE sync;
 	//Byte Array for saving data
 	byte data[DATA_LENGTH];
+	byte reduction[DATA_REDUCTION_LENGTH];
 	//Checksum to check for complete Frames
 	CHKSM_TYPE chksm;
 } DataFrame;
@@ -179,7 +182,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataFrame {
 /// Stores the data contained in one packet of the transmission protocol
 /// </summary>
 typedef struct DATAHANDLINGLIBRARY_API DataPacket {
-	//Signals the beginning of a new Packet (= -1)
+	//Signals the beginning of a new Packet
 	byte start;
 	//Used to identify payload data
 	byte msg;
@@ -187,6 +190,8 @@ typedef struct DATAHANDLINGLIBRARY_API DataPacket {
 	SYNC_TYPE sync;
 	//Byte Array containing a part of the Frame.data
 	byte payload[PAYLOAD_LENGTH];
+	byte reduction[PAYLOAD_REDUCTION_LENGTH];
+	//Checksum of DataFrame
 	CHKSM_TYPE chksm;
 	//Cyclic Redundancy Check Output
 	CHKSM_TYPE crc;

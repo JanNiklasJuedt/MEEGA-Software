@@ -3,7 +3,7 @@
 
 //Core initialization:
 static struct DataHandlingHub dataHandling = { NULL, NULL, NULL, NULL, NULL, NULL }; //Access to all reserved memory
-static SaveFrame* currentFrame = NULL; //Used by GetNextFrame()
+static SaveFrame* currentFrame = NULL; //Used by GetNextFrame(), can be set with GetSaveFrame()
 
 //INTERNAL Declarations:
 static int _SetPositions_(); //Fills in the FrameLookUpTable
@@ -160,7 +160,13 @@ static SYNC_TYPE _GetSync_()
 {
 	static SYNC_TYPE current = 0;
 	current++;
-	if (current == -1) current = 1;
+
+	//Reduce to exclude START_BYTEs
+	byte* reduction = &current;
+	for (int i = 0; i < sizeof(current); i++) if (reduction[i] == START_BYTE) current += 1 << (i * 8);
+
+	//Skip 0
+	if (current == 0) current++;
 	return current;
 }
 
@@ -271,22 +277,12 @@ int UpdateBuffer()
 		DebugLog("!Uninitiated DataHandling");
 		return 0;
 	}
-	int out = 0, amount = 0;
+	int out = 0;
 	if (FormPackets() > 0) {
-		amount = Send();
-		if (amount < 0)	out--;
-#if (!TRANSMISSION_DEBUG)
-		else if (amount > 0) {
-			_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
-		}
-#endif
+		if (Send() < 0)	out--;
 	}
-	amount = Receive();
-	if (amount > 0)
+	if (Receive() > 0)
 	{
-#if (TRANSMISSION_DEBUG)
-		_ShiftArray_(dataHandling.buffer->outPackets, PACKET_LENGTH, PACKET_BUFFER_LENGTH, -(amount / (int)PACKET_LENGTH));
-#endif
 		if (FormFrames() > 0) {
 			for (DataFrame temp = GetInFrame(); !FrameIsEmpty(temp); temp = GetInFrame()) AddSaveFrame(temp);
 		}
@@ -612,6 +608,7 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	int index;
 	int length;
 	int valid = 0;
+	//Looking up neccessary values
 	if (id >= 0) {
 		if (TC) {
 			if (id < TELECOMMAND_AMOUNT) {
@@ -632,6 +629,7 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 		DebugLog("!ID# out of range", id);
 		return 0;
 	}
+	//Checking for valid size
 	long long maxValue = 1ll << length;
 	if (value < 0 || value >= maxValue) {
 		DebugLog("!Value# out of writable range at ID#", value, id);
@@ -643,10 +641,15 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	long long return_value = 0;
 	long long new_value = value;
 	byte* bytePtr = (byte*) &old_value;
+	byte reduction = 0;
+	//Fetching Bytes from Frame
 	for (int i = 0; i < ((length / 8) + (offset != 0 ) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
 		bytePtr[i] = frame->data[index / 8 + i];
+		//Reverting reduction
+		if (frame->reduction[(index / 8 + i) / 8] & (1 << (index / 8 + i) % 8)) bytePtr[i]++;
 	}
+	//Shifting
 	workspace = old_value;
 	old_value >>= offset;
 	old_value %= 1ll << length;
@@ -655,8 +658,14 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	old_value <<= offset;
 	new_value = workspace - old_value + new_value;
 	bytePtr = (byte*) &new_value;
+	//Writing Bytes to Frame
 	for (int i = 0; i < ((length / 8) + (offset != 0) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
+		//Applying reduction
+		if (bytePtr[i] == START_BYTE) {
+			bytePtr[i]--; 
+			frame->reduction[(index / 8 + i) / 8] |= (1 << (index / 8 + i) % 8);
+		}
 		frame->data[index / 8 + i] = bytePtr[i];
 	}
 	frame->chksm = CalculateChecksum(*frame);
@@ -676,6 +685,7 @@ long long ReadFrame(DataFrame frame, int id)
 	int index;
 	long long length;
 	int valid = 0;
+	//Looking up neccessary values
 	if (id >= 0) {
 		if (TC) {
 			if (id < TELECOMMAND_AMOUNT) {
@@ -699,9 +709,12 @@ long long ReadFrame(DataFrame frame, int id)
 	int offset = index % 8;
 	long long value = 0;
 	byte* bytePtr = (byte*) &value;
+	//Fetching Bytes from Frame
 	for (int i = 0; i < ((length / 8) + (offset != 0) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
 		bytePtr[i] = frame.data[index / 8 + i];
+		//Reverting reduction
+		if (frame.reduction[(index / 8 + i) / 8] & (1 << (index / 8 + i) % 8)) bytePtr[i]++;
 	}
 	value >>= offset;
 	value %= 1ll << length;
@@ -804,18 +817,26 @@ int FormPackets()
 	DataPacket currentPacket; 
 	DataFrame currentFrame = GetOutFrame();
 	int number = 0;
-	int payloadIndex, dataIndex;
+	int payloadIndex, dataIndex, reductionIndex;
 	byte id, tc;
+	//Iterating through all outgoing Frames
 	for (; !FrameIsEmpty(currentFrame); currentFrame = GetOutFrame()) {
-		dataIndex = 0;
+		dataIndex = 0, reductionIndex = 0;
 		tc = FrameIsTC(currentFrame);
+		//Creating Packets for the Frame
 		for (id = 0; id < (1 << MSG_ID_LEN); id++, number++) {
 			currentPacket = CreatePacket(currentFrame.sync);
 			currentPacket.msg = _ToMSG_(tc, id);
+			//Copying Data from Frame
 			for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
+				if (payloadIndex < PAYLOAD_REDUCTION_LENGTH) {
+					if (reductionIndex < DATA_REDUCTION_LENGTH) currentPacket.reduction[payloadIndex] = currentFrame.reduction[reductionIndex++];
+					else currentPacket.reduction[payloadIndex] = 0;
+				}
 				if (dataIndex < DATA_LENGTH) currentPacket.payload[payloadIndex] = currentFrame.data[dataIndex];
 				else currentPacket.payload[payloadIndex] = 0;
 			}
+			//Checksum is calculated in WriteFrame()
 			currentPacket.chksm = currentFrame.chksm;
 			CalculateCRC(&currentPacket);
 			AddOutPacket(currentPacket);
@@ -832,20 +853,23 @@ int FormFrames()
 		return 0;
 	}
 	DataPacket currentPacket = GetInPacket();
-	DataFrame** framePtr = dataHandling.buffer->inFrames;
+	DataFrame** framePtr;
 	int number = 0;
-	int payloadIndex = 0, dataIndex = 0;
+	int payloadIndex, dataIndex, reductionIndex;
 	byte id, type, foundMatch, faulty;
+	//Iterating through all incoming Packets
 	for (; !PacketIsEmpty(currentPacket); currentPacket = GetInPacket(), number++) {
 		faulty = 0, foundMatch = 0;
 		if (CalculateCRC(&currentPacket)) faulty = 1;
 		_FromMSG_(currentPacket.msg, &type, &id);
+		//Searching for correct Frame in Buffer
 		for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames && *framePtr != NULL; framePtr++) {
 			if ((*framePtr)->sync == currentPacket.sync) {
 				foundMatch = 1;
 				break;
 			}
 		}
+		//Creating New Frame if none was found
 		if (!foundMatch) {
 			framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
 			(*framePtr)->sync = currentPacket.sync;
@@ -853,11 +877,17 @@ int FormFrames()
 			if (type) FrameSetFlag(*framePtr, TeleCommand);
 			FrameSetFlag(*framePtr, OK);
 		}
+		//Copying Data to Frame
 		dataIndex = id * PAYLOAD_LENGTH;
+		reductionIndex = id * PAYLOAD_REDUCTION_LENGTH;
 		for (payloadIndex = 0; payloadIndex < PAYLOAD_LENGTH; payloadIndex++, dataIndex++) {
 			if (dataIndex < DATA_LENGTH) {
 				if ((*framePtr)->data[dataIndex] != 0) break;
 				(*framePtr)->data[dataIndex] = currentPacket.payload[payloadIndex];
+			}
+			if (payloadIndex < PAYLOAD_REDUCTION_LENGTH) {
+				if ((*framePtr)->reduction[reductionIndex] != 0) break;
+				(*framePtr)->reduction[reductionIndex] = currentPacket.reduction[payloadIndex];
 			}
 		}
 		if (faulty) FrameSetFlag(*framePtr, Biterror);
@@ -941,11 +971,15 @@ int AddOutPacket(DataPacket data)
 	if (new == NULL) return -1;
 	*new = data;
 	int i = 0;
-	for (; i <= PACKET_BUFFER_LENGTH; i++) {
+	for (; i < PACKET_BUFFER_LENGTH; i++) {
 		if (dataHandling.buffer->outPackets[i] == NULL) {
 			dataHandling.buffer->outPackets[i] = new;
 			break;
 		}
+	}
+	if (i == PACKET_BUFFER_LENGTH) {
+		free(new);
+		return -1;
 	}
 	return i;
 }
@@ -960,11 +994,15 @@ int AddInPacket(DataPacket data)
 	if (new == NULL) return -1;
 	*new = data;
 	int i = 0;
-	for (; i <= PACKET_BUFFER_LENGTH; i++) {
+	for (; i < PACKET_BUFFER_LENGTH; i++) {
 		if (dataHandling.buffer->inPackets[i] == NULL) {
 			dataHandling.buffer->inPackets[i] = new;
 			break;
 		}
+	}
+	if (i == PACKET_BUFFER_LENGTH) {
+		free(new);
+		return -1;
 	}
 	return i;
 }
@@ -979,11 +1017,15 @@ int AddOutFrame(DataFrame frame)
 	if (new == NULL) return -1;
 	*new = frame;
 	int i = 0;
-	for (; i <= BUFFER_LENGTH; i++) {
+	for (; i < BUFFER_LENGTH; i++) {
 		if (dataHandling.buffer->outFrames[i] == NULL) {
 			dataHandling.buffer->outFrames[i] = new;
 			break;
 		}
+	}
+	if (i == BUFFER_LENGTH) {
+		free(new);
+		return -1;
 	}
 	return i;
 }
@@ -998,11 +1040,15 @@ int AddInFrame(DataFrame frame)
 	if (new == NULL) return -1;
 	*new = frame;
 	int i = 0;
-	for (; i <= BUFFER_LENGTH; i++) {
+	for (; i < BUFFER_LENGTH; i++) {
 		if (dataHandling.buffer->inFrames[i] == NULL) {
 			dataHandling.buffer->inFrames[i] = new;
 			break;
 		}
+	}
+	if (i == BUFFER_LENGTH) {
+		free(new);
+		return -1;
 	}
 	return i;
 }
@@ -1670,21 +1716,30 @@ int Send()
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int number = 0, amount = 0;
-	for (; amount < PACKET_BUFFER_LENGTH; amount++) if (dataHandling.buffer->outPackets[amount] == NULL) break;
-	amount *= PACKET_LENGTH;
-	
+	int number = -1;
 #if (TRANSMISSION_DEBUG)
-	if (1) {
-		number = amount;
-#elif (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
-	if (amount > 0 && WriteFile(dataHandling.handler->comHandle, dataHandling.buffer->outPackets, amount, &number, NULL)) {
+	int amount = 0;
+	//Count outgoing Packets for debug purposes
+	for (; amount < PACKET_BUFFER_LENGTH; amount++) {
+		if (dataHandling.buffer->outPackets[amount] == NULL) {
+			break;
+		}
+	}
+	//Copying happens inside Receive()
+	number = PACKET_LENGTH * amount;
+#else
+	DataPacket packet;
+	//Removes Packets from the buffer to send one at a time
+	while (!PacketIsEmpty(packet = GetOutPacket())) {
+#if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+		int step = 0;
+		if (WriteFile(dataHandling.handler->comHandle, &packet, PACKET_LENGTH, &step, NULL)) number += step;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	number = write(dataHandling.handler->comHandle, dataHandling.buffer->outPackets, amount);
-	if (number >= 0) {
-#else 
-	if (0) {
+		number += write(dataHandling.handler->comHandle,&packet, PACKET_LENGTH);
 #endif
+	}
+#endif
+	if (number >= 0) {
 		DebugLog("Sent# Bytes", number);
 		return number;
 	}
@@ -1702,18 +1757,21 @@ int Receive()
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int writeAmount = 0, foundStart = 0, didntTimeout = 0;
+	int writeAmount = 0, didntTimeout = 0;
 #if (DATAHANDLINGLIBRARY_OS == LINUX_OS)
 	clock_t start_time = 0;
 #endif
-	DataPacket** current = dataHandling.buffer->inPackets;
-	byte readByte = 0, *writePtr = (byte*)*current;
+	byte readByte = 0, writeIndex = -1, *writePtr = NULL;
 #if (TRANSMISSION_DEBUG)
-	int readIndex = 0;
-	for (int i = 0; i <= PACKET_LENGTH; i++, readIndex++) {
-		readByte = ((byte*)dataHandling.buffer->outPackets)[readIndex];
-#else
+	DataPacket readPacket = GetOutPacket();
 	for (int i = 0; i <= PACKET_LENGTH; i++) {
+		if (i == PACKET_LENGTH) readPacket = GetOutPacket(), i = 0;
+		if (!PacketIsEmpty(readPacket)) readByte = ((byte*)&readPacket)[i];
+		else break;
+#else
+	//Listen for 1 Packet and 1 byte (to reset upon receiving the START_BYTE of a new Packet)
+	for (int i = 0; i <= PACKET_LENGTH; i++) {
+		//Reads 1 byte at a time from the system
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 		if (!ReadFile(dataHandling.handler->comHandle, &readByte, 1, &didntTimeout, NULL)) break;
 		if (!didntTimeout) break;
@@ -1723,26 +1781,22 @@ int Receive()
 		if (dataHandling.handler->timeout < clock() - start_time) break;
 #endif
 #endif
+		//START_BYTE signals the beginning of a new Packet
 		if (readByte == START_BYTE) {
-			if (foundStart) {
-				current++;
-				writePtr = (byte*)*current;
-			}
-			else {
-				foundStart = 1;
-			}
+			writeIndex = AddInPacket(EmptyPacket());
+			//Index of -1 == filled array, return to prevent buffer-overflow
+			if (writeIndex == -1) break;
+			writePtr = (byte*)dataHandling.buffer->inPackets[writeIndex];
+			//Reset for  new Packet
 			i = 0;
 		}
-#if (TRANSMISSION_DEBUG)
-		if (current == dataHandling.buffer->outPackets || readIndex == PACKET_BUFFER_LENGTH * PACKET_LENGTH) break;
-#else
-		if (current == dataHandling.buffer->outPackets) break;
-#endif
-		if (foundStart && i != PACKET_LENGTH) {
+		//Write read byte if there was a START_BYTE previously
+		if (writePtr != NULL && i != PACKET_LENGTH) {
 			writePtr[i] = readByte;
 			writeAmount++;
 		}
-		else if (!foundStart && i == PACKET_LENGTH) i = 0;
+		//Reset until either timeout or first START_BYTE
+		else if (writeIndex == -1 && i == PACKET_LENGTH) i = 0;
 	}
 	if (writeAmount >= 0) DebugLog("Received# Bytes", writeAmount);
 	else DebugLog("!Unable to read from CommPort");
@@ -1767,7 +1821,6 @@ int SetPort(const char name[])
 //Error Detection / Correction functions:
 CHKSM_TYPE CalculateChecksum(DataFrame data)
 {
-	//WIP
 	CHKSM_TYPE chksm = 0;
 	//start 1 byte
 	chksm += data.start;
@@ -1783,6 +1836,10 @@ CHKSM_TYPE CalculateChecksum(DataFrame data)
 		chksm = (chksm & 0xFFFF) + (chksm >> 16);
 	}
 	*/
+
+	//Reducing CHKSM to exclude START_BYTEs
+	byte* reduction = &chksm;
+	for (int i = 0; i < sizeof(chksm); i++) if (reduction[i] == START_BYTE) reduction[i]--;
 	return chksm;
 }
 int CalculateCRC(DataPacket* data)
@@ -1798,6 +1855,10 @@ int CalculateCRC(DataPacket* data)
 		}
 	}
 
+	//Reducing CRC to exclude START_BYTEs
+	byte* reduction = &crc;
+	for (int i = 0; i < sizeof(crc); i++) if (reduction[i] == START_BYTE) reduction[i]--;
+
 	if (data->crc == 0) { //no crc -> fill crc
 		data->crc = crc;
 		return 0; //success
@@ -1806,12 +1867,13 @@ int CalculateCRC(DataPacket* data)
 		if (crc == data->crc) return 0; //0: success, 1: fail. crc presented -> check crc
 		else {
 			//...WIP
+			//Potential Bit-correction?
 			return 1;
 		}
 	}
 }
 
-//Debug function:
+//Debug functions:
 void DebugLog(const char* message, ...)
 {
 	static int lineCounter[] = {-1, 0, 0, 0, 0, 0}, depth = 0;
