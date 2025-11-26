@@ -31,7 +31,7 @@
 #define DEBUG_OUTPUT (LOGFILE + TERMINAL)
 
 #define USE_DEFAULT_VALUES 1
-#define TRANSMISSION_DEBUG 1
+#define TRANSMISSION_DEBUG 0
 //<----------------------------------------------------------------------------------------------->//
 
 

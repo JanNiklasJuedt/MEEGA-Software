@@ -163,7 +163,7 @@ static SYNC_TYPE _GetSync_()
 	current++;
 
 	//Reduce to exclude START_BYTEs
-	byte* reduction = &current;
+	byte* reduction = (byte*) & current;
 	for (int i = 0; i < sizeof(current); i++) if (reduction[i] == START_BYTE) current += 1 << (i * 8);
 
 	//Skip 0
@@ -919,7 +919,7 @@ DataPacket GetInPacket()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftBuffer_(dataHandling.buffer->inPackets, PACKET_BUFFER_LENGTH, -1);
+		_ShiftBuffer_((void**)dataHandling.buffer->inPackets, PACKET_BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -935,7 +935,7 @@ DataPacket GetOutPacket()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftBuffer_(dataHandling.buffer->outPackets, PACKET_BUFFER_LENGTH, -1);
+		_ShiftBuffer_((void**)dataHandling.buffer->outPackets, PACKET_BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -951,7 +951,7 @@ DataFrame GetOutFrame()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftBuffer_(dataHandling.buffer->outFrames, BUFFER_LENGTH, -1);
+		_ShiftBuffer_((void**)dataHandling.buffer->outFrames, BUFFER_LENGTH, -1);
 	}
 	return out;
 }
@@ -967,7 +967,7 @@ DataFrame GetInFrame()
 	if (temp != NULL) {
 		out = *temp;
 		free(temp);
-		_ShiftBuffer_(dataHandling.buffer->inFrames, BUFFER_LENGTH, -1);
+		_ShiftBuffer_((void**)dataHandling.buffer->inFrames, BUFFER_LENGTH, -1);
 	}
 	if (out.chksm != CalculateChecksum(out)) FrameSetFlag(&out, Partial);
 	else FrameSetFlag(&out, OK);
@@ -1852,7 +1852,7 @@ CHKSM_TYPE CalculateChecksum(DataFrame data)
 	*/
 
 	//Reducing CHKSM to exclude START_BYTEs
-	byte* reduction = &chksm;
+	byte* reduction = (byte*)&chksm;
 	for (int i = 0; i < sizeof(chksm); i++) if (reduction[i] == START_BYTE) reduction[i]--;
 	return chksm;
 }
@@ -1870,7 +1870,7 @@ int CalculateCRC(DataPacket* data)
 	}
 
 	//Reducing CRC to exclude START_BYTEs
-	byte* reduction = &crc;
+	byte* reduction = (byte*)&crc;
 	for (int i = 0; i < sizeof(crc); i++) if (reduction[i] == START_BYTE) reduction[i]--;
 
 	if (data->crc == 0) { //no crc -> fill crc
