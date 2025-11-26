@@ -654,7 +654,6 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 	long long return_value = 0;
 	long long new_value = value;
 	byte* bytePtr = (byte*) &old_value;
-	byte reduction = 0;
 	//Fetching Bytes from Frame
 	for (int i = 0; i < ((length / 8) + (offset != 0 ) + ((length % 8) != 0)); i++) {
 		if (index / 8 + i == DATA_LENGTH) break;
@@ -727,7 +726,8 @@ long long ReadFrame(DataFrame frame, int id)
 		if (index / 8 + i == DATA_LENGTH) break;
 		bytePtr[i] = frame.data[index / 8 + i];
 		//Reverting reduction
-		if (frame.reduction[(index / 8 + i) / 8] & (1 << (index / 8 + i) % 8)) bytePtr[i]++;
+		if (frame.reduction[(index / 8 + i) / 8] & (1 << (index / 8 + i) % 8)) 
+			if (bytePtr[i] + 1 == START_BYTE) bytePtr[i]++;
 	}
 	value >>= offset;
 	value %= 1ll << length;
@@ -866,7 +866,7 @@ int FormFrames()
 		return 0;
 	}
 	DataPacket currentPacket = GetInPacket();
-	DataFrame** framePtr;
+	DataFrame** framePtr = NULL;
 	int number = 0;
 	int payloadIndex, dataIndex, reductionIndex;
 	byte id, type, foundMatch, faulty;
@@ -900,7 +900,7 @@ int FormFrames()
 			}
 			if (payloadIndex < PAYLOAD_REDUCTION_LENGTH) {
 				if ((*framePtr)->reduction[reductionIndex] != 0) break;
-				(*framePtr)->reduction[reductionIndex] = currentPacket.reduction[payloadIndex];
+				(*framePtr)->reduction[reductionIndex++] = currentPacket.reduction[payloadIndex];
 			}
 		}
 		if (faulty) FrameSetFlag(*framePtr, Biterror);
