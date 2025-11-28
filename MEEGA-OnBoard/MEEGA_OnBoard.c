@@ -13,10 +13,12 @@ int main() {
 #endif
 #endif
 	pinMode(Valve_Pin, OUTPUT);	//output should be in wiringPi library as define output 1
-	digitalWrite(Valve_Pin, ValveClose); //Set Valve to closed position
-	//pinMode(Servo_Pin, OUTPUT);
 	pinMode(LEDs_Pin, OUTPUT);
 	pinMode(Servo_On, OUTPUT);
+
+	digitalWrite(Valve_Pin, ValveClose); //Set Valve to closed position
+	digitalWrite(Servo_On, ServoOff);
+	digitalWrite(LEDs_Pin, LEDsOff);
 
 	pinMode(Nozzle_Cover_S1, INPUT);
 	pinMode(Nozzle_Cover_S2, INPUT);
@@ -62,9 +64,6 @@ int main() {
 		//RESET
 		//TestStatus = 0;
 		SoEReceived = 0;
-		digitalWrite(Servo_On, ServoOn);
-		delay_abortable(10);
-		ServoRotation(Angle_ServoReset);
 		digitalWrite(Servo_On, ServoOff);
 		digitalWrite(LEDs_Pin, LEDsOff);
 		//RESET
@@ -359,9 +358,9 @@ void DataAcquisition(DataFrame * frame) {
 	SoESignal = digitalRead(RPi_SOE);
 
 	int SystemTime = clock() * 1000 / CLOCKS_PER_SEC;	//System Time
-	uint32_t AmbientPressure = pressureRead[0];
+	uint32_t AmbientPressure = pressureRead[1];
 	uint32_t CompareTemperature = 42;
-	uint32_t TankPressure = pressureRead[1];
+	uint32_t TankPressure = pressureRead[0];
 	uint32_t TankTemperature = temperatureRead[1];
 	uint32_t ChamberPressure = pressureRead[2];
 	uint32_t ChamberTemperature_1 = temperatureRead[2];
@@ -502,17 +501,17 @@ void ServoInit(void) {
 	pinMode(Servo_Pin, PWM_OUTPUT);
 	pwmWrite(Servo_Pin, 0);
 	pwmSetMode(PWM_MODE_MS); //Use Mark-Space mode
-	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
 	pwmSetRange(2000); //Set range to 20ms (50Hz)
+	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
 }
 
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 100) degree = 100;
 	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
-	int minR = 1000;
-	static int previousPwm = 1000;
-	int maxR = 2000;
+	int minR = 970;
+	//static int previousPwm = 1000;
+	int maxR = 1970;
 	int pulse_us = minR + degree * (maxR - minR) / 100;
 	pwmWrite(Servo_Pin, pulse_us / 10);
 #elif (SERVO_VERSION == SERVO_v2)
@@ -613,9 +612,9 @@ void ReadTemperatureSensors(uint32_t* Sensors) {
 	digitalWrite(CS_TSB, LOW);
 #if (SENSORS_SPI_VERSION == WIRINGPISPI)
 	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, txBuf, 1);
-	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, rxBuf, P_TxPACKET_LENGTH);
+	wiringPiSPIxDataRW(SPI_TEMPERATURE, 0, rxBuf, T_TxPACKET_LENGTH);
 #elif (SENSORS_SPI_VERSION == SPIDEV)
-	TransferSPI(SPI_fd_T, txBuf, rxBuf, P_TxPACKET_LENGTH);
+	TransferSPI(SPI_fd_T, txBuf, rxBuf, T_TxPACKET_LENGTH);
 #endif
 	digitalWrite(CS_TSB, HIGH);
 
