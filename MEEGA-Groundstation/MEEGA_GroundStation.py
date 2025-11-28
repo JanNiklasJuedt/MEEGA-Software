@@ -776,78 +776,115 @@ class GSCalibration(QDialog):
         self.selectedSensor = 0
         self.selectedEntry = 0
         self.currentUnit = ""
-        self.calibrationPoints = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
 
         #create exclusive button group for radio buttons and add automatic disabling/enabling of lineEdits
         self.buttonGroup = QButtonGroup(self)
-        self.buttonGroup.addButton(self.ui.radioButton)
-        self.buttonGroup.addButton(self.ui.radioButton_2)
-        self.buttonGroup.addButton(self.ui.radioButton_3)
+        self.buttonGroup.addButton(self.ui.radioButton1)
+        self.buttonGroup.addButton(self.ui.radioButton2)
+        self.buttonGroup.addButton(self.ui.radioButton3)
         self.buttonGroup.setExclusive(True)
-        self.ui.radioButton.clicked.connect(self.selectEntry)
-        self.ui.radioButton_2.clicked.connect(self.selectEntry)
-        self.ui.radioButton_3.clicked.connect(self.selectEntry)
-        self.ui.radioButton.click()
+        self.ui.radioButton1.clicked.connect(self.disablingLogic)
+        self.ui.radioButton2.clicked.connect(self.disablingLogic)
+        self.ui.radioButton3.clicked.connect(self.disablingLogic)
+        self.ui.useManualDigital.stateChanged.connect(self.disablingLogic)
+        self.ui.radioButton1.click()
 
-        self.selectSensor()
-        self.ui.comboBox.currentIndexChanged.connect(self.selectSensor)
-        self.ui.pushButton.clicked.connect(self.newCalibrationPoint)
+        self.ui.sensorSelect.currentIndexChanged.connect(self.selectSensor)
+        self.ui.okButton.clicked.connect(self.newCalibrationPoint)
     
+    def initializeCalibrationPoints(self):
+        self.analogValues = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
+        self.digitalValues = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
+        for sensorID, pointSet in enumerate(self.analogValues):
+            for pointID, point in enumerate(pointSet):
+                self.analogValues[sensorID][pointID] = DataHandling.ReadPoint(sensorID, pointID).analog
+                self.digitalValues[sensorID][pointID] = DataHandling.ReadPoint(sensorID, pointID).digital
+        self.selectSensor()
 
     #update the displayed sensor value
     def updateValue(self, index: int):
         mappedValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
-        self.ui.label.setText(str(mappedValue) + " " + self.currentUnit)
+        self.ui.currentValue.setText(str(mappedValue) + " " + self.currentUnit)
     
     #select sensor and display already existing calibration points, according Units
     @Slot()
     def selectSensor(self):
-        self.selectedSensor = self.ui.comboBox.currentIndex()
-        self.ui.lineEdit.setText(str(self.calibrationPoints[self.selectedSensor][0]))
-        self.ui.lineEdit_2.setText(str(self.calibrationPoints[self.selectedSensor][1]))
-        self.ui.lineEdit_3.setText(str(self.calibrationPoints[self.selectedSensor][2]))
+        self.selectedSensor = self.ui.sensorSelect.currentIndex()
+        self.ui.analogEdit1.setText(str(self.analogValues[self.selectedSensor][0]))
+        self.ui.analogEdit2.setText(str(self.analogValues[self.selectedSensor][1]))
+        self.ui.analogEdit3.setText(str(self.analogValues[self.selectedSensor][2]))
+        self.ui.digitalEdit1.setText(str(self.digitalValues[self.selectedSensor][0]))
+        self.ui.digitalEdit2.setText(str(self.digitalValues[self.selectedSensor][1]))
+        self.ui.digitalEdit3.setText(str(self.digitalValues[self.selectedSensor][2]))
         if self.selectedSensor in self.collection.mainWindow.pressureIndices:
             self.currentUnit = "Pa"
         else:
             self.currentUnit = "K"
-        self.ui.label_2.setText(self.currentUnit)
-        self.ui.label_3.setText(self.currentUnit)
-        self.ui.label_4.setText(self.currentUnit)
+        self.ui.unitLabel1.setText(self.currentUnit)
+        self.ui.unitLabel2.setText(self.currentUnit)
+        self.ui.unitLabel3.setText(self.currentUnit)
 
     #enable lineEdit corresponding to selected radioButton, disable the others
     @Slot()
-    def selectEntry(self):
+    def disablingLogic(self):
         match self.buttonGroup.checkedButton():
-            case self.ui.radioButton:
-                self.ui.lineEdit.setEnabled(True)
-                self.ui.lineEdit_2.setDisabled(True)
-                self.ui.lineEdit_3.setDisabled(True)
+            case self.ui.radioButton1:
+                self.ui.analogEdit1.setEnabled(True)
+                self.ui.analogEdit2.setDisabled(True)
+                self.ui.analogEdit3.setDisabled(True)
                 self.selectedEntry = 0
-            case self.ui.radioButton_2:
-                self.ui.lineEdit.setDisabled(True)
-                self.ui.lineEdit_2.setEnabled(True)
-                self.ui.lineEdit_3.setDisabled(True)
+                if not self.ui.useManualDigital.isChecked():
+                    self.ui.digitalEdit1.setEnabled(True)
+                else:
+                    self.ui.digitalEdit1.setDisabled(True)
+                self.ui.digitalEdit2.setDisabled(True)
+                self.ui.digitalEdit3.setDisabled(True)
+            case self.ui.radioButton2:
+                self.ui.analogEdit1.setDisabled(True)
+                self.ui.analogEdit2.setEnabled(True)
+                self.ui.analogEdit3.setDisabled(True)
                 self.selectedEntry = 1
-            case self.ui.radioButton_3:
-                self.ui.lineEdit.setDisabled(True)
-                self.ui.lineEdit_2.setDisabled(True)
-                self.ui.lineEdit_3.setEnabled(True)
+                self.ui.digitalEdit1.setDisabled(True)
+                if not self.ui.useManualDigital.isChecked():
+                    self.ui.digitalEdit2.setEnabled(True)
+                else:
+                    self.ui.digitalEdit2.setDisabled(True)
+                self.ui.digitalEdit3.setDisabled(True)
+            case self.ui.radioButton3:
+                self.ui.analogEdit1.setDisabled(True)
+                self.ui.analogEdit2.setDisabled(True)
+                self.ui.analogEdit3.setEnabled(True)
                 self.selectedEntry = 2
+                self.ui.digitalEdit1.setDisabled(True)
+                self.ui.digitalEdit2.setDisabled(True)
+                if not self.ui.useManualDigital.isChecked():
+                    self.ui.digitalEdit3.setEnabled(True)
+                else:
+                    self.ui.digitalEdit3.setDisabled(True)
     
     #save the currently selected calibration point
     @Slot()
     def newCalibrationPoint(self):
-        currentEntry = ""
+        analogValue = ""
         match self.selectedEntry:
             case 0:
-                currentEntry = self.ui.lineEdit.text()
+                analogValue = self.ui.analogEdit1.text()
             case 1:
-                currentEntry = self.ui.lineEdit_2.text()
+                analogValue = self.ui.analogEdit2.text()
             case 2:
-                currentEntry = self.ui.lineEdit_3.text()
-        digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
-        DataHandling.WritePoint(self.selectedSensor, self.selectedEntry, digitalValue, float(currentEntry))
-        self.calibrationPoints[self.selectedSensor][self.selectedEntry] = float(currentEntry)
+                analogValue = self.ui.analogEdit3.text()
+        if self.ui.useManualDigital.isChecked():
+            match self.selectedEntry:
+                case 0:
+                    digitalValue = int(self.ui.digitalEdit1.text())
+                case 1:
+                    digitalValue = int(self.ui.digitalEdit2.text())
+                case 2:
+                    digitalValue = int(self.ui.digitalEdit3.text())
+        else:
+            digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
+        DataHandling.WritePoint(self.selectedSensor, self.selectedEntry, digitalValue, float(analogValue))
+        self.analogValues[self.selectedSensor][self.selectedEntry] = float(analogValue)
 
     @Slot(int)
     def onNewFrame(self, index:int):
@@ -938,7 +975,7 @@ class DataAccumulation(QObject):
         self.household = np.ones((self.allocationSize, self.householdSize))
 
     def accumulate(self):
-        testData = True
+        testData = False
 
         #Get Frame and check connection status
         if not testData:
@@ -964,7 +1001,7 @@ class DataAccumulation(QObject):
                 self.gatherIndex += 1 ###only for testing purposes###
                 ###
             #extend arrays if necessary
-            if self.gatherIndex%self.allocationSize == 0:
+            if self.gatherIndex%self.allocationSize == 0 and self.gatherIndex != 0:
                 dataExtension = np.ones((self.allocationSize, self.sensorSize))
                 householdExtension = np.ones((self.allocationSize, self.householdSize))
                 self.sensorData = np.concatenate((self.sensorData, dataExtension))
@@ -985,6 +1022,8 @@ class DataAccumulation(QObject):
                     ###
                 else:
                     self.sensorData[self.newIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
+            if not testData:
+                self.sensorData[self.newIndex][PyID.Accumulator_Pressure] = self.sensorData[self.newIndex][PyID.Accumulator_Pressure] + self.sensorData[self.newIndex][PyID.Ambient_Pressure]
             if testData:
                 ###
                 self.household[self.newIndex][PyID.System_Time] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
@@ -1185,6 +1224,8 @@ class ClassCollection:
         self.dataHandlingThread.start()
         #lateInit
         self.mainWindow.connect()
+        time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
+        self.calibrationWindow.initializeCalibrationPoints()
     def interWindowConnection(self):
         self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
