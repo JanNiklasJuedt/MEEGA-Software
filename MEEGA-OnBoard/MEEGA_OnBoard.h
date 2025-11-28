@@ -36,7 +36,7 @@
 #define LEDs_Pin 4	//pin
 #define Valve_Pin 16	//pin
 #define ValveSwitch 01	//pin
-#define Servo_Pin 13	//pin
+#define Servo_Pin 12	//pin
 #define Servo_On 5	//pin
 #define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
 #define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
