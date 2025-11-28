@@ -362,6 +362,11 @@ float MapSensorValue(int id, long long value)
 		}
 		//test for insufficient calibration points
 		if (!(points[0].valid & points[1].valid)) return out;
+		//exponential mapping for ambient pressure sensor
+		if (id == Ambient_Pressure) {
+			out = pow(10.0f, (double) value * 3.3*(22.1+38.3)/22.1/65535 - 3.5f);
+			return out;
+		}
 		//linear interpolation
 		if ((CALIBRATION_METHOD == LINEAR) & (CALIBRATION_POINTS > 1)) {
 			float a = 0.0f;

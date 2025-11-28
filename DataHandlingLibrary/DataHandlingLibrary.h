@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <time.h>
+#include <math.h>
 
 #ifndef DATAHANDLINGLIBRARY_H
 #define DATAHANDLINGLIBRARY_H
