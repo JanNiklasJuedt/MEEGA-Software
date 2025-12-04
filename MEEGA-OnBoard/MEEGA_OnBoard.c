@@ -153,7 +153,11 @@ int main() {
 #endif
 					EoE = 1;
 					delay_abortable(Delay_PowerOff);
-					return (NozzleOpened) ? 0 : 404;	//End of Experiment
+					//return (NozzleOpened) ? 0 : 404;	//End of Experiment
+					currentState = SHUTDOWN_SLEEP;
+					break;
+				case SHUTDOWN_SLEEP:
+					break;
 				}
 			}
 		}
@@ -361,16 +365,16 @@ void DataAcquisition(DataFrame * frame) {
 	uint32_t AmbientPressure = pressureRead[1];
 	uint32_t CompareTemperature = 42;
 	uint32_t TankPressure = pressureRead[0];
-	uint32_t TankTemperature = temperatureRead[1];
+	uint32_t TankTemperature = temperatureRead[0];
 	uint32_t ChamberPressure = pressureRead[2];
-	uint32_t ChamberTemperature_1 = temperatureRead[2];
-	uint32_t ChamberTemperature_2 = temperatureRead[0];
+	uint32_t ChamberTemperature_1 = temperatureRead[1];
+	uint32_t ChamberTemperature_2 = temperatureRead[5];
 	uint32_t NozzlePressure_1 = pressureRead[3];
 	uint32_t NozzlePressure_2 = pressureRead[4];
 	uint32_t NozzlePressure_3 = pressureRead[5];
-	uint32_t NozzleTemperature_1 = temperatureRead[3];
-	uint32_t NozzleTemperature_2 = temperatureRead[4];
-	uint32_t NozzleTemperature_3 = temperatureRead[5];
+	uint32_t NozzleTemperature_1 = temperatureRead[2];
+	uint32_t NozzleTemperature_2 = temperatureRead[3];
+	uint32_t NozzleTemperature_3 = temperatureRead[4];
 	int NozzleCover_1 = digitalRead(Nozzle_Cover_S1);	//Nozzle Cover Feedback: fully close
 	int NozzleServo = digitalRead(Servo_On);	//Nozzle Servo Switch
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve

@@ -133,6 +133,8 @@ class GSMain(QMainWindow):
         self.statusDisplay[19] = self.ui.statusLabelMainboardV
         self.statusDisplay[20] = self.ui.statusLabelLiftOff
         self.statusDisplay[21] = self.ui.statusLabelSOE
+        
+        self.displayNecessary = True
 
         #creating status pixmaps
         self.activepix = QPixmap("Ressources\\active.png")
@@ -232,38 +234,42 @@ class GSMain(QMainWindow):
     def filePathChanges(self):
         pass
     def displayStatus(self, index: int):
-        #connection status
-        match self.connectionStatus:
-            case self.ACTIVE:
-                self.ui.connectionLabel.setPixmap(self.activepix_connection)
-            case self.ISSUES:
-                self.ui.connectionLabel.setPixmap(self.issuespix_connection)
-            case self.INACTIVE:
-                self.ui.connectionLabel.setPixmap(self.inactivepix_connection)
-            case self.NOCONNECTION:
-                self.ui.connectionLabel.setPixmap(self.noconnectionpix_connection)
-
-        #sensor / household status
-        dataAccu = self.collection.dataAccumulation
-        gatherIndex = self.collection.dataAccumulation.gatherIndex
-        statusList = np.concatenate((dataAccu.household[gatherIndex][0:DataAccumulation.sensorSize], dataAccu.household[gatherIndex][PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[gatherIndex][PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[gatherIndex][PyID.Lift_Off:PyID.Start_Experiment+1]))
-        for i, display in enumerate(self.statusDisplay):
-            match statusList[i]:
+        if self.displayNecessary:
+            #connection status
+            match self.connectionStatus:
                 case self.ACTIVE:
-                    display.setPixmap(self.activepix_scaled)
+                    self.ui.connectionLabel.setPixmap(self.activepix_connection)
                 case self.ISSUES:
-                    display.setPixmap(self.issuespix_scaled)
+                    self.ui.connectionLabel.setPixmap(self.issuespix_connection)
                 case self.INACTIVE:
-                    display.setPixmap(self.inactivepix_scaled)
+                    self.ui.connectionLabel.setPixmap(self.inactivepix_connection)
+                case self.NOCONNECTION:
+                    self.ui.connectionLabel.setPixmap(self.noconnectionpix_connection)
 
-        coverOpen = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Open]
-        coverClosed = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Closed]
-        if coverOpen and not coverClosed:
-            self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
-        elif not coverOpen and coverClosed:
-            self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
-        else:
-            self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
+            #sensor / household status
+            dataAccu = self.collection.dataAccumulation
+            gatherIndex = self.collection.dataAccumulation.gatherIndex
+            statusList = np.concatenate((dataAccu.household[gatherIndex][0:DataAccumulation.sensorSize], dataAccu.household[gatherIndex][PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[gatherIndex][PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[gatherIndex][PyID.Lift_Off:PyID.Start_Experiment+1]))
+            for i, display in enumerate(self.statusDisplay):
+                match statusList[i]:
+                    case self.ACTIVE:
+                        display.setPixmap(self.activepix_scaled)
+                    case self.ISSUES:
+                        display.setPixmap(self.issuespix_scaled)
+                    case self.INACTIVE:
+                        display.setPixmap(self.inactivepix_scaled)
+                    case self.ISSUESSTM:
+                        display.setPixmap(self.issuespix_scaled)
+
+            coverOpen = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Open]
+            coverClosed = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Closed]
+            if coverOpen and not coverClosed:
+                self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
+            elif not coverOpen and coverClosed:
+                self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
+            else:
+                self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
+        self.displayNecessary = False
 
     def createPlots(self):
         #time plot
@@ -786,7 +792,7 @@ class GSCalibration(QDialog):
         self.ui.radioButton1.clicked.connect(self.disablingLogic)
         self.ui.radioButton2.clicked.connect(self.disablingLogic)
         self.ui.radioButton3.clicked.connect(self.disablingLogic)
-        self.ui.useManualDigital.stateChanged.connect(self.disablingLogic)
+        self.ui.useCurrentDigital.stateChanged.connect(self.disablingLogic)
         self.ui.radioButton1.click()
 
         self.ui.sensorSelect.currentIndexChanged.connect(self.selectSensor)
@@ -805,6 +811,14 @@ class GSCalibration(QDialog):
     def updateValue(self, index: int):
         mappedValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
         self.ui.currentValue.setText(str(mappedValue) + " " + self.currentUnit)
+        if self.ui.useCurrentDigital.isChecked():
+            match self.selectedEntry:
+                case 0:
+                    self.ui.digitalEdit1.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
+                case 1:
+                    self.ui.digitalEdit2.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
+                case 2:
+                    self.ui.digitalEdit3.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
     
     #select sensor and display already existing calibration points, according Units
     @Slot()
@@ -833,7 +847,7 @@ class GSCalibration(QDialog):
                 self.ui.analogEdit2.setDisabled(True)
                 self.ui.analogEdit3.setDisabled(True)
                 self.selectedEntry = 0
-                if not self.ui.useManualDigital.isChecked():
+                if not self.ui.useCurrentDigital.isChecked():
                     self.ui.digitalEdit1.setEnabled(True)
                 else:
                     self.ui.digitalEdit1.setDisabled(True)
@@ -845,7 +859,7 @@ class GSCalibration(QDialog):
                 self.ui.analogEdit3.setDisabled(True)
                 self.selectedEntry = 1
                 self.ui.digitalEdit1.setDisabled(True)
-                if not self.ui.useManualDigital.isChecked():
+                if not self.ui.useCurrentDigital.isChecked():
                     self.ui.digitalEdit2.setEnabled(True)
                 else:
                     self.ui.digitalEdit2.setDisabled(True)
@@ -857,10 +871,11 @@ class GSCalibration(QDialog):
                 self.selectedEntry = 2
                 self.ui.digitalEdit1.setDisabled(True)
                 self.ui.digitalEdit2.setDisabled(True)
-                if not self.ui.useManualDigital.isChecked():
+                if not self.ui.useCurrentDigital.isChecked():
                     self.ui.digitalEdit3.setEnabled(True)
                 else:
                     self.ui.digitalEdit3.setDisabled(True)
+        self.selectSensor()
     
     #save the currently selected calibration point
     @Slot()
@@ -873,7 +888,7 @@ class GSCalibration(QDialog):
                 analogValue = self.ui.analogEdit2.text()
             case 2:
                 analogValue = self.ui.analogEdit3.text()
-        if self.ui.useManualDigital.isChecked():
+        if not self.ui.useCurrentDigital.isChecked():
             match self.selectedEntry:
                 case 0:
                     digitalValue = int(self.ui.digitalEdit1.text())
@@ -881,10 +896,12 @@ class GSCalibration(QDialog):
                     digitalValue = int(self.ui.digitalEdit2.text())
                 case 2:
                     digitalValue = int(self.ui.digitalEdit3.text())
+            self.digitalValues[self.selectedSensor][self.selectedEntry] = digitalValue
         else:
             digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
         DataHandling.WritePoint(self.selectedSensor, self.selectedEntry, digitalValue, float(analogValue))
         self.analogValues[self.selectedSensor][self.selectedEntry] = float(analogValue)
+        self.selectSensor()
 
     @Slot(int)
     def onNewFrame(self, index:int):
@@ -964,15 +981,19 @@ class DataAccumulation(QObject):
     newFrameSignal = Signal(int)
     sensorSize = 13
     householdSize = 29
+    MAX24 = (1<<24)-1
+    MAX16 = (1<<16)-1
 
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
         self.gatherIndex = -1
         self.newIndex = -1
+        self.noPacketCount = 0
         self.allocationSize = 5000
         self.sensorData = np.ones((self.allocationSize, self.sensorSize))
         self.household = np.ones((self.allocationSize, self.householdSize))
+        self.currentDigitals = [1] * self.sensorSize
 
     def accumulate(self):
         testData = False
@@ -987,13 +1008,21 @@ class DataAccumulation(QObject):
             if not testData:
                 frame = DataHandling.GetNextFrame()
                 if DataHandling.FrameIsEmpty(frame):
-                    self.newFrameSignal.emit(int(self.newIndex))
+                    self.noPacketCount += 1
+                    if self.noPacketCount >= 20:
+                        self.collection.mainWindow.displayNecessary = True
+                        self.noPacketCount = 0
+                        self.newFrameSignal.emit(int(self.newIndex))
                     break
                 if DataHandling.FrameHasFlag(frame, Flag.OK):
                     self.collection.mainWindow.connectionStatus = GSMain.ACTIVE
+                    self.collection.mainWindow.displayNecessary = True
+                    self.noPacketCount = 0
                     self.gatherIndex += 1
                 else:
                     self.collection.mainWindow.connectionStatus = GSMain.ISSUES
+                    self.collection.mainWindow.displayNecessary = True
+                    self.noPacketCount = 0
                     self.newFrameSignal.emit(int(self.newIndex))
                     break
             else:
@@ -1022,6 +1051,7 @@ class DataAccumulation(QObject):
                     ###
                 else:
                     self.sensorData[self.newIndex][i] = DataHandling.MapSensorValue(i, DataHandling.ReadFrame(frame, i))
+                    self.currentDigitals[i] = DataHandling.ReadFrame(frame, i)
             if not testData:
                 self.sensorData[self.newIndex][PyID.Accumulator_Pressure] = self.sensorData[self.newIndex][PyID.Accumulator_Pressure] + self.sensorData[self.newIndex][PyID.Ambient_Pressure]
             if testData:
@@ -1031,7 +1061,18 @@ class DataAccumulation(QObject):
                 break
             else:
                 for i in range(self.sensorSize):
-                    self.household[self.newIndex][i] = DataHandling.ReadFrame(frame, self.sensorSize+i)
+                    currentVal = self.sensorData[self.gatherIndex][i]
+                    lastVal = self.sensorData[self.gatherIndex-1][i]
+                    if currentVal == lastVal:
+                        self.household[self.newIndex][i] = 2
+                    else:
+                        self.household[self.newIndex][i] = 1
+                    if i == PyID.Ambient_Pressure or i == PyID.Accumulator_Pressure:
+                        if currentVal == self.MAX24 or currentVal == 0:
+                            self.household[self.newIndex][i] = 0
+                    else:
+                        if currentVal == self.MAX16 or currentVal == 0:
+                            self.household[self.newIndex][i] = 0
                 self.household[self.newIndex][PyID.Nozzle_Open] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
                 self.household[self.newIndex][PyID.Nozzle_Closed] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
                 self.household[self.newIndex][PyID.Nozzle_Servo] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)

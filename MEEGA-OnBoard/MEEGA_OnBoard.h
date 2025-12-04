@@ -163,8 +163,8 @@ int SPI_fd_P = -1;
 #define T_TxPACKET_LENGTH 19 //bytes
 #define TEMPERATURE_SENSORS 6
 
-uint32_t pressureRead[PRESSURE_SENSORS];
-uint32_t temperatureRead[TEMPERATURE_SENSORS];
+uint32_t pressureRead[PRESSURE_SENSORS + 1];
+uint32_t temperatureRead[TEMPERATURE_SENSORS + 1];
 
 #endif
 
@@ -207,7 +207,7 @@ modeSel = 1;
 #endif
 
 //FailSafe Experiment Status
-typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, AFTER_SOE, VALVE_CLOSED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT } ExperimentState;
+typedef enum { WAIT_LO, AFTER_LO, NOSECONE_SEPARATION, WAIT_SOE, AFTER_SOE, VALVE_CLOSED, SERVO_RUNNING, NOZZLE_OPENED, END_OF_EXPERIMENT, SHUTDOWN_SLEEP } ExperimentState;
 ExperimentState currentState = WAIT_LO;
 
 

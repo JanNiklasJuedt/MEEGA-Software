@@ -61,11 +61,11 @@ class Ui_Sensor_Calibration(object):
 
         self.verticalLayout.addWidget(self.line)
 
-        self.useManualDigital = QCheckBox(Sensor_Calibration)
-        self.useManualDigital.setObjectName(u"useManualDigital")
-        self.useManualDigital.setChecked(True)
+        self.useCurrentDigital = QCheckBox(Sensor_Calibration)
+        self.useCurrentDigital.setObjectName(u"useCurrentDigital")
+        self.useCurrentDigital.setChecked(True)
 
-        self.verticalLayout.addWidget(self.useManualDigital)
+        self.verticalLayout.addWidget(self.useCurrentDigital)
 
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
@@ -188,7 +188,7 @@ class Ui_Sensor_Calibration(object):
         self.sensorSelect.setItemText(12, QCoreApplication.translate("Sensor_Calibration", u"T Nozzle 3", None))
 
         self.currentValue.setText(QCoreApplication.translate("Sensor_Calibration", u"0.001 \u00b0C", None))
-        self.useManualDigital.setText(QCoreApplication.translate("Sensor_Calibration", u"Use current digital value", None))
+        self.useCurrentDigital.setText(QCoreApplication.translate("Sensor_Calibration", u"Use current digital value", None))
         self.radioButton3.setText("")
         self.radioButton2.setText("")
         self.radioButton1.setText("")

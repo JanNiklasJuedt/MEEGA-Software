@@ -106,7 +106,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="useManualDigital">
+    <widget class="QCheckBox" name="useCurrentDigital">
      <property name="text">
       <string>Use current digital value</string>
      </property>
