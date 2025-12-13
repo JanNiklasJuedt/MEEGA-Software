@@ -9,7 +9,7 @@ import sys
 import time
 
 #import of qt modules
-from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter)
+from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush)
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
@@ -29,6 +29,194 @@ from MEEGA_diagramSettings import *
 
 #import from own data handling module with c functions
 from MEEGA_PyDataHandling import *
+
+#style sheet
+darkmodeStylesheet = """
+/* =========================
+   GLOBAL
+========================= */
+QWidget {
+    background-color: #2b2b2b;
+    color: #dddddd;
+    font-size: 10pt;
+}
+
+/* =========================
+   LABELS
+========================= */
+QLabel {
+    color: #dddddd;
+}
+
+/* =========================
+   PUSH BUTTONS
+========================= */
+QPushButton {
+    background-color: #3c3f41;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+QPushButton:hover {
+    background-color: #4c5052;
+}
+
+QPushButton:pressed {
+    background-color: #2b2b2b;
+}
+
+QPushButton:disabled {
+    background-color: #2b2b2b;
+    color: #777;
+    border: 1px solid #444;
+}
+
+/* =========================
+   LINE EDITS / TEXT INPUT
+========================= */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #1e1e1e;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 4px;
+    selection-background-color: #007acc;
+    selection-color: #ffffff;
+}
+
+/* =========================
+   COMBO BOX
+========================= */
+QComboBox {
+    background-color: #3c3f41;
+    border: 1px solid #555;
+    padding: 4px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #2b2b2b;
+    selection-background-color: #007acc;
+}
+
+/* =========================
+   CHECKBOX & RADIOBUTTON
+========================= */
+QCheckBox, QRadioButton {
+    spacing: 6px;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+}
+
+QCheckBox::indicator:unchecked,
+QRadioButton::indicator:unchecked {
+    border: 1px solid #777;
+    background-color: #2b2b2b;
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked {
+    border: 1px solid #007acc;
+    background-color: #007acc;
+}
+
+/* =========================
+   TREE WIDGET / TREE VIEW
+========================= */
+QTreeWidget, QTreeView {
+    background-color: #1e1e1e;
+    border: 1px solid #555;
+    alternate-background-color: #252526;
+}
+
+QTreeWidget::item:selected,
+QTreeView::item:selected {
+    background-color: #007acc;
+    color: #ffffff;
+}
+
+QTreeWidget::item:hover,
+QTreeView::item:hover {
+    background-color: #3c3f41;
+}
+
+/* Header */
+QHeaderView::section {
+    background-color: #3c3f41;
+    border: 1px solid #555;
+    padding: 4px;
+}
+
+/* =========================
+   MENUS
+========================= */
+QMenu {
+    background-color: #2b2b2b;
+    border: 1px solid #555;
+}
+
+QMenu::item:selected {
+    background-color: #007acc;
+}
+
+/* =========================
+   SCROLL BARS
+========================= */
+QScrollBar:vertical {
+    background-color: #2b2b2b;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #555;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #777;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* =========================
+   TOOLTIP
+========================= */
+QToolTip {
+    background-color: #3c3f41;
+    color: #ffffff;
+    border: 1px solid #007acc;
+}
+
+/* =========================
+   STATUS BAR
+========================= */
+QStatusBar {
+    background-color: #2b2b2b;
+}
+
+/* =========================
+   TAB WIDGET
+========================= */
+QTabWidget::pane {
+    border: 1px solid #555;
+}
+
+QTabBar::tab {
+    background-color: #3c3f41;
+    padding: 6px;
+    border: 1px solid #555;
+}
+
+QTabBar::tab:selected {
+    background-color: #2b2b2b;
+}
+"""
+
 
 #class to handle program settings
 #keep track of diagram settings, program settings
@@ -171,26 +359,51 @@ class GSMain(QMainWindow):
         self.languageGroup.setExclusive(True)
         for i in self.ui.menuLanguage.actions():
             self.languageGroup.addAction(i)
+
         self.modeGroup = QActionGroup(self.ui.menuStart)
         self.modeGroup.setExclusive(True)
         self.modeGroup.addAction(self.ui.actionFlight_Mode)
         self.modeGroup.addAction(self.ui.actionTest_Mode)
+
         self.connectionModeGroup = QActionGroup(self.ui.menuConnection)
+        self.connectionModeGroup.setExclusive(True)
         self.connectionModeGroup.addAction(self.ui.actionAutomatic)
         self.connectionModeGroup.addAction(self.ui.actionManual)
-        
+
+        self.appearanceGroup = QActionGroup(self.ui.menuAppearance)
+        self.appearanceGroup.setExclusive(True)
+        self.appearanceGroup.addAction(self.ui.actionDarkMode)
+        self.appearanceGroup.addAction(self.ui.actionLightMode)
+
         #reference to the application object
         self.app = QApplication.instance()
+        
     #internal functions
+
+    #functions to apply darkmode/lightmode to app and charts, called by menu actions
+    def setLightTheme(self):
+        self.app.setStyleSheet("")
+        self.applyLightmodeToCharts()
+
+    def setDarkTheme(self):
+        self.app.setStyleSheet(darkmodeStylesheet)
+        self.applyDarkmodeToCharts()
 
     def connect(self):
         #connection of signals and slots, called in late-init in ClassCollection after all components are created
         self.languageGroup.triggered.connect(self.languageChanges)
+
         self.ui.actionManual.triggered.connect(self.fetchSettings)
         self.ui.actionAutomatic.triggered.connect(self.fetchSettings)
+
         self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
         self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
+
+        self.ui.actionDarkMode.triggered.connect(self.setDarkTheme)
+        self.ui.actionLightMode.triggered.connect(self.setLightTheme)
+
         self.ui.actionQuit.triggered.connect(self.collection.shutdown)
+
         self.ui.treeWidget.itemChanged.connect(self.onItemChanged)
 
     #override closeEvent to ensure proper thread termination and application exit when trying to close the main window
@@ -602,6 +815,59 @@ class GSMain(QMainWindow):
         self.modeSwitched()
         self.connectionModeChanges()
         self.filePathChanges()
+
+    #function to make diagrams darkmode themed
+    @Slot()
+    def applyDarkmodeToCharts(self):
+        #Chart Background
+        self.timeChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
+        self.distanceChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
+
+        #Title
+        self.timeChart.setTitleBrush(QBrush(QColor("#dddddd")))
+        self.distanceChart.setTitleBrush(QBrush(QColor("#dddddd")))
+
+        #Legend
+        self.distanceChart.legend().setLabelColor(QColor("#dddddd"))
+        self.distanceChart.legend().setBrush(QBrush(QColor("#2b2b2b")))
+        self.timeChart.legend().setPen(QPen(QColor("#555555")))
+
+        #Axes
+        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
+            axis.setLabelsColor(QColor("#dddddd"))
+            axis.setLinePen(QPen(QColor("#777777")))
+            axis.setGridLinePen(QPen(QColor("#444444")))
+            axis.setMinorGridLinePen(QPen(QColor("#333333")))
+            axis.setTitleBrush(QBrush(QColor("#dddddd")))
+
+    #function to make diagrams lightmode themed
+    @Slot()
+    def applyLightmodeToCharts(self):
+        #Chart Background
+        self.timeChart.setBackgroundBrush(QBrush())
+        self.distanceChart.setBackgroundBrush(QBrush())
+
+        #Title
+        self.timeChart.setTitleBrush(QBrush())
+        self.distanceChart.setTitleBrush(QBrush())
+
+        #Legend
+        self.timeChart.legend().setLabelColor(QColor())
+        self.timeChart.legend().setBrush(QBrush())
+        self.timeChart.legend().setPen(QPen())
+
+        self.distanceChart.legend().setLabelColor(QColor())
+        self.distanceChart.legend().setBrush(QBrush())
+        self.distanceChart.legend().setPen(QPen())
+
+        #Axes
+        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
+            axis.setLabelsColor(QColor())
+            axis.setLinePen(QPen(QColor(150, 150, 150)))
+            axis.setGridLinePen(QPen(QColor(200, 200, 200), 1))
+            axis.setMinorGridLinePen(QPen(QColor(220, 220, 220), 1))
+            axis.setTitleBrush(QBrush())
+
 
     #override of itemChanged signal from treeWidget in main window, called when user checks or unchecks an item in the tree to add or remove the according series from the time plot
     @Slot(QTreeWidgetItem, int)

@@ -2196,7 +2196,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>23</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="font">
@@ -2274,12 +2274,21 @@
     <property name="title">
      <string>Start</string>
     </property>
+    <widget class="QMenu" name="menuAppearance">
+     <property name="title">
+      <string>Appearance</string>
+     </property>
+     <addaction name="actionLightMode"/>
+     <addaction name="actionDarkMode"/>
+    </widget>
     <addaction name="actionTest_Mode"/>
     <addaction name="actionFlight_Mode"/>
     <addaction name="separator"/>
     <addaction name="actionControl_Panel"/>
     <addaction name="separator"/>
     <addaction name="actionDocumentation"/>
+    <addaction name="separator"/>
+    <addaction name="menuAppearance"/>
     <addaction name="separator"/>
     <addaction name="actionRestart"/>
     <addaction name="actionQuit"/>
@@ -2472,6 +2481,25 @@
   <action name="actionDiagrams">
    <property name="text">
     <string>Diagrams</string>
+   </property>
+  </action>
+  <action name="actionLightMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Light Mode</string>
+   </property>
+  </action>
+  <action name="actionDarkMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Dark Mode</string>
    </property>
   </action>
  </widget>
