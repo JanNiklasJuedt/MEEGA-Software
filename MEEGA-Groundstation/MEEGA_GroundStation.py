@@ -256,6 +256,7 @@ class Settings:
         self.temperatureAxeValue = 300
         self.scrollingTimeSeconds = 10
         self.expandFrom = self.ALL
+        self.maxPlotPoints = 1000
 
 #class to handle telecommands
 class Telecommand(QObject):
@@ -288,6 +289,8 @@ class Telecommand(QObject):
 
 #class to define the Main Window
 class GSMain(QMainWindow):
+    doTaskSignal = Signal(int)
+
     #Flags for status display
     ACTIVE = 1
     ISSUES = 2
@@ -691,6 +694,10 @@ class GSMain(QMainWindow):
 
                 #adjust time axis range from first to last point in arbitrarily chosen series (here: first series, ambient pressure)
                 self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
+
+            #
+            if self.timeSeries[0].count() > self.collection.settings.maxPlotPoints:
+                self.doTaskSignal.emit(PlotWorker.REDUCEPOINTS)
 
         #update axes if one of them is in self-scaling mode
         if settings.temperatureAxeMode == Settings.SELFSCALING or settings.pressureAxeMode == Settings.SELFSCALING:
@@ -1401,6 +1408,8 @@ class GSCalibration(QDialog):
         self.updateValue(index)
 
 class GSDiagramSettings(QWidget):
+    doTaskSignal = Signal(int)
+
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.ui = Ui_diagramSettings()
@@ -1459,8 +1468,7 @@ class GSDiagramSettings(QWidget):
         
         #if a plot rebuild is necessary, set rebuildPlot flag in plotWorker and start the worker thread
         if plotRebuildNecessary:
-            self.collection.plotWorker.rebuildPlot = True
-            self.collection.plotWorker.start()
+            self.doTaskSignal.emit(PlotWorker.REBUILDPLOT)
 
         #update axes for potential changes in axis settings
         self.collection.mainWindow.updateAxes()
@@ -1755,21 +1763,28 @@ class PlotWorker(QThread):
     clearSeriesSignal = Signal(int)
     updatePlotMetricsSignal = Signal(int, float, float)
 
+    REBUILDPLOT = 1
+    REDUCEPOINTS = 2
+
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
 
-        #type of plot work to be done, can be set from other threads
-        self.rebuildPlot = False
-        self.reduceArray = False
+        self.task = 0
 
-    #override run function of QThread, is triggered when thread is started from other threads
+    #override run function of QThread, only then will it run on separate thread
     def run(self):
         #check which type of work to do
-        if self.rebuildPlot:
+        if self.task == self.REBUILDPLOT:
             self.doRebuildPlot()
-        if self.reduceArray:
-            self.doReduceArray()
+        if self.task == self.REDUCEPOINTS:
+            self.doReduceSeries()
+
+    #funtcion that starts the worker with given task, is called from employing class via Signal
+    @Slot(int)
+    def doTask(self, task: int):
+        self.task = task
+        self.run()
 
     def doRebuildPlot(self):
         #fetch necessary data
@@ -1839,6 +1854,10 @@ class PlotWorker(QThread):
             #create list of QPointF from x and y values
             points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
 
+            #reduce number of points if necessary
+            while len(points) > self.collection.settings.maxPlotPoints:
+                points = self.reduceArray(points)
+
             #replace time series data in main window
             self.replaceSeriesSignal.emit(i, points)
 
@@ -1850,10 +1869,41 @@ class PlotWorker(QThread):
         #reset rebuildPlot flag
         self.rebuildPlot = False
 
-    #functionalilty to reduce amount of displayed point not implemented yet
-    def doReduceArray(self):
-        self.reduceArray = False
-        pass
+    #reduces number of points in time series by averaging every two points in the left 2/3 of the series
+    def doReduceSeries(self):
+
+        #go through all time series to reduce their points
+        for seriesIndex, series in enumerate(self.collection.mainWindow.timeSeries):
+
+            #convert QLineSeries to array of QPointF
+            points = series.points()
+
+            reducedPoints = self.reduceArray(points)
+
+            self.replaceSeriesSignal.emit(seriesIndex, reducedPoints)
+
+    #putting actual reducing functionality in separate function, so it can be used in both doRebuildPlot and doReduceSeries
+    def reduceArray(self, points: list[QPointF]):
+        length = len(points)
+
+        #split the series at 2/3 length into left and right part
+        splitIndex = (2 * length) // 3
+        left = points[:splitIndex]
+        right = points[splitIndex:]
+
+        #initialize reduced left part
+        reducedLeft = []
+
+        for i in range(0, len(left) - 1, 2):
+            point1 = left[i]
+            point2 = left[i+1]
+
+            reducedLeft.append(QPointF((point1.x() + point2.x()) / 2, (point1.y() + point2.y()) / 2))
+
+        if len(left) % 2 != 0:
+            reducedLeft.append(left[-1])
+
+        return (reducedLeft + right)
 
 #class that hosts the DataHandling loop in a separate thread
 class DataHandlingThread(QThread):
@@ -1958,6 +2008,10 @@ class ClassCollection:
         #connect statusDisplaySignal and setConnectionStatusSignal
         self.dataAccumulation.statusDisplaySignal.connect(self.mainWindow.displayStatus)
         self.dataAccumulation.setConnectionStatusSignal.connect(self.mainWindow.setConnectionStatus)
+
+        #connect doTask signals to plotWorker
+        self.mainWindow.doTaskSignal.connect(self.plotWorker.doTask)
+        self.diagramSettingsWindow.doTaskSignal.connect(self.plotWorker.doTask)
 
         #connect replace plot signal, clear plot signal and updatePlotMetricsSignal from plotWorker
         self.plotWorker.replaceSeriesSignal.connect(self.mainWindow.replaceSeries)
