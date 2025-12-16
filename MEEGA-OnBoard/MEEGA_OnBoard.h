@@ -160,11 +160,11 @@ int SPI_fd_P = -1;
 #define P_TxPACKET_LENGTH 17 //bytes
 #define PRESSURE_SENSORS 6
 
-#define T_TxPACKET_LENGTH 19 //bytes
+#define T_TxPACKET_LENGTH 22 //bytes
 #define TEMPERATURE_SENSORS 6
 
 uint32_t pressureRead[PRESSURE_SENSORS + 1];
-uint32_t temperatureRead[TEMPERATURE_SENSORS + 1];
+uint32_t temperatureRead[TEMPERATURE_SENSORS + 2]; //extra index for cold junction
 
 #endif
 
