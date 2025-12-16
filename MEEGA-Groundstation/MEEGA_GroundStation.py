@@ -7,10 +7,11 @@ from math import sin, radians
 import numpy as np
 import sys
 import time
+import winreg
 
 #import of qt modules
-from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout)
+from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPalette)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
 
@@ -29,194 +30,6 @@ from MEEGA_diagramSettings import *
 
 #import from own data handling module with c functions
 from MEEGA_PyDataHandling import *
-
-#style sheet
-darkmodeStylesheet = """
-/* =========================
-   GLOBAL
-========================= */
-QWidget {
-    background-color: #2b2b2b;
-    color: #dddddd;
-    font-size: 10pt;
-}
-
-/* =========================
-   LABELS
-========================= */
-QLabel {
-    color: #dddddd;
-}
-
-/* =========================
-   PUSH BUTTONS
-========================= */
-QPushButton {
-    background-color: #3c3f41;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 6px 10px;
-}
-
-QPushButton:hover {
-    background-color: #4c5052;
-}
-
-QPushButton:pressed {
-    background-color: #2b2b2b;
-}
-
-QPushButton:disabled {
-    background-color: #2b2b2b;
-    color: #777;
-    border: 1px solid #444;
-}
-
-/* =========================
-   LINE EDITS / TEXT INPUT
-========================= */
-QLineEdit, QTextEdit, QPlainTextEdit {
-    background-color: #1e1e1e;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 4px;
-    selection-background-color: #007acc;
-    selection-color: #ffffff;
-}
-
-/* =========================
-   COMBO BOX
-========================= */
-QComboBox {
-    background-color: #3c3f41;
-    border: 1px solid #555;
-    padding: 4px;
-}
-
-QComboBox QAbstractItemView {
-    background-color: #2b2b2b;
-    selection-background-color: #007acc;
-}
-
-/* =========================
-   CHECKBOX & RADIOBUTTON
-========================= */
-QCheckBox, QRadioButton {
-    spacing: 6px;
-}
-
-QCheckBox::indicator, QRadioButton::indicator {
-    width: 14px;
-    height: 14px;
-}
-
-QCheckBox::indicator:unchecked,
-QRadioButton::indicator:unchecked {
-    border: 1px solid #777;
-    background-color: #2b2b2b;
-}
-
-QCheckBox::indicator:checked,
-QRadioButton::indicator:checked {
-    border: 1px solid #007acc;
-    background-color: #007acc;
-}
-
-/* =========================
-   TREE WIDGET / TREE VIEW
-========================= */
-QTreeWidget, QTreeView {
-    background-color: #1e1e1e;
-    border: 1px solid #555;
-    alternate-background-color: #252526;
-}
-
-QTreeWidget::item:selected,
-QTreeView::item:selected {
-    background-color: #007acc;
-    color: #ffffff;
-}
-
-QTreeWidget::item:hover,
-QTreeView::item:hover {
-    background-color: #3c3f41;
-}
-
-/* Header */
-QHeaderView::section {
-    background-color: #3c3f41;
-    border: 1px solid #555;
-    padding: 4px;
-}
-
-/* =========================
-   MENUS
-========================= */
-QMenu {
-    background-color: #2b2b2b;
-    border: 1px solid #555;
-}
-
-QMenu::item:selected {
-    background-color: #007acc;
-}
-
-/* =========================
-   SCROLL BARS
-========================= */
-QScrollBar:vertical {
-    background-color: #2b2b2b;
-    width: 10px;
-}
-
-QScrollBar::handle:vertical {
-    background-color: #555;
-    border-radius: 4px;
-}
-
-QScrollBar::handle:vertical:hover {
-    background-color: #777;
-}
-
-QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical {
-    height: 0px;
-}
-
-/* =========================
-   TOOLTIP
-========================= */
-QToolTip {
-    background-color: #3c3f41;
-    color: #ffffff;
-    border: 1px solid #007acc;
-}
-
-/* =========================
-   STATUS BAR
-========================= */
-QStatusBar {
-    background-color: #2b2b2b;
-}
-
-/* =========================
-   TAB WIDGET
-========================= */
-QTabWidget::pane {
-    border: 1px solid #555;
-}
-
-QTabBar::tab {
-    background-color: #3c3f41;
-    padding: 6px;
-    border: 1px solid #555;
-}
-
-QTabBar::tab:selected {
-    background-color: #2b2b2b;
-}
-"""
-
 
 #class to handle program settings
 #keep track of diagram settings, program settings
@@ -256,7 +69,7 @@ class Settings:
         self.temperatureAxeValue = 300
         self.scrollingTimeSeconds = 10
         self.expandFrom = self.ALL
-        self.maxPlotPoints = 1000
+        self.maxPlotPoints = 1002 #number divisible by 3 to simplify point reduction in plot worker
 
 #class to handle telecommands
 class Telecommand(QObject):
@@ -385,11 +198,89 @@ class GSMain(QMainWindow):
 
     #functions to apply darkmode/lightmode to app and charts, called by menu actions
     def setLightTheme(self):
-        self.app.setStyleSheet("")
+        palette = QPalette()
+
+        palette.setColor(QPalette.Window, QColor(245, 245, 245))
+        palette.setColor(QPalette.WindowText, QColor(20, 20, 20))
+
+        palette.setColor(QPalette.Base, QColor(255, 255, 255))
+        palette.setColor(QPalette.AlternateBase, QColor(240, 240, 240))
+
+        palette.setColor(QPalette.Text, QColor(20, 20, 20))
+        palette.setColor(QPalette.Button, QColor(240, 240, 240))
+        palette.setColor(QPalette.ButtonText, QColor(20, 20, 20))
+
+        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
+        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+
+        self.app.setPalette(palette)
+
+        self.app.setStyleSheet("""
+            QMenuBar { background:#f5f5f5; color:#141414; }
+            QMenuBar::item:selected { background:#e6e6e6; }
+            QToolBar, QStatusBar { background:#f5f5f5; color:#141414; }
+        """)
+
         self.applyLightmodeToCharts()
 
     def setDarkTheme(self):
-        self.app.setStyleSheet(darkmodeStylesheet)
+        palette = QPalette()
+
+        palette.setColor(QPalette.Window, QColor(43, 43, 43))
+        palette.setColor(QPalette.WindowText, QColor(220, 220, 220))
+
+        palette.setColor(QPalette.Base, QColor(30, 30, 30))
+        palette.setColor(QPalette.AlternateBase, QColor(37, 37, 38))
+
+        palette.setColor(QPalette.Text, QColor(220, 220, 220))
+        palette.setColor(QPalette.Button, QColor(60, 63, 65))
+        palette.setColor(QPalette.ButtonText, QColor(220, 220, 220))
+
+        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
+        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+
+        self.app.setPalette(palette)
+
+        self.app.setStyleSheet("""
+            QMenuBar { background:#2b2b2b; color:#dcdcdc; }
+            QMenuBar::item:selected { background:#3c3f41; }
+            QToolBar, QStatusBar { background:#2b2b2b; color:#dcdcdc; }
+
+            QMenu {
+                background: #2b2b2b;
+                color: #dcdcdc;
+                border: 1px solid #3a3a3a;
+                border-radius: 8px;
+                padding: 0px;
+            }
+
+            QMenu::item {
+                padding: 4px 14px 4px 28px;
+                margin: 0px;
+                border-radius: 6px;
+            }
+
+            QMenu::item:selected {
+                background: #3c3f41;
+                color: #ffffff;
+            }
+
+            QMenu::item:disabled {
+                color: #8a8a8a;
+            }
+
+            QMenu::indicator {
+                left: 8px;
+            }
+
+            QMenu::separator {
+                height: 1px;
+                background: #3a3a3a;
+                margin: 4px 8px;
+            }
+        """)
+
+
         self.applyDarkmodeToCharts()
 
     def connect(self):
@@ -2079,12 +1970,27 @@ if __name__ == "__main__":
     icon = QIcon("Ressources\\meega_logo_small.ico")
     GS.setWindowIcon(icon)
 
+    #initialize style
+    GS.setStyle(QStyleFactory.create("Windows11"))
+
     #initialize translator and set default locale to C
     translator = QTranslator()
     QLocale.setDefault(QLocale.C)
 
     #initialize class collection, which in turn initializes all other classes
     collection = ClassCollection()
+
+    #set theme to the same as OS theme
+    try:
+        keyPath = r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, keyPath) as key:
+            appsUseLightTheme, _ = winreg.QueryValueEx(key, 'AppsUseLightTheme')
+            if appsUseLightTheme == 1:
+                collection.mainWindow.setLightTheme()
+            else:
+                collection.mainWindow.setDarkTheme()
+    except OSError:
+        collection.mainWindow.setLightTheme()
 
     #install translator according to selected locale in settings
     if translator.load(collection.settings.locale, "MEEGA_Language"):
