@@ -363,7 +363,7 @@ void DataAcquisition(DataFrame * frame) {
 
 	int SystemTime = clock() * 1000 / CLOCKS_PER_SEC;	//System Time
 	uint32_t AmbientPressure = pressureRead[1];
-	uint32_t CompareTemperature = 42;
+	uint32_t CompareTemperature = temperatureRead[6];
 	uint32_t TankPressure = pressureRead[0];
 	uint32_t TankTemperature = temperatureRead[0];
 	uint32_t ChamberPressure = pressureRead[2];
@@ -380,7 +380,7 @@ void DataAcquisition(DataFrame * frame) {
 	int ReservoirValve = digitalRead(Valve_Pin);	//Reservoir Valve
 	int LEDsStat = digitalRead(LEDs_Pin);
 	int Sensorboard_Pressure = pressureRead[6];
-	int Sensorboard_Temperature = temperatureRead[6];
+	int Sensorboard_Temperature = temperatureRead[7];
 	//uint8_t mainboard = mainboardStatus(Mainboard_TempStat, Mainboard_VoltStat);
 #endif //MODE
 
@@ -628,7 +628,8 @@ void ReadTemperatureSensors(uint32_t* Sensors) {
 	Sensors[3] = (rxBuf[9] << 16) | (rxBuf[10] << 8) | rxBuf[11];	//P1 Nozzle Throat Pressure
 	Sensors[4] = (rxBuf[12] << 16) | (rxBuf[13] << 8) | rxBuf[14];	//P2 Nozzle Midspan Pressure
 	Sensors[5] = (rxBuf[15] << 16) | (rxBuf[16] << 8) | rxBuf[17];	//P3 Nozzle Exit Pressure
-	Sensors[6] = rxBuf[18];											//Flag
+	Sensors[6] = (rxBuf[18] << 16) | (rxBuf[19] << 8) | rxBuf[20];
+	Sensors[7] = rxBuf[21];											//Flag
 }
 #endif //MODE
 
