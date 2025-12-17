@@ -8,10 +8,11 @@ import numpy as np
 import sys
 import time
 import winreg
+from winsdk.windows.ui.viewmanagement import UISettings, UIColorType
 
 #import of qt modules
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPalette)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory, QProgressBar)
 from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
 
@@ -157,6 +158,17 @@ class GSMain(QMainWindow):
         #standard value for all displays is inactive (red)
         for statusLabel in self.statusDisplay:
             statusLabel.setPixmap(self.inactivepix_scaled)
+
+        #set progressBar color to system accent color
+        ui = UISettings()
+        self.accentColor = ui.get_color_value(UIColorType.ACCENT)
+        self.accentHex = f"#{self.accentColor.r:02x}{self.accentColor.g:02x}{self.accentColor.b:02x}"
+        for progressBar in self.findChildren(QProgressBar):
+            progressBar.setStyleSheet(f"""
+            QProgressBar::chunk {{
+                background-color: {self.accentHex};
+            }}
+            """)
         
         #initializing plots
         self.createPlots()
@@ -217,8 +229,21 @@ class GSMain(QMainWindow):
 
         self.app.setStyleSheet("""
             QMenuBar { background:#f5f5f5; color:#141414; }
-            QMenuBar::item:selected { background:#e6e6e6; }
+            QMenuBar::item:selected { background:#e6e6e6; border-radius: 6px;}
             QToolBar, QStatusBar { background:#f5f5f5; color:#141414; }
+
+            QProgressBar {
+                min-height: 14px;
+                max-height: 14px;
+                border: none;
+                border-radius: 7px;
+                background: #e6e6e6;
+                color: #000000;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                border-radius: 7px;
+            }
         """)
 
         self.applyLightmodeToCharts()
@@ -243,7 +268,7 @@ class GSMain(QMainWindow):
 
         self.app.setStyleSheet("""
             QMenuBar { background:#2b2b2b; color:#dcdcdc; }
-            QMenuBar::item:selected { background:#3c3f41; }
+            QMenuBar::item:selected { background:#3c3f41; border-radius: 6px;}
             QToolBar, QStatusBar { background:#2b2b2b; color:#dcdcdc; }
 
             QMenu {
@@ -278,8 +303,20 @@ class GSMain(QMainWindow):
                 background: #3a3a3a;
                 margin: 4px 8px;
             }
-        """)
 
+            QProgressBar {
+                min-height: 14px;
+                max-height: 14px;
+                border: none;
+                border-radius: 7px;
+                background: #3c3f41;
+                color: #ffffff;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                border-radius: 7px;
+            }
+        """)
 
         self.applyDarkmodeToCharts()
 
