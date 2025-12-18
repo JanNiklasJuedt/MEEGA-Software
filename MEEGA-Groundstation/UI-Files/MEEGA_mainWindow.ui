@@ -291,6 +291,9 @@
                <kerning>true</kerning>
               </font>
              </property>
+             <property name="toolTip">
+              <string>purple = could not open Serial Port, red = no inocming data, yellow = incoming data with mismatching checksum or crc, green = incoming data is ok</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -334,6 +337,9 @@
                <width>50</width>
                <height>50</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>purple = could not open Serial Port, red = no inocming data, yellow = incoming data with mismatching checksum or crc, green = incoming data is ok</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::Panel</enum>
@@ -435,6 +441,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -462,6 +471,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -491,6 +503,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -519,6 +534,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -534,7 +552,10 @@
             </widget>
            </item>
            <item row="4" column="5">
-            <widget class="QLabel" name="label_31">
+            <widget class="QLabel" name="textLabelTNozzle1">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Nozzle 1</string>
              </property>
@@ -544,7 +565,10 @@
             </widget>
            </item>
            <item row="5" column="5">
-            <widget class="QLabel" name="label_32">
+            <widget class="QLabel" name="textLabelTNozzle2">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Nozzle 2</string>
              </property>
@@ -554,7 +578,10 @@
             </widget>
            </item>
            <item row="1" column="5">
-            <widget class="QLabel" name="label_29">
+            <widget class="QLabel" name="textLabelTAccumulator">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Accumulator</string>
              </property>
@@ -564,7 +591,10 @@
             </widget>
            </item>
            <item row="6" column="5">
-            <widget class="QLabel" name="label_33">
+            <widget class="QLabel" name="textLabelTNozzle3">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Nozzle 3</string>
              </property>
@@ -587,13 +617,16 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = LEDs off, green = LEDs on</string>
+             </property>
              <property name="text">
               <string/>
              </property>
             </widget>
            </item>
            <item row="2" column="4">
-            <widget class="QLabel" name="statusLabelPAccumulator">
+            <widget class="QLabel" name="statusLabelPChamber">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -605,6 +638,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -634,6 +670,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = no Start-Of-Experiment Signal, green = Start-Of-Experiment Signal</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -649,7 +688,7 @@
             </widget>
            </item>
            <item row="1" column="4">
-            <widget class="QLabel" name="statusLabelPReservoir">
+            <widget class="QLabel" name="statusLabelPAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -661,6 +700,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -677,7 +719,10 @@
             </widget>
            </item>
            <item row="0" column="7">
-            <widget class="QLabel" name="label_37">
+            <widget class="QLabel" name="textLabelLO">
+             <property name="toolTip">
+              <string>red = no Lift-Off signal, green = Lift-Off signal</string>
+             </property>
              <property name="text">
               <string>Lift-Off</string>
              </property>
@@ -687,7 +732,10 @@
             </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QLabel" name="label_14">
+            <widget class="QLabel" name="textLabelPChamber">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>P Chamber</string>
              </property>
@@ -697,7 +745,7 @@
             </widget>
            </item>
            <item row="1" column="6">
-            <widget class="QLabel" name="statusLabelTReservoir">
+            <widget class="QLabel" name="statusLabelTAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -709,6 +757,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -738,6 +789,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -766,6 +820,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = no Lift-Off signal, green = Lift-Off signal</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -781,7 +838,10 @@
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QLabel" name="label_temp_6">
+            <widget class="QLabel" name="textLabelPAccumulator">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -794,7 +854,10 @@
             </widget>
            </item>
            <item row="6" column="7">
-            <widget class="QLabel" name="label_10">
+            <widget class="QLabel" name="textLabelLEDs">
+             <property name="toolTip">
+              <string>red = LEDs off, green = LEDs on</string>
+             </property>
              <property name="text">
               <string>LEDs</string>
              </property>
@@ -817,6 +880,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -832,7 +898,10 @@
             </widget>
            </item>
            <item row="0" column="5">
-            <widget class="QLabel" name="label_temp_7">
+            <widget class="QLabel" name="textLabelTCompare">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -865,6 +934,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -893,6 +965,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = servo in closed position, green = servo in open position</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -908,9 +983,9 @@
             </widget>
            </item>
            <item row="0" column="0">
-            <widget class="QLabel" name="label_temp_2">
+            <widget class="QLabel" name="textLabelMainboardT">
              <property name="toolTip">
-              <string extracomment="red = &gt;55°C, yellow = &lt;5°C or 30-55°C, green = 5-30°C"/>
+              <string>purple = &lt;20°C, green = 20-70°C, yellow = 70-80°C, red = &gt;80°C</string>
              </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
@@ -924,7 +999,10 @@
             </widget>
            </item>
            <item row="2" column="5">
-            <widget class="QLabel" name="label_30">
+            <widget class="QLabel" name="textLabelTChamber1">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Chamber 1</string>
              </property>
@@ -934,7 +1012,10 @@
             </widget>
            </item>
            <item row="1" column="7">
-            <widget class="QLabel" name="label_9">
+            <widget class="QLabel" name="textLabelSOE">
+             <property name="toolTip">
+              <string>red = no Start-Of-Experiment Signal, green = Start-Of-Experiment Signal</string>
+             </property>
              <property name="text">
               <string>Start of Experiment</string>
              </property>
@@ -944,7 +1025,10 @@
             </widget>
            </item>
            <item row="6" column="2">
-            <widget class="QLabel" name="label_18">
+            <widget class="QLabel" name="textLabelPNozzle3">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>P Nozzle 3</string>
              </property>
@@ -954,7 +1038,10 @@
             </widget>
            </item>
            <item row="5" column="0">
-            <widget class="QLabel" name="label_12">
+            <widget class="QLabel" name="textLabelServo">
+             <property name="toolTip">
+              <string>red = servo in closed position, green = servo in open position</string>
+             </property>
              <property name="text">
               <string>Servo</string>
              </property>
@@ -978,7 +1065,7 @@
               </size>
              </property>
              <property name="toolTip">
-              <string extracomment="red = &gt;55°C, yellow = &lt;5°C or 30-55°C, green = 5-30°C"/>
+              <string>purple = &lt;20°C, green = 20-70°C, yellow = 70-80°C, red = &gt;80°C</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -995,7 +1082,10 @@
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QLabel" name="label_15">
+            <widget class="QLabel" name="textLabelPAmbient">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>P Ambient</string>
              </property>
@@ -1018,6 +1108,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1033,7 +1126,10 @@
             </widget>
            </item>
            <item row="6" column="0">
-            <widget class="QLabel" name="label_13">
+            <widget class="QLabel" name="textLabelValve">
+             <property name="toolTip">
+              <string>red = valve closed, green = valve open</string>
+             </property>
              <property name="text">
               <string>Valve</string>
              </property>
@@ -1055,6 +1151,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>red = valve closed, green = valve open</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1084,6 +1183,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1099,7 +1201,10 @@
             </widget>
            </item>
            <item row="5" column="2">
-            <widget class="QLabel" name="label_17">
+            <widget class="QLabel" name="textLabelPNozzle2">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>P Nozzle 2</string>
              </property>
@@ -1109,7 +1214,10 @@
             </widget>
            </item>
            <item row="3" column="5">
-            <widget class="QLabel" name="label">
+            <widget class="QLabel" name="textLabelTChamber2">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>T Chamber 2</string>
              </property>
@@ -1132,6 +1240,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1147,7 +1258,10 @@
             </widget>
            </item>
            <item row="4" column="2">
-            <widget class="QLabel" name="label_16">
+            <widget class="QLabel" name="textLabelPNozzle1">
+             <property name="toolTip">
+              <string>red = value is all 1 or all 0, yellow = value is the same as last value, green = value is ok</string>
+             </property>
              <property name="text">
               <string>P Nozzle 1</string>
              </property>
@@ -1157,9 +1271,9 @@
             </widget>
            </item>
            <item row="5" column="7">
-            <widget class="QLabel" name="label_3">
+            <widget class="QLabel" name="textLabelCoverStatus">
              <property name="toolTip">
-              <string extracomment="red = cover closed, yellow = no or both buttons pressed, green = cover opened"/>
+              <string>red = cover closed, yellow = no or both buttons pressed, green = cover opened</string>
              </property>
              <property name="text">
               <string>Cover Status</string>
@@ -1184,7 +1298,7 @@
               </size>
              </property>
              <property name="toolTip">
-              <string extracomment="red = cover closed, yellow = no or both buttons pressed, green = cover opened"/>
+              <string>red = cover closed, yellow = no or both buttons pressed, green = cover opened</string>
              </property>
              <property name="text">
               <string/>
@@ -1192,7 +1306,10 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_11">
+            <widget class="QLabel" name="textLabelTChip">
+             <property name="toolTip">
+              <string>red = error occured in reading ADCs, green = reading all ADCs succesful</string>
+             </property>
              <property name="text">
               <string>T Chip</string>
              </property>
@@ -1215,6 +1332,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = error occured in reading ADCs, green = reading all ADCs succesful</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1230,7 +1350,10 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="textLabelPChip">
+             <property name="toolTip">
+              <string>red = error occured in reading ADCs, green = reading all ADCs succesful</string>
+             </property>
              <property name="text">
               <string>P Chip</string>
              </property>
@@ -1253,6 +1376,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>red = error occured in reading ADCs, green = reading all ADCs succesful</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1268,9 +1394,9 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_temp_3">
+            <widget class="QLabel" name="textLabelMainboardV">
              <property name="toolTip">
-              <string extracomment="red = voltage too low, green = voltage normal"/>
+              <string>red = voltage too low, green = voltage normal</string>
              </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
@@ -1298,7 +1424,7 @@
               </size>
              </property>
              <property name="toolTip">
-              <string extracomment="red = voltage too low, green = voltage normal"/>
+              <string>red = voltage too low, green = voltage normal</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>

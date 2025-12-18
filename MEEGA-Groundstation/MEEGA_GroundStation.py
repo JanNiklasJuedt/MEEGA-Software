@@ -126,9 +126,9 @@ class GSMain(QMainWindow):
         self.statusDisplay = [None]*22
         self.statusDisplay[0] = self.ui.statusLabelPAmbient
         self.statusDisplay[1] = self.ui.statusLabelTCompare
-        self.statusDisplay[2] = self.ui.statusLabelPReservoir
-        self.statusDisplay[3] = self.ui.statusLabelTReservoir
-        self.statusDisplay[4] = self.ui.statusLabelPAccumulator
+        self.statusDisplay[2] = self.ui.statusLabelPAccumulator
+        self.statusDisplay[3] = self.ui.statusLabelTAccumulator
+        self.statusDisplay[4] = self.ui.statusLabelPChamber
         self.statusDisplay[5] = self.ui.statusLabelTChamber1
         self.statusDisplay[6] = self.ui.statusLabelTChamber2
         self.statusDisplay[7] = self.ui.statusLabelPNozzle1
