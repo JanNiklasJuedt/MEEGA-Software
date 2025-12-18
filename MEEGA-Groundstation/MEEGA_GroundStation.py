@@ -417,7 +417,7 @@ class GSMain(QMainWindow):
         gatherIndex = self.collection.dataAccumulation.gatherIndex
 
         #fitting most recent status values from dataAccumulation into a single list with order according to statusDisplay list for handling via for loop
-        statusList = np.concatenate((dataAccu.household[gatherIndex][0:DataAccumulation.sensorSize], dataAccu.household[gatherIndex][PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[gatherIndex][PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[gatherIndex][PyID.Lift_Off:PyID.Start_Experiment+1]))
+        statusList = np.concatenate((dataAccu.household[0:DataAccumulation.sensorSize], dataAccu.household[PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[PyID.Lift_Off:PyID.Start_Experiment+1]))
             
         #updating each label in statusDisplay according to statusList that was just created
         for i, display in enumerate(self.statusDisplay):
@@ -432,8 +432,8 @@ class GSMain(QMainWindow):
                     display.setPixmap(self.issuespix_scaled)
             
         #special case for nozzle cover status display
-        coverOpen = dataAccu.household[gatherIndex][PyID.Nozzle_Open]
-        coverClosed = dataAccu.household[gatherIndex][PyID.Nozzle_Closed]
+        coverOpen = dataAccu.household[PyID.Nozzle_Open]
+        coverClosed = dataAccu.household[PyID.Nozzle_Closed]
         if coverOpen and not coverClosed:
             self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
         elif not coverOpen and coverClosed:
@@ -442,7 +442,7 @@ class GSMain(QMainWindow):
             self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
 
         #special case for board temperature
-        boardTemp = dataAccu.household[gatherIndex][PyID.Mainboard_T]
+        boardTemp = dataAccu.household[PyID.Mainboard_T]
         if boardTemp == 1:
             self.ui.statusLabelMainboardT.setPixmap(self.coldpix_scaled)
         elif boardTemp == 2:
@@ -600,7 +600,7 @@ class GSMain(QMainWindow):
                     #"index" is given by the signal that calls extendPlots and is the index in the dataAccumulation list of the newly added sensor Data
                     #if index matches currentIndex, simply append new data point
                     if index == self.currentIndex:
-                        series.append(dataAccu.household[index][PyID.System_Time], dataAccu.sensorData[index][i])
+                        series.append(dataAccu.systemTime[index], dataAccu.sensorData[index][i])
 
                     #if index does not match currentIndex, calculate correct insert index
                     else:
@@ -622,7 +622,7 @@ class GSMain(QMainWindow):
 
                         #insert data point at calculated index if valid
                         if insertIndex >= 0:
-                            series.insert(insertIndex, QPointF(dataAccu.household[index][PyID.System_Time], dataAccu.sensorData[index][i]))
+                            series.insert(insertIndex, QPointF(dataAccu.systemTime[index], dataAccu.sensorData[index][i]))
 
                     #save highest values for scaling of axes
                     if i in self.pressureIndices: #pressure Value
@@ -1475,14 +1475,19 @@ class DataAccumulation(QObject):
 
         #initialize data arrays with initial allocation size
         self.sensorData = np.ones((self.allocationSize, self.sensorSize))
-        self.household = np.ones((self.allocationSize, self.householdSize))
+        self.household = np.ones(self.householdSize)
+        self.systemTime = np.ones(self.allocationSize)
+
+        #variables to keep track of rising edge of LO and SOE, to determine where the corresponding indices should be set
+        self.risingEdgeLO = 0
+        self.risingEdgeSOE = 0
 
         #initialize current digitals array. Used for calibration window to get current digital values of sensors, since sensorData only contains mapped analog values
         self.currentDigitals = [1] * self.sensorSize
 
     def accumulate(self):
         #switch for testing purposes
-        testData = False
+        testData = True
 
         #Get Frame and check connection status
         if not testData:
@@ -1551,20 +1556,20 @@ class DataAccumulation(QObject):
 
                 #create extensions of arrays with allocation size
                 dataExtension = np.ones((self.allocationSize, self.sensorSize))
-                householdExtension = np.ones((self.allocationSize, self.householdSize))
+                timeExtension = np.ones(self.allocationSize)
 
                 #concatenate extensions to existing arrays
                 self.sensorData = np.concatenate((self.sensorData, dataExtension))
-                self.household = np.concatenate((self.household, householdExtension))
+                self.systemTime = np.concatenate((self.systemTime, timeExtension))
 
             if not testData:
                 #if array has no entries yet, or system time of new frame is higher than the last entry in array, new index is simply gather index
-                if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.household[self.gatherIndex-1][PyID.System_Time]:
+                if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.systemTime[gatherIndex - 1]:
                     self.newIndex = self.gatherIndex
 
                 #in other case, find correct index for new data point by searching sorted system time array
                 else:
-                    self.newIndex = np.searchsorted(self.household[:self.gatherIndex, PyID.System_Time], DataHandling.ReadFrame(frame, TMID.System_Time))
+                    self.newIndex = np.searchsorted(self.systemTime[:self.gatherIndex], DataHandling.ReadFrame(frame, TMID.System_Time))
 
             else:
                 ###
@@ -1596,7 +1601,7 @@ class DataAccumulation(QObject):
                     
             if testData:
                 ###
-                self.household[self.newIndex][PyID.System_Time] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
+                self.systemTime[self.newIndex] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
 
                 self.newFrameSignal.emit(int(self.newIndex))
@@ -1605,58 +1610,67 @@ class DataAccumulation(QObject):
                 break
 
             else:
-                #check health of all sensors by checking their values for plausability
-                for i in range(self.sensorSize):
+                #check health of all sensors by checking their values for plausability, only if new frame is most recent frame
+                if self.newIndex == self.gatherIndex:
+                    for i in range(self.sensorSize):
 
-                    #fetch current and last value of sensor
-                    currentVal = self.sensorData[self.gatherIndex][i]
-                    lastVal = self.sensorData[self.gatherIndex-1][i]
+                        #fetch current and last value of sensor
+                        currentVal = self.sensorData[self.gatherIndex][i]
+                        lastVal = self.sensorData[self.gatherIndex-1][i]
 
-                    #check if current value hasnt changed (not plausible) -> mark as ISSUES (yellow)
-                    if currentVal == lastVal:
-                        self.household[self.newIndex][i] = GSMain.ISSUES
+                        #check if current value hasnt changed (not plausible) -> mark as ISSUES (yellow)
+                        if currentVal == lastVal:
+                            self.household[i] = GSMain.ISSUES
 
-                    #in other case, mark as ACTIVE (green)
-                    else:
-                        self.household[self.newIndex][i] = GSMain.ACTIVE
+                        #in other case, mark as ACTIVE (green)
+                        else:
+                            self.household[i] = GSMain.ACTIVE
 
-                    #check if sensor is ambient pressure sensor or accumulator pressure sensor as they are the only 24-bit sensors
-                    if i == PyID.Ambient_Pressure or i == PyID.Accumulator_Pressure:
+                        #check if sensor is ambient pressure sensor or accumulator pressure sensor as they are the only 24-bit sensors
+                        if i == PyID.Ambient_Pressure or i == PyID.Accumulator_Pressure:
 
-                        #if current value is either max 24-bit value or 0, mark as INACTIVE (red)
-                        if self.currentDigitals[i] == self.MAX24 or self.currentDigitals[i] == 0:
-                            self.household[self.newIndex][i] = GSMain.INACTIVE
+                            #if current value is either max 24-bit value or 0, mark as INACTIVE (red)
+                            if self.currentDigitals[i] == self.MAX24 or self.currentDigitals[i] == 0:
+                                self.household[i] = GSMain.INACTIVE
 
-                    #in other case, for 16-bit sensors
-                    else:
+                        #in other case, for 16-bit sensors
+                        else:
 
-                        #if current value is either max 16-bit value or 0, mark as INACTIVE (red)
-                        if self.currentDigitals[i] == self.MAX16 or self.currentDigitals[i] == 0:
-                            self.household[self.newIndex][i] = GSMain.INACTIVE
+                            #if current value is either max 16-bit value or 0, mark as INACTIVE (red)
+                            if self.currentDigitals[i] == self.MAX16 or self.currentDigitals[i] == 0:
+                                self.household[i] = GSMain.INACTIVE
 
-                #go through all household entries, read their values from frame and store them in household array at newIndex
-                self.household[self.newIndex][PyID.Nozzle_Open] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
-                self.household[self.newIndex][PyID.Nozzle_Closed] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
-                self.household[self.newIndex][PyID.Nozzle_Servo] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
-                self.household[self.newIndex][PyID.Reservoir_Valve] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
-                self.household[self.newIndex][PyID.LEDs] = DataHandling.ReadFrame(frame, TMID.LEDs)
-                self.household[self.newIndex][PyID.Sensorboard_P] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
-                self.household[self.newIndex][PyID.Sensorboard_T] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
-                self.household[self.newIndex][PyID.Mainboard_T] = DataHandling.ReadFrame(frame, TMID.Mainboard_T)
-                self.household[self.newIndex][PyID.Mainboard_V] = DataHandling.ReadFrame(frame, TMID.Mainboard_V)
-                self.household[self.newIndex][PyID.System_Time] = DataHandling.ReadFrame(frame, TMID.System_Time)
-                self.household[self.newIndex][PyID.Lift_Off] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
-                self.household[self.newIndex][PyID.Start_Experiment] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
-                self.household[self.newIndex][PyID.End_Experiment] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
-                self.household[self.newIndex][PyID.Mode] = DataHandling.ReadFrame(frame, TMID.Mode)
-                self.household[self.newIndex][PyID.Experiment_State] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
+                    #go through all household entries, read their values from frame and store them in household array at newIndex, also only if frame is most recent frame
+                    self.household[PyID.Nozzle_Open] = DataHandling.ReadFrame(frame, TMID.Nozzle_Open)
+                    self.household[PyID.Nozzle_Closed] = DataHandling.ReadFrame(frame, TMID.Nozzle_Closed)
+                    self.household[PyID.Nozzle_Servo] = DataHandling.ReadFrame(frame, TMID.Nozzle_Servo)
+                    self.household[PyID.Reservoir_Valve] = DataHandling.ReadFrame(frame, TMID.Reservoir_Valve)
+                    self.household[PyID.LEDs] = DataHandling.ReadFrame(frame, TMID.LEDs)
+                    self.household[PyID.Sensorboard_P] = DataHandling.ReadFrame(frame, TMID.Sensorboard_P)
+                    self.household[PyID.Sensorboard_T] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
+                    self.household[PyID.Mainboard_T] = DataHandling.ReadFrame(frame, TMID.Mainboard_T)
+                    self.household[PyID.Mainboard_V] = DataHandling.ReadFrame(frame, TMID.Mainboard_V)
+                    self.household[PyID.System_Time] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                    self.household[PyID.Lift_Off] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
+                    self.household[PyID.Start_Experiment] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
+                    self.household[PyID.End_Experiment] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
+                    self.household[PyID.Mode] = DataHandling.ReadFrame(frame, TMID.Mode)
+                    self.household[PyID.Experiment_State] = DataHandling.ReadFrame(frame, TMID.Experiment_State)
 
                 #if gatherIndex is not 0, check for rising edges of lift off and start of experiment values to store their indices in settings
                 if self.gatherIndex > 0:
-                    if self.household[self.gatherIndex - 1][PyID.Lift_Off] == 0 and self.household[self.gatherIndex][PyID.Lift_Off] == 1:
+                    if self.risingEdgeLO == 0 and self.household[PyID.Lift_Off] == 1:
                         self.liftOffIndex = self.gatherIndex
-                    if self.household[self.gatherIndex -1][PyID.Start_Experiment] == 0 and self.household[self.gatherIndex][PyID.Start_Experiment] == 1:
+                        self.risingEdgeLO = 1
+                    if self.risingEdgeSOE == 0 and self.household[PyID.Start_Experiment] == 1:
                         self.startOfExperimentIndex = self.gatherIndex
+                        self.risingEdgeSOE = 1
+
+                #reset risingEdge trackers if falling edge is detected
+                if self.risingEdgeLO == 1 and self.household[PyID.Lift_Off] == 0:
+                    self.risingEdgeLO = 0
+                if self.risingEdgeSOE == 1 and self.household[PyID.Stat_Experiment] == 0:
+                    self.risingEdgeSOE = 0
 
             #emit new frame signal for graph and calibration window updates
             self.newFrameSignal.emit(int(self.newIndex))
@@ -1735,7 +1749,7 @@ class PlotWorker(QThread):
         settings = self.collection.settings
         dataAcc = self.collection.dataAccumulation
         sensorData = dataAcc.sensorData
-        household = dataAcc.household
+        systemTime = dataAcc.systemTime
         mainWindow = self.collection.mainWindow
 
         #variable to track if plot should be cleared instead of rebuilt
@@ -1782,12 +1796,12 @@ class PlotWorker(QThread):
         
         #if startIndex is 0, relevant data can be sliced from full array directly
         if startIndex == 0:
-            xValues = household[:endIndex, PyID.System_Time]
+            xValues = systemTime[:endIndex]
             yMatrix = sensorData[:endIndex, :DataAccumulation.sensorSize]
 
         #for arbitrary startIndex, slicing needs to be done with ascontiguousarray
         else:
-            xValues = np.ascontiguousarray(household[startIndex:endIndex, PyID.System_Time])
+            xValues = np.ascontiguousarray(systemTime[startIndex:endIndex])
             yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :DataAccumulation.sensorSize])
 
         #for every sensor, create list of QPointF from x and y values and replace time series data in main window
