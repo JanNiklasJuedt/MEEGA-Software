@@ -909,6 +909,9 @@
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_temp_2">
+             <property name="toolTip">
+              <string extracomment="red = &gt;55°C, yellow = &lt;5°C or 30-55°C, green = 5-30°C"/>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -973,6 +976,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string extracomment="red = &gt;55°C, yellow = &lt;5°C or 30-55°C, green = 5-30°C"/>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1152,6 +1158,9 @@
            </item>
            <item row="5" column="7">
             <widget class="QLabel" name="label_3">
+             <property name="toolTip">
+              <string extracomment="red = cover closed, yellow = no or both buttons pressed, green = cover opened"/>
+             </property>
              <property name="text">
               <string>Cover Status</string>
              </property>
@@ -1173,6 +1182,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string extracomment="red = cover closed, yellow = no or both buttons pressed, green = cover opened"/>
              </property>
              <property name="text">
               <string/>
@@ -1257,6 +1269,9 @@
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_temp_3">
+             <property name="toolTip">
+              <string extracomment="red = voltage too low, green = voltage normal"/>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -1281,6 +1296,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string extracomment="red = voltage too low, green = voltage normal"/>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -2196,7 +2214,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="font">

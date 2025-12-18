@@ -672,9 +672,9 @@ float temp_data(void) {
 	return temp_millideg / 1000.0;
 }
 uint8_t temp_stat(float temp) {
-	if (temp < 5.0) return 1;		//cold
-	else if (temp < 30.0) return 2;	//normal
-	else if (temp < 55.0) return 3;	//warm
+	if (temp < 20.0) return 1;		//cold
+	else if (temp < 70.0) return 2;	//normal
+	else if (temp < 80.0) return 3;	//warm
 	else return 4;					//hot
 }
 

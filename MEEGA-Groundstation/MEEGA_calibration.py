@@ -178,7 +178,7 @@ class Ui_Sensor_Calibration(object):
         self.sensorSelect.setItemText(2, QCoreApplication.translate("Sensor_Calibration", u"P Accumulator", None))
         self.sensorSelect.setItemText(3, QCoreApplication.translate("Sensor_Calibration", u"T Accumulator", None))
         self.sensorSelect.setItemText(4, QCoreApplication.translate("Sensor_Calibration", u"P Chamber", None))
-        self.sensorSelect.setItemText(5, QCoreApplication.translate("Sensor_Calibration", u"T Chamber 2", None))
+        self.sensorSelect.setItemText(5, QCoreApplication.translate("Sensor_Calibration", u"T Chamber 1", None))
         self.sensorSelect.setItemText(6, QCoreApplication.translate("Sensor_Calibration", u"T Chamber 2", None))
         self.sensorSelect.setItemText(7, QCoreApplication.translate("Sensor_Calibration", u"P Nozzle 1", None))
         self.sensorSelect.setItemText(8, QCoreApplication.translate("Sensor_Calibration", u"T Nozzle 1", None))

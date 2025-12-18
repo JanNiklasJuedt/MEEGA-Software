@@ -233,8 +233,8 @@ class GSMain(QMainWindow):
             QToolBar, QStatusBar { background:#f5f5f5; color:#141414; }
 
             QProgressBar {
-                min-height: 14px;
-                max-height: 14px;
+                min-height: 20px;
+                max-height: 20px;
                 border: none;
                 border-radius: 7px;
                 background: #e6e6e6;
@@ -305,8 +305,8 @@ class GSMain(QMainWindow):
             }
 
             QProgressBar {
-                min-height: 14px;
-                max-height: 14px;
+                min-height: 20px;
+                max-height: 20px;
                 border: none;
                 border-radius: 7px;
                 background: #3c3f41;
@@ -350,6 +350,7 @@ class GSMain(QMainWindow):
             self.activepix_scaled = self.activepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.issuespix_scaled = self.issuespix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.inactivepix_scaled = self.inactivepix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.coldpix_scaled = self.noconnectionpix.scaled(circle_diameter, circle_diameter, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             #scale for connection status label
             connectionLabelSize = self.ui.connectionLabel.size()
             connectionCircle = min(connectionLabelSize.width(), connectionLabelSize.height())
@@ -431,14 +432,25 @@ class GSMain(QMainWindow):
                     display.setPixmap(self.issuespix_scaled)
             
         #special case for nozzle cover status display
-        coverOpen = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Open]
-        coverClosed = self.collection.dataAccumulation.household[gatherIndex][PyID.Nozzle_Closed]
+        coverOpen = dataAccu.household[gatherIndex][PyID.Nozzle_Open]
+        coverClosed = dataAccu.household[gatherIndex][PyID.Nozzle_Closed]
         if coverOpen and not coverClosed:
             self.ui.statusLabelCover.setPixmap(self.activepix_scaled)
         elif not coverOpen and coverClosed:
             self.ui.statusLabelCover.setPixmap(self.inactivepix_scaled)
         else:
             self.ui.statusLabelCover.setPixmap(self.issuespix_scaled)
+
+        #special case for board temperature
+        boardTemp = dataAccu.household[gatherIndex][PyID.Mainboard_T]
+        if boardTemp == 1:
+            self.ui.statusLabelMainboardT.setPixmap(self.coldpix_scaled)
+        elif boardTemp == 2:
+            self.ui.statusLabelMainboardT.setPixmap(self.activepix_scaled)
+        elif boardTemp == 3:
+            self.ui.statusLabelMainboardT.setPixmap(self.issuespix_scaled)
+        else:
+            self.ui.statusLabelMainboardT.setPixmap(self.inactivepix_scaled)
 
     def createPlots(self):
         #time plot
@@ -1578,6 +1590,10 @@ class DataAccumulation(QObject):
                 #special case for accumulator pressure, override it as sum of itself and ambient pressure, as it is a relative pressure sensor
                 self.sensorData[self.newIndex][PyID.Accumulator_Pressure] = self.sensorData[self.newIndex][PyID.Accumulator_Pressure] + self.sensorData[self.newIndex][PyID.Ambient_Pressure]
 
+                #override all thermocouple values with the sum of themselves and compare temperature, as they are relative temp sensors
+                for sensorIndex in [PyID.Accumulator_Temperature, PyID.Chamber_Temperature_1, PyID.Nozzle_1_Temperature, PyID.Nozzle_2_Temperature, PyID.Nozzle_3_Temperature]:
+                    self.sensorData[self.newIndex][sensorIndex] = self.sensorData[self.newIndex][sensorIndex] + self.sensorData[self.newIndex][PyID.Compare_Temperature]
+                    
             if testData:
                 ###
                 self.household[self.newIndex][PyID.System_Time] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
@@ -1608,14 +1624,14 @@ class DataAccumulation(QObject):
                     if i == PyID.Ambient_Pressure or i == PyID.Accumulator_Pressure:
 
                         #if current value is either max 24-bit value or 0, mark as INACTIVE (red)
-                        if currentVal == self.MAX24 or currentVal == 0:
+                        if self.currentDigitals[i] == self.MAX24 or self.currentDigitals[i] == 0:
                             self.household[self.newIndex][i] = GSMain.INACTIVE
 
                     #in other case, for 16-bit sensors
                     else:
 
                         #if current value is either max 16-bit value or 0, mark as INACTIVE (red)
-                        if currentVal == self.MAX16 or currentVal == 0:
+                        if self.currentDigitals[i] == self.MAX16 or self.currentDigitals[i] == 0:
                             self.household[self.newIndex][i] = GSMain.INACTIVE
 
                 #go through all household entries, read their values from frame and store them in household array at newIndex
