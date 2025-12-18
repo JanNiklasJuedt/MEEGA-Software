@@ -28,6 +28,7 @@ from MEEGA_controlPanel import *
 from MEEGA_results import *
 from MEEGA_calibration import *
 from MEEGA_diagramSettings import *
+import resources_rc
 
 #import from own data handling module with c functions
 from MEEGA_PyDataHandling import *
@@ -148,10 +149,10 @@ class GSMain(QMainWindow):
         self.statusDisplay[21] = self.ui.statusLabelSOE
 
         #creating status pixmaps
-        self.activepix = QPixmap("Ressources\\active.png")
-        self.issuespix = QPixmap("Ressources\\issues.png")
-        self.inactivepix = QPixmap("Ressources\\inactive.png")
-        self.noconnectionpix = QPixmap("Ressources\\noconnection.png")
+        self.activepix = QPixmap("Resources\\active.png")
+        self.issuespix = QPixmap("Resources\\issues.png")
+        self.inactivepix = QPixmap("Resources\\inactive.png")
+        self.noconnectionpix = QPixmap("Resources\\noconnection.png")
 
         self.scalePixmaps()
         
@@ -179,7 +180,7 @@ class GSMain(QMainWindow):
         self.ui.treeWidget.expandAll()
 
         #creating the big logo
-        self.logo = QPixmap("Ressources\\meega_logo_small.png")
+        self.logo = QPixmap("Resources\\meega_logo_small.png")
         self.ui.label_logo.setPixmap(self.logo)
 
         #creating menubar actiongroups (for exclusivity of selected options)
@@ -225,6 +226,9 @@ class GSMain(QMainWindow):
         palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
         palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
 
+        palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
+        palette.setColor(QPalette.ToolTipText, QColor(20, 20, 20)) 
+
         self.app.setPalette(palette)
 
         self.app.setStyleSheet("""
@@ -263,6 +267,9 @@ class GSMain(QMainWindow):
 
         palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
         palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+
+        palette.setColor(QPalette.ToolTipBase, QColor(50, 50, 50))
+        palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
 
         self.app.setPalette(palette)
 
@@ -617,7 +624,7 @@ class GSMain(QMainWindow):
                                 insertIndex = index
 
                         #in scrolling mode, calculate insert index by subtracting the the global index of first data point currently displayed in the chart (highgest current globalIndex (gatherIndex) - number of points currently in series)
-                        elif settings.timespandMode == Settings.SCROLLING:
+                        elif settings.timespanMode == Settings.SCROLLING:
                             insertIndex = index - (dataAccu.gatherIndex - series.count())
 
                         #insert data point at calculated index if valid
@@ -1564,7 +1571,7 @@ class DataAccumulation(QObject):
 
             if not testData:
                 #if array has no entries yet, or system time of new frame is higher than the last entry in array, new index is simply gather index
-                if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.systemTime[gatherIndex - 1]:
+                if self.gatherIndex <= 0 or DataHandling.ReadFrame(frame, TMID.System_Time) > self.systemTime[self.gatherIndex - 1]:
                     self.newIndex = self.gatherIndex
 
                 #in other case, find correct index for new data point by searching sorted system time array
@@ -2034,7 +2041,7 @@ if __name__ == "__main__":
     GS = QApplication()
 
     #initialize application icon
-    icon = QIcon("Ressources\\meega_logo_small.ico")
+    icon = QIcon("Resources\\meega_logo_small.ico")
     GS.setWindowIcon(icon)
 
     #initialize style

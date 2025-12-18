@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/qrc">
+        <file>resources/active.png</file>
+        <file>resources/inactive.png</file>
+        <file>resources/issues.png</file>
+        <file>resources/noconnection.png</file>
+        <file>resources/activeBorderless.png</file>
+        <file>resources/inactiveBorderless.png</file>
+        <file>resources/issuesBorderless.png</file>
+        <file>resources/noConnectionBorderless.png</file>
+    </qresource>
+</RCC>
