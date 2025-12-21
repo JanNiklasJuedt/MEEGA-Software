@@ -2012,7 +2012,7 @@
          <number>0</number>
         </property>
         <property name="value">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -2090,7 +2090,7 @@
          <locale language="English" country="Germany"/>
         </property>
         <property name="value">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -2237,7 +2237,7 @@
          <locale language="English" country="Germany"/>
         </property>
         <property name="value">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -2279,7 +2279,7 @@
          <locale language="English" country="Germany"/>
         </property>
         <property name="value">
-         <number>24</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -2444,6 +2444,8 @@
     <addaction name="actionCalibration"/>
     <addaction name="separator"/>
     <addaction name="actionEstimated_Launch_Time"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_Progress_Bar"/>
    </widget>
    <addaction name="menuStart"/>
    <addaction name="menuFile"/>
@@ -2644,6 +2646,11 @@
    </property>
    <property name="text">
     <string>Dark Mode</string>
+   </property>
+  </action>
+  <action name="actionReset_Progress_Bar">
+   <property name="text">
+    <string>Reset Progress Bar</string>
    </property>
   </action>
  </widget>

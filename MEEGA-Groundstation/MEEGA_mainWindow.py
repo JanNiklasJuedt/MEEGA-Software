@@ -118,6 +118,8 @@ class Ui_MainWindow(object):
         self.actionDarkMode = QAction(MainWindow)
         self.actionDarkMode.setObjectName(u"actionDarkMode")
         self.actionDarkMode.setCheckable(True)
+        self.actionReset_Progress_Bar = QAction(MainWindow)
+        self.actionReset_Progress_Bar.setObjectName(u"actionReset_Progress_Bar")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -901,7 +903,7 @@ class Ui_MainWindow(object):
         self.progressBar_SODS.setFont(font2)
         self.progressBar_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
         self.progressBar_SODS.setMinimum(0)
-        self.progressBar_SODS.setValue(100)
+        self.progressBar_SODS.setValue(0)
         self.progressBar_SODS.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.layout_progressbars.addWidget(self.progressBar_SODS, 0, 4, 1, 1)
@@ -928,7 +930,7 @@ class Ui_MainWindow(object):
         self.progressBar_LO.setMinimumSize(QSize(75, 0))
         self.progressBar_LO.setFont(font2)
         self.progressBar_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.progressBar_LO.setValue(100)
+        self.progressBar_LO.setValue(0)
         self.progressBar_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progressBar_LO.setTextVisible(True)
 
@@ -985,7 +987,7 @@ class Ui_MainWindow(object):
         self.progressBar_SD.setBaseSize(QSize(97, 0))
         self.progressBar_SD.setFont(font2)
         self.progressBar_SD.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.progressBar_SD.setValue(100)
+        self.progressBar_SD.setValue(0)
         self.progressBar_SD.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progressBar_SD.setTextVisible(False)
 
@@ -1001,7 +1003,7 @@ class Ui_MainWindow(object):
         self.progressBar_SOE.setMinimumSize(QSize(100, 0))
         self.progressBar_SOE.setFont(font2)
         self.progressBar_SOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.progressBar_SOE.setValue(24)
+        self.progressBar_SOE.setValue(0)
         self.progressBar_SOE.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.layout_progressbars.addWidget(self.progressBar_SOE, 0, 6, 1, 1)
@@ -1094,6 +1096,8 @@ class Ui_MainWindow(object):
         self.menuSetup.addAction(self.actionCalibration)
         self.menuSetup.addSeparator()
         self.menuSetup.addAction(self.actionEstimated_Launch_Time)
+        self.menuSetup.addSeparator()
+        self.menuSetup.addAction(self.actionReset_Progress_Bar)
 
         self.retranslateUi(MainWindow)
 
@@ -1138,6 +1142,7 @@ class Ui_MainWindow(object):
         self.actionDiagrams.setText(QCoreApplication.translate("MainWindow", u"Diagrams", None))
         self.actionLightMode.setText(QCoreApplication.translate("MainWindow", u"Light Mode", None))
         self.actionDarkMode.setText(QCoreApplication.translate("MainWindow", u"Dark Mode", None))
+        self.actionReset_Progress_Bar.setText(QCoreApplication.translate("MainWindow", u"Reset Progress Bar", None))
         self.label_time.setText(QCoreApplication.translate("MainWindow", u"T -", None))
 #if QT_CONFIG(tooltip)
         self.label_Connection.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/noConnectionBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = could not open Serial Port</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = no inocming data</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = incoming data with mismatching checksum or crc</p><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = incoming data is ok</p></body></html>", None))
