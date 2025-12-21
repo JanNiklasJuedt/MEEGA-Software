@@ -1563,7 +1563,7 @@
          <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
         </property>
         <item>
-         <widget class="QGroupBox" name="groupBox_2">
+         <widget class="QGroupBox" name="SensorSelectionGroupBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -2396,21 +2396,9 @@
      <addaction name="actionEnglish"/>
      <addaction name="actionGerman"/>
     </widget>
-    <widget class="QMenu" name="menuConnection">
-     <property name="title">
-      <string>Connection</string>
-     </property>
-     <addaction name="actionConnect"/>
-     <addaction name="actionRetry"/>
-     <addaction name="separator"/>
-     <addaction name="actionAutomatic"/>
-     <addaction name="actionManual"/>
-     <addaction name="separator"/>
-     <addaction name="actionDisconnect"/>
-    </widget>
     <addaction name="menuLanguage"/>
     <addaction name="separator"/>
-    <addaction name="menuConnection"/>
+    <addaction name="actionConnection"/>
     <addaction name="separator"/>
     <addaction name="actionDiagrams"/>
    </widget>
@@ -2651,6 +2639,11 @@
   <action name="actionReset_Progress_Bar">
    <property name="text">
     <string>Reset Progress Bar</string>
+   </property>
+  </action>
+  <action name="actionConnection">
+   <property name="text">
+    <string>Connection</string>
    </property>
   </action>
  </widget>

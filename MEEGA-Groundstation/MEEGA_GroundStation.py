@@ -36,12 +36,8 @@ from MEEGA_PyDataHandling import *
 #class to handle program settings
 #keep track of diagram settings, program settings
 class Settings:
-    AUTOMATIC = 0
-    MANUAL = 1
     FLIGHT = 1
     TEST = 0
-    SERIAL = 0
-    TCP = 1
     #diagram flags
     SELFSCALING = 0
     FIXEDVALUE = 1
@@ -59,8 +55,6 @@ class Settings:
         else:
             self.locale = QLocale(locale)
         self.mode = self.TEST
-        self.connectionMode = self.AUTOMATIC
-        self.connectionType = self.SERIAL
         self.connector = "COM4"
         self.filePath = self.defaultFilePath
         self.estimatedLaunchTime = self.defaultLaunchTime
@@ -143,6 +137,11 @@ class GSMain(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        #settings margins, so that contents dont cover edges
+        treeWidgetLayout = self.ui.SensorSelectionGroupBox.layout()
+        treeWidgetLayout.addWidget(self.ui.treeWidget)
+        treeWidgetLayout.setContentsMargins(2, 5, 2, 2)
+
         #creating variables
         self.connectionStatus = self.NOCONNECTION
         self.collection = collection
@@ -218,11 +217,6 @@ class GSMain(QMainWindow):
         self.modeGroup.addAction(self.ui.actionFlight_Mode)
         self.modeGroup.addAction(self.ui.actionTest_Mode)
 
-        self.connectionModeGroup = QActionGroup(self.ui.menuConnection)
-        self.connectionModeGroup.setExclusive(True)
-        self.connectionModeGroup.addAction(self.ui.actionAutomatic)
-        self.connectionModeGroup.addAction(self.ui.actionManual)
-
         self.appearanceGroup = QActionGroup(self.ui.menuAppearance)
         self.appearanceGroup.setExclusive(True)
         self.appearanceGroup.addAction(self.ui.actionDarkMode)
@@ -251,7 +245,7 @@ class GSMain(QMainWindow):
         palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
 
         palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
-        palette.setColor(QPalette.ToolTipText, QColor(20, 20, 20)) 
+        palette.setColor(QPalette.ToolTipText, QColor(20, 20, 20))
 
         self.app.setPalette(palette)
 
@@ -271,6 +265,20 @@ class GSMain(QMainWindow):
             }
             QProgressBar::chunk {
                 border-radius: 7px;
+            }
+            QTreeWidget {
+                background: #f5f5f5;
+                alternate-background-color: #f5f5f5;
+                border: none;
+            }
+
+            QTreeWidget::item:selected {
+                background: #0078d7;
+                color: white;
+            }
+
+            QTreeWidget::item:hover {
+                background: #e6e6e6;
             }
         """)
 
@@ -347,6 +355,20 @@ class GSMain(QMainWindow):
             QProgressBar::chunk {
                 border-radius: 7px;
             }
+            QTreeWidget {
+                background: #2b2b2b;
+                alternate-background-color: #2b2b2b;
+                border: none;
+            }
+
+            QTreeWidget::item:selected {
+                background: #0078d7;
+                color: white;
+            }
+
+            QTreeWidget::item:hover {
+                background: #3c3f41;
+            }
         """)
 
         self.applyDarkmodeToCharts()
@@ -354,9 +376,6 @@ class GSMain(QMainWindow):
     def connect(self):
         #connection of signals and slots, called in late-init in ClassCollection after all components are created
         self.languageGroup.triggered.connect(self.languageChanges)
-
-        self.ui.actionManual.triggered.connect(self.fetchSettings)
-        self.ui.actionAutomatic.triggered.connect(self.fetchSettings)
 
         self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
         self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
@@ -414,18 +433,6 @@ class GSMain(QMainWindow):
             self.app.installTranslator(translator)
             self.retranslateUi(self)
 
-    #functionality for changing connection mode, not implemented yet, not planning on implementing automatic connection handling
-    def connectionModeChanges(self):
-        if self.collection.settings.connectionMode == Settings.AUTOMATIC:
-            self.ui.actionConnect.setEnabled(False)
-            self.ui.actionRetry.setEnabled(False)
-            self.ui.actionDisconnect.setEnabled(False)
-        else:
-            self.ui.actionConnect.setEnabled(True)
-            self.ui.actionRetry.setEnabled(True)
-            self.ui.actionDisconnect.setEnabled(True)
-            self.ui.menuSettings.popup(self.ui.menuSettings.pos())
-            self.ui.menuSettings.setActiveAction(self.ui.menuConnection.menuAction())
     def filePathChanges(self):
         pass
 
@@ -538,7 +545,7 @@ class GSMain(QMainWindow):
             
         #create Layout
         self.timeLayout = QVBoxLayout(self.ui.timePlotGroupBox)
-        self.timeLayout.setContentsMargins(0,0,0,0)
+        self.timeLayout.setContentsMargins(2,0,2,2)
 
         #create ChartView and add to Layout
         self.timeChartView = QChartView(self.timeChart)
@@ -582,7 +589,7 @@ class GSMain(QMainWindow):
         
         #create Layout
         self.distanceLayout = QVBoxLayout(self.ui.distancePlotGroupBox)
-        self.distanceLayout.setContentsMargins(0,0,0,0)
+        self.distanceLayout.setContentsMargins(2,0,2,2)
 
         #add Chart to ChartView and Layout
         self.distanceChartView = QChartView(self.distanceChart)
@@ -781,15 +788,10 @@ class GSMain(QMainWindow):
         else:
             connectionMode = Settings.MANUAL
         self.collection.settings.connectionMode = connectionMode
-        self.connectionModeChanges()
 
     #function to apply settings from collection to main window ui elements, called after startup dialog is closed
     @Slot()
     def applySettings(self):
-        if self.collection.settings.connectionMode == Settings.AUTOMATIC:
-            self.ui.actionAutomatic.setChecked(True)
-        else:
-            self.ui.actionManual.setChecked(True)
         if self.collection.settings.mode == Settings.FLIGHT:
             self.ui.actionFlight_Mode.setChecked(True)
         else:
@@ -797,7 +799,6 @@ class GSMain(QMainWindow):
         self.setLocale(self.collection.settings.locale)
         self.languageChanges()
         self.modeSwitched()
-        self.connectionModeChanges()
         self.filePathChanges()
 
     #function to make diagrams darkmode themed
@@ -1027,8 +1028,6 @@ class GSStart(QDialog):
         self.collection = collection
         self.ui.languageComboBox.setItemData(0, "en")
         self.ui.languageComboBox.setItemData(1, "de")
-        self.ui.connectionComboBox.setItemData(0,Settings.AUTOMATIC)
-        self.ui.connectionComboBox.setItemData(1,Settings.MANUAL)
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
@@ -1047,7 +1046,8 @@ class GSStart(QDialog):
     @Slot()
     def fetchSettings(self):
         self.collection.settings.language = self.ui.languageComboBox.currentData()
-        self.collection.settings.connectionMode = self.ui.connectionComboBox.currentData()
+        self.collection.settings.connector = self.ui.connectionComboBox.currentText().encode("utf-8")
+        DataHandling.SetPort(self.collection.settings.connector)
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeTimeEdit.time(), self.collection.settings.timeZone)
@@ -1281,27 +1281,13 @@ class GSConnection(QDialog):
         # initialize ui elements according to current settings, choose combobox index from currently stored connector setting
         self.ui.ConnectorBox.setCurrentIndex(int(self.collection.settings.connector[-1])-1)
 
-        #connect ui elements to enabling/disabling functions and applySettings function
-        self.connect()
+        #connect applySettings function
+        self.ui.buttonBox.accepted.connect(self.applySettings)
     
     #apply settings from ui elements to settings and DataHandling, currently only serial connector settings is functional, tcp not planned
     def applySettings(self):
-        if self.ui.RS_Button.isChecked():
-            self.collection.settings.connectionType = Settings.SERIAL
-            self.collection.settings.connector = self.ui.ConnectorBox.currentText().encode("utf-8")
-            DataHandling.SetPort(self.collection.settings.connector)
-        else:
-            self.collection.settings.connectionType = Settings.TCP
-
-    #connect ui elements to enabling/disabling functions and applySettings function
-    def connect(self):
-        self.ui.TCP_Button.clicked.connect(self.ui.PortEdit.setEnabled)
-        self.ui.TCP_Button.clicked.connect(self.ui.IPEdit.setEnabled)
-        self.ui.TCP_Button.clicked.connect(self.ui.ConnectorBox.setDisabled)
-        self.ui.RS_Button.clicked.connect(self.ui.PortEdit.setDisabled)
-        self.ui.RS_Button.clicked.connect(self.ui.IPEdit.setDisabled)
-        self.ui.RS_Button.clicked.connect(self.ui.ConnectorBox.setEnabled)
-        self.ui.buttonBox.accepted.connect(self.applySettings)
+        self.collection.settings.connector = self.ui.ConnectorBox.currentText().encode("utf-8")
+        DataHandling.SetPort(self.collection.settings.connector)
 
 class GSCalibration(QDialog):
     def __init__(self, collection: ClassCollection):
@@ -2180,7 +2166,7 @@ class ClassCollection:
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
         self.mainWindow.ui.actionControl_Panel.triggered.connect(self.controlPanel.show)
         self.mainWindow.ui.actionDocumentation.triggered.connect(self.documentationWindow.show)
-        self.mainWindow.ui.actionConnect.triggered.connect(self.connectionWindow.show)
+        self.mainWindow.ui.actionConnection.triggered.connect(self.connectionWindow.show)
         self.mainWindow.ui.actionResults.triggered.connect(self.resultsWindow.show)
         self.mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(self.timeWindow.show)
         self.startWindow.accepted.connect(self.mainWindow.applySettings)
