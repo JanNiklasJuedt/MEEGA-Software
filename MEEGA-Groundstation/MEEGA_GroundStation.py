@@ -529,6 +529,7 @@ class GSMain(QMainWindow):
         self.timePressureAxis.setRange(0, self.collection.settings.pressureAxeValue)
         self.timeTemperatureAxis.setRange(0, self.collection.settings.temperatureAxeValue)
         self.timeAxis.setRange(0, 1)
+        self.timeAxis.setLabelFormat("%.1f")
 
         #add axes to chart
         self.timeChart.addAxis(self.timeAxis, Qt.AlignBottom)
@@ -633,7 +634,7 @@ class GSMain(QMainWindow):
 
                     #if in scrolling mode, removing oldest point as long as covered timespand exceeds specified scrolling time from settings
                     if settings.timespanMode == Settings.SCROLLING:
-                        while (series.at(series.count()-1).x() - series.at(0).x()) > settings.scrollingTimeSeconds*1000:
+                        while (series.at(series.count()-1).x() - series.at(0).x()) > settings.scrollingTimeSeconds:
                             series.remove(0)
 
                     #"index" is given by the signal that calls extendPlots and is the index in the dataAccumulation list of the newly added sensor Data
@@ -1736,6 +1737,9 @@ class DataAccumulation(QObject):
                     self.currentDigitals[i] = DataHandling.ReadFrame(frame, i)
 
             if not testData:
+                #save system time
+                self.systemTime[self.newIndex] = DataHandling.ReadFrame(frame, TMID.System_Time) / 1000
+
                 #special case for accumulator pressure, override it as sum of itself and ambient pressure, as it is a relative pressure sensor
                 self.sensorData[self.newIndex][PyID.Accumulator_Pressure] = self.sensorData[self.newIndex][PyID.Accumulator_Pressure] + self.sensorData[self.newIndex][PyID.Ambient_Pressure]
 
@@ -1745,7 +1749,7 @@ class DataAccumulation(QObject):
                     
             if testData:
                 ###
-                self.systemTime[self.newIndex] = 1000/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
+                self.systemTime[self.newIndex] = 1/self.collection.dataHandlingThread.frequency*self.gatherIndex  ###only for testing purposes###
                 ###
 
                 self.newFrameSignal.emit(int(self.newIndex))
@@ -1794,7 +1798,7 @@ class DataAccumulation(QObject):
                     self.household[PyID.Sensorboard_T] = DataHandling.ReadFrame(frame, TMID.Sensorboard_T)
                     self.household[PyID.Mainboard_T] = DataHandling.ReadFrame(frame, TMID.Mainboard_T)
                     self.household[PyID.Mainboard_V] = DataHandling.ReadFrame(frame, TMID.Mainboard_V)
-                    self.household[PyID.System_Time] = DataHandling.ReadFrame(frame, TMID.System_Time)
+                    self.household[PyID.System_Time] = DataHandling.ReadFrame(frame, TMID.System_Time) / 1000
                     self.household[PyID.Lift_Off] = DataHandling.ReadFrame(frame, TMID.Lift_Off)
                     self.household[PyID.Start_Experiment] = DataHandling.ReadFrame(frame, TMID.Start_Experiment)
                     self.household[PyID.End_Experiment] = DataHandling.ReadFrame(frame, TMID.End_Experiment)
