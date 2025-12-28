@@ -29,23 +29,20 @@ class Ui_ConnectionDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(ConnectionDialog.sizePolicy().hasHeightForWidth())
         ConnectionDialog.setSizePolicy(sizePolicy)
+        ConnectionDialog.setMinimumSize(QSize(400, 172))
+        ConnectionDialog.setMaximumSize(QSize(400, 172))
         font = QFont()
         font.setPointSize(12)
         ConnectionDialog.setFont(font)
         self.verticalLayout = QVBoxLayout(ConnectionDialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(20, 20, 20, 20)
-        self.label_2 = QLabel(ConnectionDialog)
-        self.label_2.setObjectName(u"label_2")
-
-        self.verticalLayout.addWidget(self.label_2)
-
         self.formLayout_2 = QFormLayout()
         self.formLayout_2.setObjectName(u"formLayout_2")
         self.label = QLabel(ConnectionDialog)
         self.label.setObjectName(u"label")
 
-        self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label)
+        self.formLayout_2.setWidget(1, QFormLayout.ItemRole.LabelRole, self.label)
 
         self.ConnectorBox = QComboBox(ConnectionDialog)
         self.ConnectorBox.addItem("")
@@ -59,14 +56,19 @@ class Ui_ConnectionDialog(object):
         self.ConnectorBox.addItem("")
         self.ConnectorBox.setObjectName(u"ConnectorBox")
 
-        self.formLayout_2.setWidget(0, QFormLayout.ItemRole.FieldRole, self.ConnectorBox)
+        self.formLayout_2.setWidget(1, QFormLayout.ItemRole.FieldRole, self.ConnectorBox)
 
+        self.label_2 = QLabel(ConnectionDialog)
+        self.label_2.setObjectName(u"label_2")
 
-        self.verticalLayout.addLayout(self.formLayout_2)
+        self.formLayout_2.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_2)
 
         self.verticalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.MinimumExpanding)
 
-        self.verticalLayout.addItem(self.verticalSpacer)
+        self.formLayout_2.setItem(2, QFormLayout.ItemRole.FieldRole, self.verticalSpacer)
+
+
+        self.verticalLayout.addLayout(self.formLayout_2)
 
         self.buttonBox = QDialogButtonBox(ConnectionDialog)
         self.buttonBox.setObjectName(u"buttonBox")
@@ -92,7 +94,6 @@ class Ui_ConnectionDialog(object):
 
     def retranslateUi(self, ConnectionDialog):
         ConnectionDialog.setWindowTitle(QCoreApplication.translate("ConnectionDialog", u"MEEGA - Connection", None))
-        self.label_2.setText(QCoreApplication.translate("ConnectionDialog", u"Serial Port (RS-232)", None))
         self.label.setText(QCoreApplication.translate("ConnectionDialog", u"Connector", None))
         self.ConnectorBox.setItemText(0, QCoreApplication.translate("ConnectionDialog", u"COM1", None))
         self.ConnectorBox.setItemText(1, QCoreApplication.translate("ConnectionDialog", u"COM2", None))
@@ -104,5 +105,6 @@ class Ui_ConnectionDialog(object):
         self.ConnectorBox.setItemText(7, QCoreApplication.translate("ConnectionDialog", u"COM8", None))
         self.ConnectorBox.setItemText(8, QCoreApplication.translate("ConnectionDialog", u"COM9", None))
 
+        self.label_2.setText(QCoreApplication.translate("ConnectionDialog", u"Serial Port (RS-232)", None))
     # retranslateUi
 

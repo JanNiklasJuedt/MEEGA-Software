@@ -28,6 +28,7 @@ Resources/noconnection.png
 Resources/statusLightsTemplate.xcf
 UI-Files/.qtcreator/project.json
 UI-Files/MEEGA_calibration.ui
+UI-Files/MEEGA_calibrationNEW.ui
 UI-Files/MEEGA_connection.ui
 UI-Files/MEEGA_controlPanel.ui
 UI-Files/MEEGA_diagramSettings.ui

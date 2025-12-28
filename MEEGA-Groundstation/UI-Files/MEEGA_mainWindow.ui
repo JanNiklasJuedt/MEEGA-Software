@@ -2369,21 +2369,13 @@
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuExport">
-     <property name="title">
-      <string>Export</string>
-     </property>
-     <addaction name="actionExportHousholding"/>
-     <addaction name="actionExportMeasurements"/>
-     <addaction name="actionExportEverything"/>
-    </widget>
     <addaction name="actionFileNew"/>
     <addaction name="actionFileLoad"/>
     <addaction name="separator"/>
     <addaction name="actionFileSave_as"/>
     <addaction name="separator"/>
     <addaction name="actionResults"/>
-    <addaction name="menuExport"/>
+    <addaction name="actionExport"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -2644,6 +2636,11 @@
   <action name="actionConnection">
    <property name="text">
     <string>Connection</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="text">
+    <string>Export</string>
    </property>
   </action>
  </widget>

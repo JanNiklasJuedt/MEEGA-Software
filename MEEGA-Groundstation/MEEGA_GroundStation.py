@@ -9,6 +9,9 @@ import sys
 import time
 import winreg
 from winsdk.windows.ui.viewmanagement import UISettings, UIColorType
+import csv
+import tkinter as tk
+from tkinter import filedialog
 
 #import of qt modules
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPalette)
@@ -28,6 +31,7 @@ from MEEGA_controlPanel import *
 from MEEGA_results import *
 from MEEGA_calibration import *
 from MEEGA_diagramSettings import *
+from MEEGA_export import *
 import resources_rc
 
 #import from own data handling module with c functions
@@ -1290,10 +1294,10 @@ class GSConnection(QDialog):
         self.collection.settings.connector = self.ui.ConnectorBox.currentText().encode("utf-8")
         DataHandling.SetPort(self.collection.settings.connector)
 
-class GSCalibration(QDialog):
+class GSCalibration(QWidget):
     def __init__(self, collection: ClassCollection):
         super().__init__()
-        self.ui = Ui_Sensor_Calibration()
+        self.ui = Ui_Calibration()
         self.ui.setupUi(self)
         self.collection = collection
 
@@ -1581,6 +1585,160 @@ class GSDiagramSettings(QWidget):
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.applyDiagramSettings.clicked.connect(self.applySettings)
+
+class GSExport(QDialog):
+    POWON = 0
+    LO = 1
+    SOE = 2
+    EOE = 3
+    POWOFF = 4
+    HOUSEHOLD = 0
+    MEASUREMENT = 1
+    ALL = 2
+
+    def __init__(self, collection: ClassCollection):
+        super().__init__()
+        self.ui = Ui_Export()
+        self.ui.setupUi(self)
+        self.collection = collection
+
+        self.accepted.connect(self.collection.exportWorker.run)
+
+class ExportWorker(QThread):
+    def __init__(self, collection: ClassCollection):
+        super().__init__()
+        self.collection = collection
+
+    def run(self):
+        #open explorer for choosing filepath
+        filepath = filedialog.asksaveasfilename(
+            title="save as csv",
+            defaultextension=".csv",
+            filetypes=[("CSV-files", "*.csv")],
+            confirmoverwrite=True
+        )
+
+        #if no filepath was chosen, abort
+        if not filepath: return
+
+        #find start and end indices of frames according to settings set in export window
+
+        #initialize indices
+        startIndex = -1
+        endIndex = -1
+
+        #get settings for start and ending point
+        startSetting = self.collection.exportWindow.ui.startComboBox.currentIndex
+        endSetting = self.collection.exportWindow.ui.endComboBox.currentIndex + 1 #shift by 1 as Power On is not an option in End Point Combo Box
+
+        #if if power on is chosen as starting point, start Index should be 0 (the first frame in saveFile)
+        if startSetting == self.POWON:
+            startIndex = 0
+
+        #initializing frame counter for finding right indices
+        currentIndex = 0
+
+        #loop for finding the according start and end indices
+        #run until both indices have been found
+        while startIndex == -1 or endIndex == -1:
+
+            #Get frame
+            frame = DataHandling.GetSaveFrame(currentIndex)
+
+            #abort if all frames have been passed. if endIndex hasnt been set yet, set it to last index
+            if DataHandling.FrameIsEmpty(frame):
+                if endIndex == -1:
+                    endIndex = currentIndex - 1
+                break
+
+            #if start Index hasnt been found yet, check if it is found with this frame
+            if startIndex == -1:
+
+                #check if first frame should be the lift-Off frame, if so, check if lift off has happenned in the current frame
+                if startSetting == GSExport.LO and DataHandling.ReadFrame(frame, TMID.Lift_Off) == 1:
+
+                    #if it has, set the start index accordingly
+                    startIndex = currentIndex
+
+                #same logic with SOE, accordingly
+                if startSetting == GSExport.SOE and DataHandling.ReadFrame(frame, TMID.Start_Experiment) == 1:
+                    startIndex = currentIndex
+
+                #same logic with EOE, accordingly
+                if startSetting == GSExport.EOE and DataHandling.ReadFrame(frame, TMID.End_Experiment) == 1:
+                    startIndex = currentIndex
+            
+            #same principle as start Index
+            if endIndex == -1:
+                if endSetting == GSExport.LO and DataHandling.ReadFrame(frame, TMID.Lift_Off) == 1:
+                    endIndex = currentIndex
+                if endSetting == GSExport.SOE and DataHandling.ReadFrame(frame, TMID.Start_Experiment) == 1:
+                    endIndex = currentIndex
+                if endSetting == GSExport.EOE and DataHandling.ReadFrame(frame, TMID.End_Experiment) == 1:
+                    endIndex = currentIndex
+
+            #increase currentIndex and continue with next frame in next loop iteration
+            currentIndex += 1
+
+        #if indices are valid, continue with writing csv file
+        if endIndex >= startIndex:
+
+            #open file with set filepath
+            with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+
+                #open csv writer for this file
+                writer = csv.writer(file, delimiter=";")
+        
+                #fetch setting for which data should be written
+                dataSetting = self.collection.exportWindow.ui.dataComboBox.currentIndex
+
+                #initialize header
+                header = []
+
+                #initialize range of points of interest (first of second half and last of first half by default, at least one of them will be overwritten, so that range is valid)
+                firstPoint = TMID.Ambient_Pressure_Health
+                lastPoint = TMID.Nozzle_Temperature_3
+
+                #if Measurement data should be included (either exclusively or because all data should be included), add according header strings and set first point to first sensor point
+                if dataSetting == GSExport.ALL or dataSetting == GSExport.MEASUREMENT:
+                    header.append["Ambient Pressure", "Compare Temperature", "Accumulator Pressure", "Accumulator Temperature", "Chamber Pressure",
+                        "Chamber Temperature 1", "Chamber Temperature 2", "Nozzle Pressure 1", "Nozzle Temperature 1", "Nozzle Pressure 2",
+                        "Nozzle Temperature 2", "Nozzle Pressure 3", "Nozzle Temperature 3"]
+                    firstPoint = TMID.Ambient_Pressure
+
+                #if household data should be included, add according header strings and set last Point to the last household Point
+                if dataSetting == GSExport.ALL or dataSetting == GSExport.HOUSEHOLD:
+                    header.append["Ambient Pressure Health", "Compare Temperature Health", "Tank Pressure Health", "Tank Temperature Health",
+                        "Chamber Pressure Health", "Chamber Temperature 1 Health", "Chamber Temperature 2 Health", "Nozzle Pressure 1 Health",
+                        "Nozzle Temperature 1 Health", "Nozzle Pressure 2 Health", "Nozzle Temperature 2 Health", "Nozzle Pressure 3 Health",
+                        "Nozzle_Temperature 3 Health", "Nozzle Open", "Nozzle Closed", "Nozzle Servo", "Reservoir Valve", "Camera", "LEDs",
+                        "Sensorboard P", "Sensorboard T", "Mainboard", "Mainboard T", "Mainboard V", "System Time", "Lift Off", "Start Experiment",
+                        "End Experiment", "Mode", "Experiment State"]
+                    lastPoint = TMID.Experiment_State
+
+                #write the header row with the now accumulated entries
+                writer.writerow(header)
+
+                #go through all indices that were determined earlier
+                for frameIndex in range(startIndex, endIndex + 1):
+                    
+                    #initialize the row
+                    row = []
+
+                    #get the save frame from current Index
+                    frame = DataHandling.GestSaveFrame(frameIndex)
+
+                    #go through all point indices that were determined earlier
+                    for pointIndex in range(firstPoint, lastPoint + 1):
+
+                        #append point to row
+                        row.append(DataHandling.ReadFrame(frame, pointIndex))
+
+                    #write row
+                    writer.writerow(row)
+
+        #call GetSaveFrame with newest index, so that internal counting is set back to the newest index and GetNextFrame() works as wanted for DataAccumulation
+        DataHandling.GetSaveFrame(-1)
 
 #class for accumulating incoming data frames and sorting them into numpy arrays
 class DataAccumulation(QObject):
@@ -2124,6 +2282,8 @@ class ClassCollection:
         self.calibrationWindow = GSCalibration(self)
         self.plotWorker = PlotWorker(self)
         self.diagramSettingsWindow = GSDiagramSettings(self)
+        self.exportWorker = ExportWorker(self)
+        self.exportWindow = GSExport(self)
 
         #connect onNewFrame signals
         self.dataAccumulation.newFrameSignal.connect(self.mainWindow.onNewFrame)
@@ -2178,6 +2338,7 @@ class ClassCollection:
         self.timeWindow.accepted.connect(self.mainWindow.applySettings)
         self.mainWindow.ui.actionCalibration.triggered.connect(self.calibrationWindow.show)
         self.mainWindow.ui.actionDiagrams.triggered.connect(self.diagramSettingsWindow.show)
+        self.mainWindow.ui.actionExport.triggered.connect(self.exportWindow.show)
 
     #shutdown procedure to stop DataHandling thread cleanly
     def shutdown(self):
