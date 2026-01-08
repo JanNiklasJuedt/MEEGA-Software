@@ -10,7 +10,6 @@ import time
 import winreg
 from winsdk.windows.ui.viewmanagement import UISettings, UIColorType
 import csv
-import tkinter as tk
 from tkinter import filedialog
 
 #import of qt modules
@@ -287,6 +286,7 @@ class GSMain(QMainWindow):
         """)
 
         self.applyLightmodeToCharts()
+        self.updateLineSeriesThemes()
 
     def setDarkTheme(self):
         palette = QPalette()
@@ -376,6 +376,51 @@ class GSMain(QMainWindow):
         """)
 
         self.applyDarkmodeToCharts()
+        self.updateLineSeriesThemes()
+
+    def updateLineSeriesThemes(self):
+        #get 1 for darkmode and 0 for light mode
+        theme = self.ui.actionDarkMode.isChecked()
+
+        #go through all series
+        for i, s in enumerate(self.timeSeries):
+
+            #create QPen with correct color
+            pen = QPen(QColor(self.seriesColors[theme][i]))
+
+            #set width of the line
+            pen.setWidth(2)
+
+            #apply the style to series
+            s.setPen(pen)
+
+        coloredSquares = []
+        for i in range(len(self.timeSeries)):
+            pixmap = QPixmap(15, 15)
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            painter.setBrush(QColor(self.seriesColors[theme][i]))
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(0, 0, 15, 15, 4, 4)
+            painter.end()
+            coloredSquares.append(pixmap)
+
+        #update the icon of the tree Widget items. hard coded because not really possible with a loop :(
+        #(except for a recursicve algorithm that would be overkill at this point)
+        tree = self.ui.treeWidget
+        tree.topLevelItem(0).child(0).child(3).setIcon(0 ,coloredSquares[0])  # Ambient Pressure
+        tree.topLevelItem(0).child(1).child(3).setIcon(0, coloredSquares[1])  # Compare Temperature
+        tree.topLevelItem(0).child(0).child(2).setIcon(0, coloredSquares[2])  # Accumulator Pressure
+        tree.topLevelItem(0).child(1).child(2).setIcon(0, coloredSquares[3])  # Accumulator Temperature
+        tree.topLevelItem(0).child(0).child(1).setIcon(0, coloredSquares[4])  # Chamber Pressure
+        tree.topLevelItem(0).child(1).child(1).child(0).setIcon(0, coloredSquares[5])  # Chamber 1 Temperature
+        tree.topLevelItem(0).child(1).child(1).child(1).setIcon(0, coloredSquares[6]) #Chamber 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(0).setIcon(0, coloredSquares[7])  # Nozzle 1 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(0).setIcon(0, coloredSquares[8])  # Nozzle 1 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(1).setIcon(0, coloredSquares[9])  # Nozzle 2 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(1).setIcon(0, coloredSquares[10])  # Nozzle 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(2).setIcon(0, coloredSquares[11])  # Nozzle 3 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(2).setIcon(0, coloredSquares[12])  # Nozzle 3 Temperature
 
     def connect(self):
         #connection of signals and slots, called in late-init in ClassCollection after all components are created
@@ -498,10 +543,6 @@ class GSMain(QMainWindow):
 
     def createPlots(self):
         #time plot
-        #create Line Series for each sensor
-        #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature1, chamber temperature 2, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
-        self.timeSeries = [QLineSeries() for _ in range(DataAccumulation.sensorSize)]
-
         #indices of pressure and temperature series f.e. for axis assignment
         self.pressureIndices = [0,2,4,7,9,11]
         self.temperatureIndices = [1,3,5,6,8,10,12]
@@ -511,9 +552,39 @@ class GSMain(QMainWindow):
         self.timeHighestTemp = 0 #keep track of highest temperature for self-scaling axes
         self.currentIndex = -1 #keep track of last index added to time plot for extendPlots function
 
+        #create Line Series for each sensor
+        #ambient pressure, compare temperature, accumulator pressure, accumulator temperature, chamber pressure, chamber temperature1, chamber temperature 2, nozzle 1 pressure, nozzle 1 temperature, nozzle 2 pressure, nozzle 2 temperature, nozzle 3 pressure, nozzle 3 temperature
+        self.timeSeries = [QLineSeries() for _ in range(DataAccumulation.sensorSize)]
+
+        self.seriesColors = [
+            # Light Mode
+            [
+                "#1F77B4", "#1F77B4",  # blue (ambient P, compare T)
+                "#9467BD", "#9467BD",  # purple (accumulator P + T)
+                "#2CA02C", "#2CA02C",  # green (chamber P + T)
+                "#6DBF6D",             # different green (chamber 2 T)
+                "#8C564B", "#8C564B",  # brown (nozzle 1 P + T)
+                "#FF7F0E", "#FF7F0E",  # orange (nozzle 2 P + T)
+                "#D62728", "#D62728",  # red (nozzle 3 P + T)
+            ],
+            # Dark Mode:
+            [
+                "#4FA3D9", "#4FA3D9",
+                "#B999E5", "#B999E5",
+                "#5BC85B", "#5BC85B",
+                "#8FD98F",
+                "#C08A7A", "#C08A7A",
+                "#FF9F4A", "#FF9F4A",
+                "#FF6B6B", "#FF6B6B", 
+            ]
+        ]
+
         #create chart and disable legend
         self.timeChart = QChart()
         self.timeChart.legend().setVisible(False)
+
+        #modify series stlyes
+        self.updateLineSeriesThemes()
 
         #add series to chart
         for s in self.timeSeries:
@@ -525,7 +596,7 @@ class GSMain(QMainWindow):
         self.timeTemperatureAxis = QValueAxis()
 
         #label axes
-        self.timeAxis.setTitleText("time in ms")
+        self.timeAxis.setTitleText("time in s")
         self.timePressureAxis.setTitleText("pressure in Pa")
         self.timeTemperatureAxis.setTitleText("temperature in K")
 
@@ -561,6 +632,10 @@ class GSMain(QMainWindow):
         #create Line Series for pressure and temperature
         self.distancePSeries = QLineSeries()
         self.distanceTSeries = QLineSeries()
+
+        #set title of series
+        self.distancePSeries.setName("pressure")
+        self.distanceTSeries.setName("temperature")
 
         #create Chart and add Series
         self.distanceChart = QChart()
@@ -901,7 +976,7 @@ class GSMain(QMainWindow):
         #if value isnt negative (lift off isnt in the past), set the lift off counter to the difference
         if secstoLO >= 0:
             timetoLO = QTime(0, 0).addSecs(secstoLO)
-            self.ui.time_counter.setText(timetoLO.toString("mm:ss"))
+            self.ui.time_counter.setText(timetoLO.toString("h:mm:ss"))
 
     @Slot()
     def updateProgressBar(self):
@@ -963,7 +1038,7 @@ class GSMain(QMainWindow):
                         secsSinceSOE = settings.SOETime.secsTo(currentTime)
 
                         #set the progressBar value to fraction of experiment that has passed
-                        if secsSinceSOE <= settings.SOEtoEOETime:
+                        if secsSinceSOE <= settings.SOEtoEOESecs:
                             self.ui.progressBar_SOE.setValue(100 * secsSinceSOE / settings.SOEtoEOETime)
 
                         #set experiment time tracker to time that has passed since SOE
@@ -1052,7 +1127,7 @@ class GSStart(QDialog):
     def fetchSettings(self):
         self.collection.settings.language = self.ui.languageComboBox.currentData()
         self.collection.settings.connector = self.ui.connectionComboBox.currentText().encode("utf-8")
-        DataHandling.SetPort(self.collection.settings.connector)
+        #DataHandling.SetPort(self.collection.settings.connector)
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeTimeEdit.time(), self.collection.settings.timeZone)
@@ -1601,8 +1676,21 @@ class GSExport(QDialog):
         self.ui = Ui_Export()
         self.ui.setupUi(self)
         self.collection = collection
+        self.filepath = ""
 
-        self.accepted.connect(self.collection.exportWorker.run)
+        self.accepted.connect(self.export)
+
+    @Slot()
+    def export(self):
+        #open explorer for choosing filepath
+        self.filepath = filedialog.asksaveasfilename(
+            title="save as csv",
+            defaultextension=".csv",
+            filetypes=[("CSV-files", "*.csv")],
+            confirmoverwrite=True
+        )
+
+        self.collection.exportWorker.start()
 
 class ExportWorker(QThread):
     def __init__(self, collection: ClassCollection):
@@ -1610,13 +1698,7 @@ class ExportWorker(QThread):
         self.collection = collection
 
     def run(self):
-        #open explorer for choosing filepath
-        filepath = filedialog.asksaveasfilename(
-            title="save as csv",
-            defaultextension=".csv",
-            filetypes=[("CSV-files", "*.csv")],
-            confirmoverwrite=True
-        )
+        filepath = self.collection.exportWindow.filepath
 
         #if no filepath was chosen, abort
         if not filepath: return
@@ -1628,11 +1710,11 @@ class ExportWorker(QThread):
         endIndex = -1
 
         #get settings for start and ending point
-        startSetting = self.collection.exportWindow.ui.startComboBox.currentIndex
-        endSetting = self.collection.exportWindow.ui.endComboBox.currentIndex + 1 #shift by 1 as Power On is not an option in End Point Combo Box
+        startSetting = self.collection.exportWindow.ui.startComboBox.currentIndex()
+        endSetting = self.collection.exportWindow.ui.endComboBox.currentIndex() + 1 #shift by 1 as Power On is not an option in End Point Combo Box
 
         #if if power on is chosen as starting point, start Index should be 0 (the first frame in saveFile)
-        if startSetting == self.POWON:
+        if startSetting == GSExport.POWON:
             startIndex = 0
 
         #initializing frame counter for finding right indices
@@ -1680,44 +1762,47 @@ class ExportWorker(QThread):
             #increase currentIndex and continue with next frame in next loop iteration
             currentIndex += 1
 
-        #if indices are valid, continue with writing csv file
-        if endIndex >= startIndex:
-
-            #open file with set filepath
-            with open(filepath, mode="w", newline="", encoding="utf-8") as file:
-
-                #open csv writer for this file
-                writer = csv.writer(file, delimiter=";")
+            #continue with writing csv file
         
-                #fetch setting for which data should be written
-                dataSetting = self.collection.exportWindow.ui.dataComboBox.currentIndex
 
-                #initialize header
-                header = []
+        #open file with set filepath
+        with open(filepath, mode="w", newline="", encoding="utf-8") as file:
 
-                #initialize range of points of interest (first of second half and last of first half by default, at least one of them will be overwritten, so that range is valid)
-                firstPoint = TMID.Ambient_Pressure_Health
-                lastPoint = TMID.Nozzle_Temperature_3
+            #open csv writer for this file
+            writer = csv.writer(file, delimiter=";")
+        
+            #fetch setting for which data should be written
+            dataSetting = self.collection.exportWindow.ui.dataComboBox.currentIndex()
 
-                #if Measurement data should be included (either exclusively or because all data should be included), add according header strings and set first point to first sensor point
-                if dataSetting == GSExport.ALL or dataSetting == GSExport.MEASUREMENT:
-                    header.append["Ambient Pressure", "Compare Temperature", "Accumulator Pressure", "Accumulator Temperature", "Chamber Pressure",
-                        "Chamber Temperature 1", "Chamber Temperature 2", "Nozzle Pressure 1", "Nozzle Temperature 1", "Nozzle Pressure 2",
-                        "Nozzle Temperature 2", "Nozzle Pressure 3", "Nozzle Temperature 3"]
-                    firstPoint = TMID.Ambient_Pressure
+            #initialize header
+            header = []
 
-                #if household data should be included, add according header strings and set last Point to the last household Point
-                if dataSetting == GSExport.ALL or dataSetting == GSExport.HOUSEHOLD:
-                    header.append["Ambient Pressure Health", "Compare Temperature Health", "Tank Pressure Health", "Tank Temperature Health",
-                        "Chamber Pressure Health", "Chamber Temperature 1 Health", "Chamber Temperature 2 Health", "Nozzle Pressure 1 Health",
-                        "Nozzle Temperature 1 Health", "Nozzle Pressure 2 Health", "Nozzle Temperature 2 Health", "Nozzle Pressure 3 Health",
-                        "Nozzle_Temperature 3 Health", "Nozzle Open", "Nozzle Closed", "Nozzle Servo", "Reservoir Valve", "Camera", "LEDs",
-                        "Sensorboard P", "Sensorboard T", "Mainboard", "Mainboard T", "Mainboard V", "System Time", "Lift Off", "Start Experiment",
-                        "End Experiment", "Mode", "Experiment State"]
-                    lastPoint = TMID.Experiment_State
+            #initialize range of points of interest (first of second half and last of first half by default, at least one of them will be overwritten, so that range is valid)
+            firstPoint = TMID.Ambient_Pressure_Health
+            lastPoint = TMID.Nozzle_Temperature_3
 
-                #write the header row with the now accumulated entries
-                writer.writerow(header)
+            #if Measurement data should be included (either exclusively or because all data should be included), add according header strings and set first point to first sensor point
+            if dataSetting == GSExport.ALL or dataSetting == GSExport.MEASUREMENT:
+                header.extend(["Ambient Pressure", "Compare Temperature", "Accumulator Pressure", "Accumulator Temperature", "Chamber Pressure",
+                    "Chamber Temperature 1", "Chamber Temperature 2", "Nozzle Pressure 1", "Nozzle Temperature 1", "Nozzle Pressure 2",
+                    "Nozzle Temperature 2", "Nozzle Pressure 3", "Nozzle Temperature 3"])
+                firstPoint = TMID.Ambient_Pressure
+
+            #if household data should be included, add according header strings and set last Point to the last household Point
+            if dataSetting == GSExport.ALL or dataSetting == GSExport.HOUSEHOLD:
+                header.extend(["Ambient Pressure Health", "Compare Temperature Health", "Tank Pressure Health", "Tank Temperature Health",
+                    "Chamber Pressure Health", "Chamber Temperature 1 Health", "Chamber Temperature 2 Health", "Nozzle Pressure 1 Health",
+                    "Nozzle Temperature 1 Health", "Nozzle Pressure 2 Health", "Nozzle Temperature 2 Health", "Nozzle Pressure 3 Health",
+                    "Nozzle_Temperature 3 Health", "Nozzle Open", "Nozzle Closed", "Nozzle Servo", "Reservoir Valve", "Camera", "LEDs",
+                    "Sensorboard P", "Sensorboard T", "Mainboard", "Mainboard T", "Mainboard V", "System Time", "Lift Off", "Start Experiment",
+                    "End Experiment", "Mode", "Experiment State"])
+                lastPoint = TMID.Experiment_State
+
+            #write the header row with the now accumulated entries
+            writer.writerow(header)
+
+            #check if indices are valid, write data
+            if endIndex >= startIndex:
 
                 #go through all indices that were determined earlier
                 for frameIndex in range(startIndex, endIndex + 1):
@@ -1726,7 +1811,7 @@ class ExportWorker(QThread):
                     row = []
 
                     #get the save frame from current Index
-                    frame = DataHandling.GestSaveFrame(frameIndex)
+                    frame = DataHandling.GetSaveFrame(frameIndex)
 
                     #go through all point indices that were determined earlier
                     for pointIndex in range(firstPoint, lastPoint + 1):
@@ -1786,7 +1871,7 @@ class DataAccumulation(QObject):
 
     def accumulate(self):
         #switch for testing purposes
-        testData = True
+        testData = False
 
         #Get Frame and check connection status
         if not testData:
@@ -1901,8 +1986,11 @@ class DataAccumulation(QObject):
                 #special case for accumulator pressure, override it as sum of itself and ambient pressure, as it is a relative pressure sensor
                 self.sensorData[self.newIndex][PyID.Accumulator_Pressure] = self.sensorData[self.newIndex][PyID.Accumulator_Pressure] + self.sensorData[self.newIndex][PyID.Ambient_Pressure]
 
+                #Due to difficulties with the adcs, chamber 1 temperature adc has been permanently hijacked for reading cold junction -> copy chamber 1 temp to compare temp
+                self.sensorData[self.newIndex][PyID.Compare_Temperature] = self.sensorData[self.newIndex][PyID.Chamber_Temperature_1]
+
                 #override all thermocouple values with the sum of themselves and compare temperature, as they are relative temp sensors
-                for sensorIndex in [PyID.Accumulator_Temperature, PyID.Chamber_Temperature_1, PyID.Nozzle_1_Temperature, PyID.Nozzle_2_Temperature, PyID.Nozzle_3_Temperature]:
+                for sensorIndex in [PyID.Accumulator_Temperature, PyID.Nozzle_1_Temperature, PyID.Nozzle_2_Temperature, PyID.Nozzle_3_Temperature]:
                     self.sensorData[self.newIndex][sensorIndex] = self.sensorData[self.newIndex][sensorIndex] + self.sensorData[self.newIndex][PyID.Compare_Temperature]
                     
             if testData:
@@ -1972,7 +2060,7 @@ class DataAccumulation(QObject):
                             self.liftOffIndex = self.gatherIndex
                             self.risingEdgeLO = 1
                     if (self.collection.settings.SOETime is None) and self.household[PyID.Start_Experiment] == 1:
-                        self.setSOETimeSignal(QDateTime.currentDateTime(self.collection.settings.timeZone))
+                        self.setSOETimeSignal.emit(QDateTime.currentDateTime(self.collection.settings.timeZone))
                         if self.risingEdgeSOE == 0:
                             self.startOfExperimentIndex = self.gatherIndex
                             self.risingEdgeSOE = 1
@@ -1985,7 +2073,7 @@ class DataAccumulation(QObject):
                 if self.risingEdgeLO == 1 and self.household[PyID.Lift_Off] == 0:
                     self.resetProgressBarSignal.emit()
                     self.risingEdgeLO = 0
-                if self.risingEdgeSOE == 1 and self.household[PyID.Stat_Experiment] == 0:
+                if self.risingEdgeSOE == 1 and self.household[PyID.Start_Experiment] == 0:
                     self.risingEdgeSOE = 0
 
             #emit new frame signal for graph and calibration window updates
@@ -2059,7 +2147,7 @@ class PlotWorker(QThread):
     @Slot(int)
     def doTask(self, task: int):
         self.task = task
-        self.run()
+        self.start()
 
     def doRebuildPlot(self):
         #fetch necessary data
