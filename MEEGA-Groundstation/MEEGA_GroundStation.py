@@ -1084,6 +1084,7 @@ class GSMain(QMainWindow):
         self.collection.settings.powerOnTime = None
         self.collection.settings.LOTime = None
         self.collection.settings.SOETime = None
+        self.collection.settings.servoOnTime = None
         self.collection.settings.EOETime = None
 
         #set all Progress Bars to 0
@@ -1091,6 +1092,7 @@ class GSMain(QMainWindow):
         self.ui.progressBar_LO.setValue(0)
         self.ui.progressBar_SODS.setValue(0)
         self.ui.progressBar_SOE.setValue(0)
+        self.ui.progressBar_ER.setValue(0)
         self.ui.progressBar_SD.setValue(0)
 
         #set all Progress Bar texts to 00:00
@@ -1098,6 +1100,7 @@ class GSMain(QMainWindow):
         self.ui.progressBar_LO.setFormat("00:00")
         self.ui.progressBar_SODS.setFormat("00:00")
         self.ui.progressBar_SOE.setFormat("00:00")
+        self.ui.progressBar_ER.setFormat("00:00")
         self.ui.progressBar_SD.setFormat("00:00")
 
     #slot to replace series, called by PlotWorker Thread when needing to replace entire series
