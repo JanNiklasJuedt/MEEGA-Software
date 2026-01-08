@@ -73,10 +73,12 @@ class Settings:
         self.powerOnTime = None
         self.LOTime = None
         self.SOETime = None
+        self.servoOnTime = None
         self.EOETime = None
         self.LOtoExpPrepSecs = 70
         self.ExpPreptoSOESecs = 10
-        self.SOEtoEOESecs = 60
+        self.SOEtoServoSecs = 27
+        self.servoToEOESecs = 30
 
     @Slot(QDateTime)
     def setPowerOnTime(self, time: QDateTime):
@@ -89,6 +91,10 @@ class Settings:
     @Slot(QDateTime)
     def setSOETime(self, time: QDateTime):
         self.SOETime = time
+
+    @Slot(QDateTime)
+    def setServoOnTime(self, time: QDateTime):
+        self.servoOnTime = time
 
     @Slot(QDateTime)
     def setEOETime(self, time: QDateTime):
@@ -1007,17 +1013,17 @@ class GSMain(QMainWindow):
                 #get time that has passed since liftOff
                 secsSinceLO = settings.LOTime.secsTo(currentTime)
 
-                #check if still in lift off-sequence, or already in experiment preparation sequence
+                #check if still in lift off-sequence, or already in nose cone ejection sequence
                 if secsSinceLO <= settings.LOtoExpPrepSecs and settings.SOETime is None:
 
                     #set lift-off time tracker to current time since LO
                     timeSinceLO = QTime(0, 0).addSecs(secsSinceLO)
                     self.ui.progressBar_LO.setFormat(timeSinceLO.toString("mm:ss"))
 
-                #check if still in experiment preparation, or already further into the sequence (SOE reached)
+                #check if still in nose cone ejecion sequence, or already further into the sequence (SOE reached)
                 if settings.SOETime is None:
 
-                    #set exp prep progress bar to percentage of experiment preparation that has passed
+                    #set nose cone ejection progress bar to percentage of nose cone ejection that has passed
                     secsSinceExpPrepStart = settings.LOTime.secsTo(currentTime) - settings.LOtoExpPrepSecs
                     self.ui.progressBar_SODS.setValue(100 * secsSinceExpPrepStart / settings.ExpPreptoSOESecs)
 
@@ -1031,29 +1037,46 @@ class GSMain(QMainWindow):
                     #fill exp prep progress bar, if not already filled
                     self.ui.progressBar_SODS.setValue(100)
 
-                    #check if still in experiment sequence, or EOE has already been reached
-                    if settings.EOETime is None:
+                    #check if still in valve sequence or already in experiment run sequence (servo active, nozzle cover opened)
+                    if settings.servoOnTime is None:
 
                         #get time since SOE
                         secsSinceSOE = settings.SOETime.secsTo(currentTime)
 
-                        #set the progressBar value to fraction of experiment that has passed
-                        if secsSinceSOE <= settings.SOEtoEOESecs:
-                            self.ui.progressBar_SOE.setValue(100 * secsSinceSOE / settings.SOEtoEOETime)
+                        #set the progressBar value to fraction of valve sequence that has passed
+                        if secsSinceSOE <= settings.SOEtoServoSecs:
+                            self.ui.progressBar_SOE.setValue(100 * secsSinceSOE / settings.SOEtoServoSecs)
 
-                        #set experiment time tracker to time that has passed since SOE
+                        #set valve sequence time tracker to time that has passed since SOE
                         timeSinceSOE = QTime(0, 0).addSecs(secsSinceSOE)
                         self.ui.progressBar_SOE.setFormat(timeSinceSOE.toString("mm:ss"))
 
-                    #EOE has been reached
+                    #Servo has been turned on, nozzle cover is opening, experiment run starts
                     else:
-                        
-                        #fill exp progress bar, if not already filled
-                        self.ui.progressBar_SOE.setValue(100)
 
-                        #if experiment state is shutdown (9), fill shutdown progress bar
-                        if self.collection.dataAccumulation.household[PyID.Experiment_State] == 9:
-                            self.ui.progressBar_SD.setValue(100)
+                        #check if still in experiment sequence, or EOE has already been reached
+                        if settings.EOETime is None:
+
+                            #get time since servo on
+                            secsSinceServoOn = settings.servoOnTime.secsTo(currentTime)
+
+                            #set the progressBar value to fraction of experiment that has passed
+                            if secsSinceServoOn <= settings.servoToEOESecs:
+                                self.ui.progressBar_SOE.setValue(100 * secsSinceServoOn / settings.servoToEOESecs)
+
+                            #set experiment time tracker to time that has passed since SOE
+                            timeSinceServoOn = QTime(0, 0).addSecs(secsSinceServoOn)
+                            self.ui.progressBar_ER.setFormat(timeSinceServoOn.toString("mm:ss"))
+
+                        #EOE has been reached
+                        else:
+                        
+                            #fill exp progress bar, if not already filled
+                            self.ui.progressBar_ER.setValue(100)
+
+                            #if experiment state is shutdown (9), fill shutdown progress bar
+                            if self.collection.dataAccumulation.household[PyID.Experiment_State] == 9:
+                                self.ui.progressBar_SD.setValue(100)
 
     @Slot()
     def resetProgressBar(self):
@@ -1834,6 +1857,7 @@ class DataAccumulation(QObject):
     setPowerOnTimeSignal = Signal(QDateTime)
     setLOTimeSignal = Signal(QDateTime)
     setSOETimeSignal = Signal(QDateTime)
+    setServoOnTimeSignal = Signal(QDateTime)
     setEOETimeSignal = Signal(QDateTime)
     resetProgressBarSignal = Signal()
 
@@ -2064,6 +2088,10 @@ class DataAccumulation(QObject):
                         if self.risingEdgeSOE == 0:
                             self.startOfExperimentIndex = self.gatherIndex
                             self.risingEdgeSOE = 1
+
+                #set servo on time in settings, if servo on signal is received and servo on time has not been written yet
+                if self.household[PyID.Nozzle_Servo] == 1 and self.collection.settings.servoOnTime is None:
+                    self.setServoOnTimeSignal.emit(QDateTime.currentDateTime(self.collection.settings.timeZone))
                 
                 #set EOE time in settings, if EOE Signal is received and EOETime has not been written yet
                 if self.household[PyID.End_Experiment] == 1 and self.collection.settings.EOETime is None:
@@ -2071,7 +2099,6 @@ class DataAccumulation(QObject):
 
                 #reset risingEdge trackers if falling edge is detected, reset ProgressBars on falling edge of LO
                 if self.risingEdgeLO == 1 and self.household[PyID.Lift_Off] == 0:
-                    self.resetProgressBarSignal.emit()
                     self.risingEdgeLO = 0
                 if self.risingEdgeSOE == 1 and self.household[PyID.Start_Experiment] == 0:
                     self.risingEdgeSOE = 0
@@ -2383,6 +2410,7 @@ class ClassCollection:
         self.dataAccumulation.setPowerOnTimeSignal.connect(self.settings.setPowerOnTime)
         self.dataAccumulation.setLOTimeSignal.connect(self.settings.setLOTime)
         self.dataAccumulation.setSOETimeSignal.connect(self.settings.setSOETime)
+        self.dataAccumulation.setServoOnTimeSignal.connect(self.settings.setServoOnTime)
         self.dataAccumulation.setEOETimeSignal.connect(self.settings.setEOETime)
         self.dataAccumulation.resetProgressBarSignal.connect(self.mainWindow.resetProgressBar)
 

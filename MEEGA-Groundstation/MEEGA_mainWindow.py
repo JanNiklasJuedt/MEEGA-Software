@@ -124,6 +124,8 @@ class Ui_MainWindow(object):
         self.actionConnection.setObjectName(u"actionConnection")
         self.actionExport = QAction(MainWindow)
         self.actionExport.setObjectName(u"actionExport")
+        self.actionReconnect = QAction(MainWindow)
+        self.actionReconnect.setObjectName(u"actionReconnect")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_2 = QGridLayout(self.centralwidget)
@@ -860,42 +862,26 @@ class Ui_MainWindow(object):
         self.layout_progressbars.setHorizontalSpacing(0)
         self.layout_progressbars.setVerticalSpacing(10)
         self.layout_progressbars.setContentsMargins(0, -1, 0, -1)
-        self.label_SODS = QLabel(self.centralwidget)
-        self.label_SODS.setObjectName(u"label_SODS")
-        sizePolicy11 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.label_LO = QLabel(self.centralwidget)
+        self.label_LO.setObjectName(u"label_LO")
+        sizePolicy11 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy11.setHorizontalStretch(0)
         sizePolicy11.setVerticalStretch(0)
-        sizePolicy11.setHeightForWidth(self.label_SODS.sizePolicy().hasHeightForWidth())
-        self.label_SODS.setSizePolicy(sizePolicy11)
-        self.label_SODS.setMinimumSize(QSize(127, 0))
-        self.label_SODS.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
-        self.label_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_SODS.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sizePolicy11.setHeightForWidth(self.label_LO.sizePolicy().hasHeightForWidth())
+        self.label_LO.setSizePolicy(sizePolicy11)
+        self.label_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.layout_progressbars.addWidget(self.label_SODS, 1, 4, 1, 1)
+        self.layout_progressbars.addWidget(self.label_LO, 1, 2, 1, 1)
 
-        self.horizontalSpacer_4 = QSpacerItem(20, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.layout_progressbars.addItem(self.horizontalSpacer_4, 0, 7, 1, 1)
-
-        self.label_SD = QLabel(self.centralwidget)
-        self.label_SD.setObjectName(u"label_SD")
-        sizePolicy1.setHeightForWidth(self.label_SD.sizePolicy().hasHeightForWidth())
-        self.label_SD.setSizePolicy(sizePolicy1)
-        self.label_SD.setMinimumSize(QSize(97, 0))
-        self.label_SD.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_SD.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.layout_progressbars.addWidget(self.label_SD, 1, 8, 1, 1)
-
-        self.progressBar_SODS = QProgressBar(self.centralwidget)
-        self.progressBar_SODS.setObjectName(u"progressBar_SODS")
+        self.progressBar_ER = QProgressBar(self.centralwidget)
+        self.progressBar_ER.setObjectName(u"progressBar_ER")
         sizePolicy12 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
         sizePolicy12.setHorizontalStretch(5)
         sizePolicy12.setVerticalStretch(0)
-        sizePolicy12.setHeightForWidth(self.progressBar_SODS.sizePolicy().hasHeightForWidth())
-        self.progressBar_SODS.setSizePolicy(sizePolicy12)
-        self.progressBar_SODS.setMinimumSize(QSize(50, 0))
+        sizePolicy12.setHeightForWidth(self.progressBar_ER.sizePolicy().hasHeightForWidth())
+        self.progressBar_ER.setSizePolicy(sizePolicy12)
+        self.progressBar_ER.setMinimumSize(QSize(50, 0))
         font2 = QFont()
         font2.setFamilies([u"Arial"])
         font2.setPointSize(12)
@@ -904,13 +890,22 @@ class Ui_MainWindow(object):
         font2.setUnderline(False)
         font2.setStrikeOut(False)
         font2.setKerning(True)
-        self.progressBar_SODS.setFont(font2)
-        self.progressBar_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.progressBar_SODS.setMinimum(0)
-        self.progressBar_SODS.setValue(0)
-        self.progressBar_SODS.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.progressBar_ER.setFont(font2)
+        self.progressBar_ER.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.progressBar_ER.setMinimum(0)
+        self.progressBar_ER.setValue(0)
+        self.progressBar_ER.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.layout_progressbars.addWidget(self.progressBar_SODS, 0, 4, 1, 1)
+        self.layout_progressbars.addWidget(self.progressBar_ER, 0, 12, 1, 1)
+
+        self.label_PF = QLabel(self.centralwidget)
+        self.label_PF.setObjectName(u"label_PF")
+        sizePolicy11.setHeightForWidth(self.label_PF.sizePolicy().hasHeightForWidth())
+        self.label_PF.setSizePolicy(sizePolicy11)
+        self.label_PF.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_PF.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_progressbars.addWidget(self.label_PF, 1, 0, 1, 1)
 
         self.progressBar_PF = QProgressBar(self.centralwidget)
         self.progressBar_PF.setObjectName(u"progressBar_PF")
@@ -927,61 +922,9 @@ class Ui_MainWindow(object):
 
         self.layout_progressbars.addWidget(self.progressBar_PF, 0, 0, 1, 1)
 
-        self.progressBar_LO = QProgressBar(self.centralwidget)
-        self.progressBar_LO.setObjectName(u"progressBar_LO")
-        sizePolicy13.setHeightForWidth(self.progressBar_LO.sizePolicy().hasHeightForWidth())
-        self.progressBar_LO.setSizePolicy(sizePolicy13)
-        self.progressBar_LO.setMinimumSize(QSize(75, 0))
-        self.progressBar_LO.setFont(font2)
-        self.progressBar_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.progressBar_LO.setValue(0)
-        self.progressBar_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.progressBar_LO.setTextVisible(True)
+        self.horizontalSpacer_4 = QSpacerItem(20, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.layout_progressbars.addWidget(self.progressBar_LO, 0, 2, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
-
-        self.layout_progressbars.addItem(self.horizontalSpacer_3, 0, 3, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
-
-        self.layout_progressbars.addItem(self.horizontalSpacer, 0, 5, 1, 1)
-
-        self.label_LO = QLabel(self.centralwidget)
-        self.label_LO.setObjectName(u"label_LO")
-        sizePolicy14 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy14.setHorizontalStretch(0)
-        sizePolicy14.setVerticalStretch(0)
-        sizePolicy14.setHeightForWidth(self.label_LO.sizePolicy().hasHeightForWidth())
-        self.label_LO.setSizePolicy(sizePolicy14)
-        self.label_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.layout_progressbars.addWidget(self.label_LO, 1, 2, 1, 1)
-
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setSpacing(20)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label_SOE = QLabel(self.centralwidget)
-        self.label_SOE.setObjectName(u"label_SOE")
-        sizePolicy4.setHeightForWidth(self.label_SOE.sizePolicy().hasHeightForWidth())
-        self.label_SOE.setSizePolicy(sizePolicy4)
-        self.label_SOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
-
-        self.horizontalLayout.addWidget(self.label_SOE)
-
-        self.label_EOE = QLabel(self.centralwidget)
-        self.label_EOE.setObjectName(u"label_EOE")
-        sizePolicy14.setHeightForWidth(self.label_EOE.sizePolicy().hasHeightForWidth())
-        self.label_EOE.setSizePolicy(sizePolicy14)
-        self.label_EOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_EOE.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.horizontalLayout.addWidget(self.label_EOE)
-
-
-        self.layout_progressbars.addLayout(self.horizontalLayout, 1, 6, 1, 1)
+        self.layout_progressbars.addItem(self.horizontalSpacer_4, 0, 11, 1, 1)
 
         self.progressBar_SD = QProgressBar(self.centralwidget)
         self.progressBar_SD.setObjectName(u"progressBar_SD")
@@ -995,35 +938,127 @@ class Ui_MainWindow(object):
         self.progressBar_SD.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progressBar_SD.setTextVisible(False)
 
-        self.layout_progressbars.addWidget(self.progressBar_SD, 0, 8, 1, 1)
+        self.layout_progressbars.addWidget(self.progressBar_SD, 0, 14, 1, 1)
+
+        self.label_SD = QLabel(self.centralwidget)
+        self.label_SD.setObjectName(u"label_SD")
+        sizePolicy1.setHeightForWidth(self.label_SD.sizePolicy().hasHeightForWidth())
+        self.label_SD.setSizePolicy(sizePolicy1)
+        self.label_SD.setMinimumSize(QSize(97, 0))
+        self.label_SD.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_SD.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_progressbars.addWidget(self.label_SD, 1, 14, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
+
+        self.layout_progressbars.addItem(self.horizontalSpacer, 0, 5, 1, 1)
+
+        self.progressBar_SODS = QProgressBar(self.centralwidget)
+        self.progressBar_SODS.setObjectName(u"progressBar_SODS")
+        sizePolicy12.setHeightForWidth(self.progressBar_SODS.sizePolicy().hasHeightForWidth())
+        self.progressBar_SODS.setSizePolicy(sizePolicy12)
+        self.progressBar_SODS.setMinimumSize(QSize(50, 0))
+        self.progressBar_SODS.setFont(font2)
+        self.progressBar_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.progressBar_SODS.setMinimum(0)
+        self.progressBar_SODS.setValue(0)
+        self.progressBar_SODS.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_progressbars.addWidget(self.progressBar_SODS, 0, 4, 1, 1)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setSpacing(20)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.label_SOE = QLabel(self.centralwidget)
+        self.label_SOE.setObjectName(u"label_SOE")
+        sizePolicy4.setHeightForWidth(self.label_SOE.sizePolicy().hasHeightForWidth())
+        self.label_SOE.setSizePolicy(sizePolicy4)
+        self.label_SOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
+
+        self.horizontalLayout.addWidget(self.label_SOE)
+
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.label_2 = QLabel(self.centralwidget)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout.addWidget(self.label_2)
+
+        self.label_EOE = QLabel(self.centralwidget)
+        self.label_EOE.setObjectName(u"label_EOE")
+        sizePolicy11.setHeightForWidth(self.label_EOE.sizePolicy().hasHeightForWidth())
+        self.label_EOE.setSizePolicy(sizePolicy11)
+        self.label_EOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_EOE.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.horizontalLayout.addWidget(self.label_EOE)
+
+
+        self.layout_progressbars.addLayout(self.horizontalLayout, 1, 8, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
+
+        self.layout_progressbars.addItem(self.horizontalSpacer_3, 0, 3, 1, 1)
 
         self.progressBar_SOE = QProgressBar(self.centralwidget)
         self.progressBar_SOE.setObjectName(u"progressBar_SOE")
-        sizePolicy15 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy15.setHorizontalStretch(20)
-        sizePolicy15.setVerticalStretch(0)
-        sizePolicy15.setHeightForWidth(self.progressBar_SOE.sizePolicy().hasHeightForWidth())
-        self.progressBar_SOE.setSizePolicy(sizePolicy15)
+        sizePolicy14 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy14.setHorizontalStretch(20)
+        sizePolicy14.setVerticalStretch(0)
+        sizePolicy14.setHeightForWidth(self.progressBar_SOE.sizePolicy().hasHeightForWidth())
+        self.progressBar_SOE.setSizePolicy(sizePolicy14)
         self.progressBar_SOE.setMinimumSize(QSize(100, 0))
         self.progressBar_SOE.setFont(font2)
         self.progressBar_SOE.setLocale(QLocale(QLocale.English, QLocale.Germany))
         self.progressBar_SOE.setValue(0)
         self.progressBar_SOE.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.layout_progressbars.addWidget(self.progressBar_SOE, 0, 6, 1, 1)
-
-        self.label_PF = QLabel(self.centralwidget)
-        self.label_PF.setObjectName(u"label_PF")
-        sizePolicy14.setHeightForWidth(self.label_PF.sizePolicy().hasHeightForWidth())
-        self.label_PF.setSizePolicy(sizePolicy14)
-        self.label_PF.setLocale(QLocale(QLocale.English, QLocale.Germany))
-        self.label_PF.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.layout_progressbars.addWidget(self.label_PF, 1, 0, 1, 1)
+        self.layout_progressbars.addWidget(self.progressBar_SOE, 0, 8, 1, 1)
 
         self.horizontalSpacer_5 = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
 
         self.layout_progressbars.addItem(self.horizontalSpacer_5, 0, 1, 1, 1)
+
+        self.label_SODS = QLabel(self.centralwidget)
+        self.label_SODS.setObjectName(u"label_SODS")
+        sizePolicy15 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy15.setHorizontalStretch(0)
+        sizePolicy15.setVerticalStretch(0)
+        sizePolicy15.setHeightForWidth(self.label_SODS.sizePolicy().hasHeightForWidth())
+        self.label_SODS.setSizePolicy(sizePolicy15)
+        self.label_SODS.setMinimumSize(QSize(127, 0))
+        self.label_SODS.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.label_SODS.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.label_SODS.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_progressbars.addWidget(self.label_SODS, 1, 4, 1, 1)
+
+        self.progressBar_LO = QProgressBar(self.centralwidget)
+        self.progressBar_LO.setObjectName(u"progressBar_LO")
+        sizePolicy13.setHeightForWidth(self.progressBar_LO.sizePolicy().hasHeightForWidth())
+        self.progressBar_LO.setSizePolicy(sizePolicy13)
+        self.progressBar_LO.setMinimumSize(QSize(75, 0))
+        self.progressBar_LO.setFont(font2)
+        self.progressBar_LO.setLocale(QLocale(QLocale.English, QLocale.Germany))
+        self.progressBar_LO.setValue(0)
+        self.progressBar_LO.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.progressBar_LO.setTextVisible(True)
+
+        self.layout_progressbars.addWidget(self.progressBar_LO, 0, 2, 1, 1)
+
+        self.horizontalSpacer_9 = QSpacerItem(20, 20, QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
+
+        self.layout_progressbars.addItem(self.horizontalSpacer_9, 0, 13, 1, 1)
+
+        self.label_3 = QLabel(self.centralwidget)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_progressbars.addWidget(self.label_3, 1, 12, 1, 1)
 
 
         self.gridLayout_2.addLayout(self.layout_progressbars, 1, 0, 1, 2)
@@ -1035,7 +1070,7 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QRect(0, 0, 1366, 23))
+        self.menubar.setGeometry(QRect(0, 0, 1366, 17))
         self.menubar.setFont(font)
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
@@ -1066,6 +1101,7 @@ class Ui_MainWindow(object):
         self.menuSettings.addAction(self.menuLanguage.menuAction())
         self.menuSettings.addSeparator()
         self.menuSettings.addAction(self.actionConnection)
+        self.menuSettings.addAction(self.actionReconnect)
         self.menuSettings.addSeparator()
         self.menuSettings.addAction(self.actionDiagrams)
         self.menuLanguage.addAction(self.actionEnglish)
@@ -1135,6 +1171,7 @@ class Ui_MainWindow(object):
         self.actionReset_Progress_Bar.setText(QCoreApplication.translate("MainWindow", u"Reset Progress Bar", None))
         self.actionConnection.setText(QCoreApplication.translate("MainWindow", u"Connection", None))
         self.actionExport.setText(QCoreApplication.translate("MainWindow", u"Export", None))
+        self.actionReconnect.setText(QCoreApplication.translate("MainWindow", u"Reconnect", None))
         self.label_time.setText(QCoreApplication.translate("MainWindow", u"T -", None))
 #if QT_CONFIG(tooltip)
         self.label_Connection.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/noConnectionBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = could not open Serial Port</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = no inocming data</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = incoming data with mismatching checksum or crc</p><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align:middle;\"/> = incoming data is ok</p></body></html>", None))
@@ -1379,17 +1416,21 @@ class Ui_MainWindow(object):
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
         self.timePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Time", None))
-        self.label_SODS.setText(QCoreApplication.translate("MainWindow", u"Experiment Preparation", None))
+        self.label_LO.setText(QCoreApplication.translate("MainWindow", u"Lift Off", None))
+        self.progressBar_ER.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
+        self.label_PF.setText(QCoreApplication.translate("MainWindow", u"Pre-Flight", None))
+        self.progressBar_PF.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
+        self.progressBar_SD.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
         self.label_SD.setText(QCoreApplication.translate("MainWindow", u"Shutdown", None))
         self.progressBar_SODS.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
-        self.progressBar_PF.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
-        self.progressBar_LO.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
-        self.label_LO.setText(QCoreApplication.translate("MainWindow", u"Lift Off", None))
-        self.label_SOE.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
-        self.label_EOE.setText(QCoreApplication.translate("MainWindow", u"End of Experiment", None))
-        self.progressBar_SD.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
+        self.label_SOE.setText(QCoreApplication.translate("MainWindow", u"SOE", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"OpenValve", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"CloseValve", None))
+        self.label_EOE.setText(QCoreApplication.translate("MainWindow", u"Servo On", None))
         self.progressBar_SOE.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
-        self.label_PF.setText(QCoreApplication.translate("MainWindow", u"Pre-Flight", None))
+        self.label_SODS.setText(QCoreApplication.translate("MainWindow", u"Nose Cone Ejection Sequence", None))
+        self.progressBar_LO.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Experiment Run", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menuLanguage.setTitle(QCoreApplication.translate("MainWindow", u"Language", None))
