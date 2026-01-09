@@ -997,6 +997,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.label_EOE)
 
+        self.horizontalLayout.setStretch(0, 2)
+        self.horizontalLayout.setStretch(1, 5)
+        self.horizontalLayout.setStretch(2, 20)
+        self.horizontalLayout.setStretch(3, 1)
 
         self.layout_progressbars.addLayout(self.horizontalLayout, 1, 8, 1, 1)
 
@@ -1060,6 +1064,17 @@ class Ui_MainWindow(object):
 
         self.layout_progressbars.addWidget(self.label_3, 1, 12, 1, 1)
 
+        self.layout_progressbars.setColumnStretch(0, 4)
+        self.layout_progressbars.setColumnStretch(1, 1)
+        self.layout_progressbars.setColumnStretch(2, 4)
+        self.layout_progressbars.setColumnStretch(3, 1)
+        self.layout_progressbars.setColumnStretch(4, 10)
+        self.layout_progressbars.setColumnStretch(5, 1)
+        self.layout_progressbars.setColumnStretch(8, 30)
+        self.layout_progressbars.setColumnStretch(11, 1)
+        self.layout_progressbars.setColumnStretch(12, 30)
+        self.layout_progressbars.setColumnStretch(13, 1)
+        self.layout_progressbars.setColumnStretch(14, 4)
 
         self.gridLayout_2.addLayout(self.layout_progressbars, 1, 0, 1, 2)
 
@@ -1070,7 +1085,7 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QRect(0, 0, 1366, 17))
+        self.menubar.setGeometry(QRect(0, 0, 1366, 23))
         self.menubar.setFont(font)
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
@@ -1428,7 +1443,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"CloseValve", None))
         self.label_EOE.setText(QCoreApplication.translate("MainWindow", u"Servo On", None))
         self.progressBar_SOE.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
-        self.label_SODS.setText(QCoreApplication.translate("MainWindow", u"Nose Cone Ejection Sequence", None))
+        self.label_SODS.setText(QCoreApplication.translate("MainWindow", u"Nose Cone Ejection", None))
         self.progressBar_LO.setFormat(QCoreApplication.translate("MainWindow", u"00:00", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Experiment Run", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
