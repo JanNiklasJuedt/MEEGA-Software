@@ -966,7 +966,7 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo in open position&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo in closed position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is being powered&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is not being powered&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1040,7 +1040,7 @@
            <item row="5" column="0">
             <widget class="QLabel" name="textLabelServo">
              <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo in open position&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo in closed position&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is being powered&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is not being powered&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
               <string>Servo</string>
@@ -2425,7 +2425,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>23</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="font">
