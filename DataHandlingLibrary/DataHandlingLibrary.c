@@ -633,6 +633,8 @@ long long WriteFrame(DataFrame* frame, int id, long long value)
 				index = dataHandling.frameLookUp->telecommand_Pos_Len[id][0];
 				length = dataHandling.frameLookUp->telecommand_Pos_Len[id][1];
 				valid = 1;
+				//Offset Servo_Control by 1 to use 0 as neutral
+				if (id == Servo_Control) value++;
 			}
 		}
 		else {
@@ -736,6 +738,8 @@ long long ReadFrame(DataFrame frame, int id)
 	}
 	value >>= offset;
 	value %= 1ll << length;
+	//Offset Servo_Control by 1 to use 0 as neutral
+	if (TC && (id == Servo_Control)) value--;
 	return value;
 }
 
