@@ -99,6 +99,7 @@ typedef unsigned char byte;
 
 #define START_BYTE 0b11111111
 #define COMM_TIMEOUT 10 //Milliseconds
+#define MAX_INFRAME_RETRIES 5
 
 #define SENSOR_AMOUNT Nozzle_Temperature_3 + 1
 #define TELEMETRY_AMOUNT Experiment_State + 1
@@ -205,6 +206,7 @@ typedef struct DATAHANDLINGLIBRARY_API DataBuffer {
 	struct DataPacket* inPackets[PACKET_BUFFER_LENGTH];
 	struct DataPacket* outPackets[PACKET_BUFFER_LENGTH];
 	struct DataFrame* inFrames[BUFFER_LENGTH];
+	byte inFrameCounter[BUFFER_LENGTH];
 	struct DataFrame* outFrames[BUFFER_LENGTH];
 } DataBuffer;
 

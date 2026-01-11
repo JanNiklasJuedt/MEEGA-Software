@@ -29,8 +29,8 @@ DataPacket EmptyPacket(); //Creates an empty Packet
 int FormPackets(); //Converts all buffered DataFrames into buffered outgoing DataPackets, returns the amount converted
 int FormFrames(); //Converts all buffered incoming DataPackets into buffered DataFrames (with {0} values if parts are missing), returns the amount converted
 DataFrame GetOutFrame(); //Returns the first buffered outgoing DataFrame and removes it from the buffer
-int AddInFrame(DataFrame frame); //Adds an incoming DataFrame to the Buffer, returns the corresponding index
-DataFrame GetInFrame(); //Returns the first buffered incoming DataFrame and removes it from the buffer
+int AddInFrame(DataFrame frame, byte counter); //Adds an incoming DataFrame to the Buffer, returns the corresponding index
+DataFrame GetInFrame(); //Returns the first buffered incoming DataFrame and removes it from the buffer, also outputs the life-time counter for the frame (to reinsert into the buffer if incomplete) 
 int LoadPort(); //Configures and opens the communication port
 int CreateBuffer(); //Initializes new Buffer-Arrays
 
@@ -163,7 +163,7 @@ static SYNC_TYPE _GetSync_()
 	current++;
 
 	//Reduce to exclude START_BYTEs
-	byte* reduction = (byte*) & current;
+	byte* reduction = (byte*) &current;
 	for (int i = 0; i < sizeof(current); i++) if (reduction[i] == START_BYTE) current += 1 << (i * 8);
 
 	//Skip 0
@@ -883,17 +883,18 @@ int FormFrames()
 	for (; !PacketIsEmpty(currentPacket); currentPacket = GetInPacket(), number++) {
 		faulty = 0, foundMatch = 0;
 		if (CalculateCRC(&currentPacket)) faulty = 1;
+		//Retrieving type and id from MSG byte
 		_FromMSG_(currentPacket.msg, &type, &id);
-		//Searching for correct Frame in Buffer
+		//Searching for matching Frame in Buffer
 		for (framePtr = dataHandling.buffer->inFrames; framePtr != dataHandling.buffer->outFrames && *framePtr != NULL; framePtr++) {
 			if ((*framePtr)->sync == currentPacket.sync) {
 				foundMatch = 1;
 				break;
 			}
 		}
-		//Creating New Frame if none was found
+		//Creating new Frame if none was found
 		if (!foundMatch) {
-			framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame());
+			framePtr = dataHandling.buffer->inFrames + AddInFrame(CreateFrame(), MAX_INFRAME_RETRIES);
 			(*framePtr)->sync = currentPacket.sync;
 			(*framePtr)->chksm = currentPacket.chksm;
 			if (type) FrameSetFlag(*framePtr, TeleCommand);
@@ -973,13 +974,36 @@ DataFrame GetInFrame()
 	}
 	DataFrame out = EmptyFrame();
 	DataFrame* temp = dataHandling.buffer->inFrames[0];
+	byte counter = 0;
+	//saved first sync-value to stop recursive retries
+	static SYNC_TYPE firstSync = 0;
 	if (temp != NULL) {
+		if (firstSync == 0) firstSync = temp->sync;
+		else if (firstSync == temp->sync) {
+			//resetting static variable for next call
+			firstSync = 0;
+			//returning empty frame to stop infinite recursion
+			return out;
+		}
 		out = *temp;
+		counter = dataHandling.buffer->inFrameCounter[0];
 		free(temp);
-		_ShiftBuffer_((void**)dataHandling.buffer->inFrames, BUFFER_LENGTH, -1);
+		_ShiftBuffer_((void**) dataHandling.buffer->inFrames, BUFFER_LENGTH, -1);
+		_ShiftArray_((void*) dataHandling.buffer->inFrameCounter, sizeof(byte), BUFFER_LENGTH, -1);
 	}
-	if (out.chksm != CalculateChecksum(out)) FrameSetFlag(&out, Partial);
+	else return out;
+	if (out.chksm != CalculateChecksum(out)) {
+		FrameSetFlag(&out, Partial);
+		if (counter > 0 && !FrameHasFlag(out, Biterror)) {
+			//re-adding frame to wait for missing packets with decremented counter
+			AddInFrame(out, counter - 1);
+			//recursive call to get next frame
+			return GetInFrame();
+		}
+	}
 	else FrameSetFlag(&out, OK);
+	//resetting static variable for next call
+	firstSync = 0;
 	return out;
 }
 
@@ -1052,7 +1076,7 @@ int AddOutFrame(DataFrame frame)
 	return i;
 }
 
-int AddInFrame(DataFrame frame)
+int AddInFrame(DataFrame frame, byte counter)
 {
 	if (dataHandling.buffer == NULL) {
 		DebugLog("!Uninitialized DataHandling");
@@ -1072,6 +1096,7 @@ int AddInFrame(DataFrame frame)
 		free(new);
 		return -1;
 	}
+	dataHandling.buffer->inFrameCounter[i] = counter;
 	return i;
 }
 
@@ -1861,7 +1886,7 @@ CHKSM_TYPE CalculateChecksum(DataFrame data)
 	*/
 
 	//Reducing CHKSM to exclude START_BYTEs
-	byte* reduction = (byte*)&chksm;
+	byte* reduction = (byte*) &chksm;
 	for (int i = 0; i < sizeof(chksm); i++) if (reduction[i] == START_BYTE) reduction[i]--;
 	return chksm;
 }
@@ -1879,7 +1904,7 @@ int CalculateCRC(DataPacket* data)
 	}
 
 	//Reducing CRC to exclude START_BYTEs
-	byte* reduction = (byte*)&crc;
+	byte* reduction = (byte*) &crc;
 	for (int i = 0; i < sizeof(crc); i++) if (reduction[i] == START_BYTE) reduction[i]--;
 
 	if (data->crc == 0) { //no crc -> fill crc
