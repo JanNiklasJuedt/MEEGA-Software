@@ -2496,6 +2496,8 @@
     <addaction name="separator"/>
     <addaction name="actionControl_Panel"/>
     <addaction name="separator"/>
+    <addaction name="actionLive_Values_Widget"/>
+    <addaction name="separator"/>
     <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="menuAppearance"/>
@@ -2732,6 +2734,11 @@
   <action name="actionReconnect">
    <property name="text">
     <string>Reconnect</string>
+   </property>
+  </action>
+  <action name="actionLive_Values_Widget">
+   <property name="text">
+    <string>Live Values Widget</string>
    </property>
   </action>
  </widget>

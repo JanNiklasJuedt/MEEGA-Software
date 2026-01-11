@@ -35,6 +35,7 @@ UI-Files/MEEGA_diagramSettings.ui
 UI-Files/MEEGA_documentation.ui
 UI-Files/MEEGA_error.ui
 UI-Files/MEEGA_export.ui
+UI-Files/MEEGA_liveValuesWidget.ui
 UI-Files/MEEGA_mainWindow.ui
 UI-Files/MEEGA_results.ui
 UI-Files/MEEGA_startup.ui

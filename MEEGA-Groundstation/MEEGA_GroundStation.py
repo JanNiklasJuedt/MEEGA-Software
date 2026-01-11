@@ -31,6 +31,7 @@ from MEEGA_results import *
 from MEEGA_calibration import *
 from MEEGA_diagramSettings import *
 from MEEGA_export import *
+from MEEGA_liveValuesWidget import *
 import resources_rc
 
 #import from own data handling module with c functions
@@ -658,7 +659,7 @@ class GSMain(QMainWindow):
         self.distanceTemperatureAxis.setTitleText("temperature in K")
 
         #set initial ranges
-        self.distanceAxis.setRange(0, 5)
+        self.distanceAxis.setRange(0, 4)
         self.distancePressureAxis.setRange(0, self.collection.settings.pressureAxeValue)
         self.distanceTemperatureAxis.setRange(0, self.collection.settings.temperatureAxeValue)
 
@@ -694,15 +695,14 @@ class GSMain(QMainWindow):
         self.distanceTSeries.clear()
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Pressure], 0)
         self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Pressure], 1)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Pressure], 3)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Pressure], 4)
-        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Pressure], 5)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Pressure], 2)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Pressure], 3)
+        self.distancePSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Pressure], 4)
         self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Temperature], 0)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_1], 1)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_2], 2)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Temperature], 3)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Temperature], 4)
-        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Temperature], 5)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_2], 1)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_1_Temperature], 2)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_2_Temperature], 3)
+        self.distanceTSeries.append(self.collection.dataAccumulation.sensorData[dataAccu.gatherIndex][PyID.Nozzle_3_Temperature], 4)
 
         #skip if expanding mode needs an event that hasnt happened yet ie. expanding mode with LO or SOE as starting point with no recorded index (-1)
         if not (settings.timespanMode == Settings.EXPANDING and(
@@ -1687,6 +1687,41 @@ class GSDiagramSettings(QWidget):
         self.ui.expandingRadioButton.clicked.connect(self.radioButtonClicked)
         self.ui.applyDiagramSettings.clicked.connect(self.applySettings)
 
+class GSLiveValuesWidget(QWidget):
+    def __init__(self, collection: ClassCollection):
+        super().__init__()
+        self.ui = Ui_LiveValuesWidget()
+        self.ui.setupUi(self)
+        self.collection = collection
+
+        self.FSAlabel = QLabel(self)
+        self.FSAlabel.setFrameShape(QLabel.NoFrame)
+        self.FSAlabel.setFrameShadow(QLabel.Plain)
+        self.FSApixmap = QPixmap("Resources\\FSAschematic.jpg")
+        self.FSAlabel.setScaledContents(False)
+        self.FSAlabel.lower()
+        FSAscaled = self.FSApixmap.scaled(self.width()*0.9, self.height()*0.9, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.FSAlabel.setPixmap(FSAscaled)
+        x = (self.width() - FSAscaled.width()) / 2
+        y = (self.height() - FSAscaled.height()) / 2
+        self.FSAlabel.setGeometry(x, y, FSAscaled.width(), FSAscaled.height())
+
+    @Slot()
+    def onNewFrame(self):
+        dataAccu = self.collection.dataAccumulation
+        self.ui.ambientPressure.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Ambient_Pressure]:.1f} Pa")
+        self.ui.compareTemperature.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Compare_Temperature]:.1f} K")
+        self.ui.accumulatorPressure.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Pressure]:.1f} Pa")
+        self.ui.accumulatorTemperature.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Accumulator_Temperature]:.1f} K")
+        self.ui.chamberPressure.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Chamber_Pressure]:.1f} Pa")
+        self.ui.chamberTemperature.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Chamber_Temperature_2]:.1f} K")
+        self.ui.nozzlePressure1.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Pressure_1]:.1f} Pa")
+        self.ui.nozzleTemperature1.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Temperature_1]:.1f} K")
+        self.ui.nozzlePressure2.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Pressure_2]:.1f} Pa")
+        self.ui.nozzleTemperature2.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Temperature_2]:.1f} K")
+        self.ui.nozzlePressure3.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Pressure_3]:.1f} Pa")
+        self.ui.nozzleTemperature3.setText(f"{dataAccu.sensorData[dataAccu.gatherIndex][PyID.Nozzle_Temperature_3]:.1f} K")
+
 class GSExport(QDialog):
     POWON = 0
     LO = 1
@@ -2402,10 +2437,12 @@ class ClassCollection:
         self.diagramSettingsWindow = GSDiagramSettings(self)
         self.exportWorker = ExportWorker(self)
         self.exportWindow = GSExport(self)
+        self.liveValuesWidget = GSLiveValuesWidget(self)
 
         #connect onNewFrame signals
         self.dataAccumulation.newFrameSignal.connect(self.mainWindow.onNewFrame)
         self.dataAccumulation.newFrameSignal.connect(self.calibrationWindow.onNewFrame)
+        self.dataAccumulation.newFrameSignal.connect(self.liveValuesWidget.onNewFrame)
 
         #connect statusDisplaySignal and setConnectionStatusSignal, as well set time signals
         self.dataAccumulation.statusDisplaySignal.connect(self.mainWindow.displayStatus)
@@ -2458,6 +2495,7 @@ class ClassCollection:
         self.mainWindow.ui.actionCalibration.triggered.connect(self.calibrationWindow.show)
         self.mainWindow.ui.actionDiagrams.triggered.connect(self.diagramSettingsWindow.show)
         self.mainWindow.ui.actionExport.triggered.connect(self.exportWindow.show)
+        self.mainWindow.ui.actionLive_Values_Widget.triggered.connect(self.liveValuesWidget.show)
 
     #shutdown procedure to stop DataHandling thread cleanly
     def shutdown(self):
