@@ -192,15 +192,16 @@ modeSel = 1;
 
 //Parameters
 #define Delay_OnGoingValve 5000
-#define Delay_to_OpenNozzleCover 6000
+#define Delay_to_OpenNozzleCover 10000
 #define Delay_NoseConeSeparation 10000
-#define Delay_to_NoseConeSeparation 55000
+#define Delay_to_NoseConeSeparation 70000
 #define Delay_to_EoE 30000
 #define Delay_PowerOff 1000
 #define Delay_NozzleCoverFeedback 1500
 #define Angle_ServoReset 91
 #define Angle_Servo 0
 #define Delay_ServoRetry 3000
+#define Delay_AfterSOE 2000
 #if (MODE == DEBUG)
 #define Delay_to_NoseConeSeparation 5000
 #define Delay_to_EoE 3000

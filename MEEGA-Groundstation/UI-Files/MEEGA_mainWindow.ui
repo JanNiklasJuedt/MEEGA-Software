@@ -291,6 +291,9 @@
                <kerning>true</kerning>
               </font>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/noConnectionBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = could not open Serial Port&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = no inocming data&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = incoming data with mismatching checksum or crc&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = incoming data is ok&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -334,6 +337,9 @@
                <width>50</width>
                <height>50</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/noConnectionBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = could not open Serial Port&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = no inocming data&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = incoming data with mismatching checksum or crc&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align:middle;&quot;/&gt; = incoming data is ok&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::Panel</enum>
@@ -435,6 +441,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -462,6 +471,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -491,6 +503,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -519,6 +534,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -534,7 +552,10 @@
             </widget>
            </item>
            <item row="4" column="5">
-            <widget class="QLabel" name="label_31">
+            <widget class="QLabel" name="textLabelTNozzle1">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Nozzle 1</string>
              </property>
@@ -544,7 +565,10 @@
             </widget>
            </item>
            <item row="5" column="5">
-            <widget class="QLabel" name="label_32">
+            <widget class="QLabel" name="textLabelTNozzle2">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Nozzle 2</string>
              </property>
@@ -554,7 +578,10 @@
             </widget>
            </item>
            <item row="1" column="5">
-            <widget class="QLabel" name="label_29">
+            <widget class="QLabel" name="textLabelTAccumulator">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Accumulator</string>
              </property>
@@ -564,7 +591,10 @@
             </widget>
            </item>
            <item row="6" column="5">
-            <widget class="QLabel" name="label_33">
+            <widget class="QLabel" name="textLabelTNozzle3">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Nozzle 3</string>
              </property>
@@ -587,13 +617,16 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = LEDs on&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = LEDs off&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string/>
              </property>
             </widget>
            </item>
            <item row="2" column="4">
-            <widget class="QLabel" name="statusLabelPAccumulator">
+            <widget class="QLabel" name="statusLabelPChamber">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -605,6 +638,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -634,6 +670,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = Start-Of-Experiment signal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no Start-Of-Experiment signal&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -649,7 +688,7 @@
             </widget>
            </item>
            <item row="1" column="4">
-            <widget class="QLabel" name="statusLabelPReservoir">
+            <widget class="QLabel" name="statusLabelPAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -661,6 +700,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -677,7 +719,10 @@
             </widget>
            </item>
            <item row="0" column="7">
-            <widget class="QLabel" name="label_37">
+            <widget class="QLabel" name="textLabelLO">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = Lift-Off signal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no Lift-Off signal&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Lift-Off</string>
              </property>
@@ -687,7 +732,10 @@
             </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QLabel" name="label_14">
+            <widget class="QLabel" name="textLabelPChamber">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Chamber</string>
              </property>
@@ -697,7 +745,7 @@
             </widget>
            </item>
            <item row="1" column="6">
-            <widget class="QLabel" name="statusLabelTReservoir">
+            <widget class="QLabel" name="statusLabelTAccumulator">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -709,6 +757,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -738,6 +789,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -766,6 +820,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = Lift-Off signal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no Lift-Off signal&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -781,7 +838,10 @@
             </widget>
            </item>
            <item row="1" column="2">
-            <widget class="QLabel" name="label_temp_6">
+            <widget class="QLabel" name="textLabelPAccumulator">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -794,7 +854,10 @@
             </widget>
            </item>
            <item row="6" column="7">
-            <widget class="QLabel" name="label_10">
+            <widget class="QLabel" name="textLabelLEDs">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = LEDs on&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = LEDs off&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>LEDs</string>
              </property>
@@ -817,6 +880,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -832,7 +898,10 @@
             </widget>
            </item>
            <item row="0" column="5">
-            <widget class="QLabel" name="label_temp_7">
+            <widget class="QLabel" name="textLabelTCompare">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -865,6 +934,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -893,6 +965,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is being powered&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is not being powered&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -908,7 +983,10 @@
             </widget>
            </item>
            <item row="0" column="0">
-            <widget class="QLabel" name="label_temp_2">
+            <widget class="QLabel" name="textLabelMainboardT">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/noConnectionBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = &amp;lt;20°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = 20-70°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = 70-80°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = &amp;gt;80°C&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -921,7 +999,10 @@
             </widget>
            </item>
            <item row="2" column="5">
-            <widget class="QLabel" name="label_30">
+            <widget class="QLabel" name="textLabelTChamber1">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Chamber 1</string>
              </property>
@@ -931,7 +1012,10 @@
             </widget>
            </item>
            <item row="1" column="7">
-            <widget class="QLabel" name="label_9">
+            <widget class="QLabel" name="textLabelSOE">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = Start-Of-Experiment signal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no Start-Of-Experiment signal&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Start of Experiment</string>
              </property>
@@ -941,7 +1025,10 @@
             </widget>
            </item>
            <item row="6" column="2">
-            <widget class="QLabel" name="label_18">
+            <widget class="QLabel" name="textLabelPNozzle3">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Nozzle 3</string>
              </property>
@@ -951,7 +1038,10 @@
             </widget>
            </item>
            <item row="5" column="0">
-            <widget class="QLabel" name="label_12">
+            <widget class="QLabel" name="textLabelServo">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is being powered&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = servo is not being powered&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Servo</string>
              </property>
@@ -974,6 +1064,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/noConnectionBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = &amp;lt;20°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = 20-70°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = 70-80°C&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = &amp;gt;80°C&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -989,7 +1082,10 @@
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QLabel" name="label_15">
+            <widget class="QLabel" name="textLabelPAmbient">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Ambient</string>
              </property>
@@ -1012,6 +1108,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1027,7 +1126,10 @@
             </widget>
            </item>
            <item row="6" column="0">
-            <widget class="QLabel" name="label_13">
+            <widget class="QLabel" name="textLabelValve">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = valve open&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = valve closed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Valve</string>
              </property>
@@ -1049,6 +1151,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = valve open&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = valve closed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1078,6 +1183,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1093,7 +1201,10 @@
             </widget>
            </item>
            <item row="5" column="2">
-            <widget class="QLabel" name="label_17">
+            <widget class="QLabel" name="textLabelPNozzle2">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Nozzle 2</string>
              </property>
@@ -1103,7 +1214,10 @@
             </widget>
            </item>
            <item row="3" column="5">
-            <widget class="QLabel" name="label">
+            <widget class="QLabel" name="textLabelTChamber2">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Chamber 2</string>
              </property>
@@ -1126,6 +1240,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1141,7 +1258,10 @@
             </widget>
            </item>
            <item row="4" column="2">
-            <widget class="QLabel" name="label_16">
+            <widget class="QLabel" name="textLabelPNozzle1">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Nozzle 1</string>
              </property>
@@ -1151,7 +1271,10 @@
             </widget>
            </item>
            <item row="5" column="7">
-            <widget class="QLabel" name="label_3">
+            <widget class="QLabel" name="textLabelCoverStatus">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = cover opened&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no or both buttons pressed&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = cover closed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>Cover Status</string>
              </property>
@@ -1174,13 +1297,19 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = cover opened&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = no or both buttons pressed&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = cover closed&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string/>
              </property>
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_11">
+            <widget class="QLabel" name="textLabelTChip">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; &lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = reading all ADCs succesful&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = error occured in reading ADCs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>T Chip</string>
              </property>
@@ -1203,6 +1332,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; &lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = reading all ADCs succesful&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = error occured in reading ADCs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1218,7 +1350,10 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="textLabelPChip">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; &lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = reading all ADCs succesful&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = error occured in reading ADCs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>P Chip</string>
              </property>
@@ -1241,6 +1376,9 @@
                <height>25</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; &lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = reading all ADCs succesful&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = error occured in reading ADCs&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
              </property>
@@ -1256,7 +1394,10 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_temp_3">
+            <widget class="QLabel" name="textLabelMainboardV">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage normal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="locale">
               <locale language="English" country="Germany"/>
              </property>
@@ -1281,6 +1422,9 @@
                <width>25</width>
                <height>25</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage normal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1419,7 +1563,7 @@
          <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
         </property>
         <item>
-         <widget class="QGroupBox" name="groupBox_2">
+         <widget class="QGroupBox" name="SensorSelectionGroupBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -1751,7 +1895,7 @@
      </layout>
     </item>
     <item row="1" column="0" colspan="2">
-     <layout class="QGridLayout" name="layout_progressbars" columnstretch="0,0,0,0,0,0,0,0,0">
+     <layout class="QGridLayout" name="layout_progressbars" columnstretch="4,1,4,1,10,1,0,0,30,0,0,1,30,1,4">
       <property name="sizeConstraint">
        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
       </property>
@@ -1767,77 +1911,27 @@
       <property name="verticalSpacing">
        <number>10</number>
       </property>
-      <item row="1" column="4">
-       <widget class="QLabel" name="label_SODS">
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_LO">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>127</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LayoutDirection::LeftToRight</enum>
         </property>
         <property name="locale">
          <locale language="English" country="Germany"/>
         </property>
         <property name="text">
-         <string>Experiment Preparation</string>
+         <string>Lift Off</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
-      <item row="0" column="7">
-       <spacer name="horizontalSpacer_4">
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="1" column="8">
-       <widget class="QLabel" name="label_SD">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>97</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Shutdown</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QProgressBar" name="progressBar_SODS">
+      <item row="0" column="12">
+       <widget class="QProgressBar" name="progressBar_ER">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>5</horstretch>
@@ -1868,13 +1962,32 @@
          <number>0</number>
         </property>
         <property name="value">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
         <property name="format">
          <string>00:00</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_PF">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="text">
+         <string>Pre-Flight</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -1917,58 +2030,13 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QProgressBar" name="progressBar_LO">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>75</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-          <italic>false</italic>
-          <bold>false</bold>
-          <underline>false</underline>
-          <strikeout>false</strikeout>
-          <kerning>true</kerning>
-         </font>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="value">
-         <number>100</number>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-        <property name="textVisible">
-         <bool>true</bool>
-        </property>
-        <property name="format">
-         <string>00:00</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <spacer name="horizontalSpacer_3">
+      <item row="0" column="11">
+       <spacer name="horizontalSpacer_4">
         <property name="locale">
          <locale language="English" country="Germany"/>
         </property>
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -1978,87 +2046,7 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="5">
-       <spacer name="horizontalSpacer">
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_LO">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Lift Off</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="6">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <property name="spacing">
-         <number>20</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="label_SOE">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="locale">
-           <locale language="English" country="Germany"/>
-          </property>
-          <property name="text">
-           <string>Start of Experiment</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_EOE">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="locale">
-           <locale language="English" country="Germany"/>
-          </property>
-          <property name="text">
-           <string>End of Experiment</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="8">
+      <item row="0" column="14">
        <widget class="QProgressBar" name="progressBar_SD">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -2093,7 +2081,7 @@
          <locale language="English" country="Germany"/>
         </property>
         <property name="value">
-         <number>100</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -2106,7 +2094,168 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="6">
+      <item row="1" column="14">
+       <widget class="QLabel" name="label_SD">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>97</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="text">
+         <string>Shutdown</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <spacer name="horizontalSpacer">
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="4">
+       <widget class="QProgressBar" name="progressBar_SODS">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>5</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>50</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>12</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+        <property name="format">
+         <string>00:00</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="8">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,5,20,1">
+        <property name="spacing">
+         <number>20</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_SOE">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="locale">
+           <locale language="English" country="Germany"/>
+          </property>
+          <property name="text">
+           <string>SOE</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>OpenValve</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>CloseValve</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_EOE">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="locale">
+           <locale language="English" country="Germany"/>
+          </property>
+          <property name="text">
+           <string>Servo On</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="3">
+       <spacer name="horizontalSpacer_3">
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="8">
        <widget class="QProgressBar" name="progressBar_SOE">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2135,32 +2284,13 @@
          <locale language="English" country="Germany"/>
         </property>
         <property name="value">
-         <number>24</number>
+         <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
         <property name="format">
          <string>00:00</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_PF">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Pre-Flight</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -2182,6 +2312,105 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLabel" name="label_SODS">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>127</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LayoutDirection::LeftToRight</enum>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="text">
+         <string>Nose Cone Ejection</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QProgressBar" name="progressBar_LO">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>75</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>12</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>00:00</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="13">
+       <spacer name="horizontalSpacer_9">
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="12">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Experiment Run</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -2225,21 +2454,13 @@
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuExport">
-     <property name="title">
-      <string>Export</string>
-     </property>
-     <addaction name="actionExportHousholding"/>
-     <addaction name="actionExportMeasurements"/>
-     <addaction name="actionExportEverything"/>
-    </widget>
     <addaction name="actionFileNew"/>
     <addaction name="actionFileLoad"/>
     <addaction name="separator"/>
     <addaction name="actionFileSave_as"/>
     <addaction name="separator"/>
     <addaction name="actionResults"/>
-    <addaction name="menuExport"/>
+    <addaction name="actionExport"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -2252,21 +2473,10 @@
      <addaction name="actionEnglish"/>
      <addaction name="actionGerman"/>
     </widget>
-    <widget class="QMenu" name="menuConnection">
-     <property name="title">
-      <string>Connection</string>
-     </property>
-     <addaction name="actionConnect"/>
-     <addaction name="actionRetry"/>
-     <addaction name="separator"/>
-     <addaction name="actionAutomatic"/>
-     <addaction name="actionManual"/>
-     <addaction name="separator"/>
-     <addaction name="actionDisconnect"/>
-    </widget>
     <addaction name="menuLanguage"/>
     <addaction name="separator"/>
-    <addaction name="menuConnection"/>
+    <addaction name="actionConnection"/>
+    <addaction name="actionReconnect"/>
     <addaction name="separator"/>
     <addaction name="actionDiagrams"/>
    </widget>
@@ -2286,6 +2496,8 @@
     <addaction name="separator"/>
     <addaction name="actionControl_Panel"/>
     <addaction name="separator"/>
+    <addaction name="actionLive_Values_Widget"/>
+    <addaction name="separator"/>
     <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="menuAppearance"/>
@@ -2300,6 +2512,8 @@
     <addaction name="actionCalibration"/>
     <addaction name="separator"/>
     <addaction name="actionEstimated_Launch_Time"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_Progress_Bar"/>
    </widget>
    <addaction name="menuStart"/>
    <addaction name="menuFile"/>
@@ -2500,6 +2714,31 @@
    </property>
    <property name="text">
     <string>Dark Mode</string>
+   </property>
+  </action>
+  <action name="actionReset_Progress_Bar">
+   <property name="text">
+    <string>Reset Progress Bar</string>
+   </property>
+  </action>
+  <action name="actionConnection">
+   <property name="text">
+    <string>Connection</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="text">
+    <string>Export</string>
+   </property>
+  </action>
+  <action name="actionReconnect">
+   <property name="text">
+    <string>Reconnect</string>
+   </property>
+  </action>
+  <action name="actionLive_Values_Widget">
+   <property name="text">
+    <string>Live Values Widget</string>
    </property>
   </action>
  </widget>

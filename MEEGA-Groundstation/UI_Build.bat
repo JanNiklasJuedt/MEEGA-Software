@@ -8,3 +8,6 @@ pyside6-uic UI-Files\MEEGA_error.ui -o MEEGA_error.py
 pyside6-uic UI-Files\MEEGA_controlPanel.ui -o MEEGA_controlPanel.py
 pyside6-uic UI-Files\MEEGA_calibration.ui -o MEEGA_calibration.py
 pyside6-uic UI-Files\MEEGA_diagramSettings.ui -o MEEGA_diagramSettings.py
+pyside6-uic UI-Files\MEEGA_export.ui -o MEEGA_export.py
+pyside6-uic UI-Files\MEEGA_liveValuesWidget.ui -o MEEGA_liveValuesWidget.py
+pyside6-rcc UI-Files\resources.qrc -o resources_rc.py

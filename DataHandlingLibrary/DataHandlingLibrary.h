@@ -104,7 +104,7 @@ typedef unsigned char byte;
 #define SENSOR_AMOUNT Nozzle_Temperature_3 + 1
 #define TELEMETRY_AMOUNT Experiment_State + 1
 #define TELECOMMAND_AMOUNT Test_Run + 1
-#define CALIBRATION_POINTS 3
+#define CALIBRATION_POINTS 2
 
 #define LOW_RES 16 //Bits
 #define HIGH_RES 24 //Bits

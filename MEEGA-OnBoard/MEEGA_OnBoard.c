@@ -123,6 +123,7 @@ int main() {
 						currentState = AFTER_SOE;
 						digitalWrite(Servo_On, ServoOn);
 						digitalWrite(LEDs_Pin, LEDsOn);
+						delay_abortable(Delay_AfterSOE);
 					}
 					break;
 
@@ -198,6 +199,7 @@ int main() {
 				GS_Delay_to_OpenNozzleCover = (GS_Delay_to_OpenNozzleCover != 0) ? GS_Delay_to_OpenNozzleCover : Delay_to_OpenNozzleCover; 	//If the value from ground station is 0, use the default value
 				GS_Delay_to_EoE = (GS_Delay_to_EoE != 0) ? GS_Delay_to_EoE : Delay_to_EoE;				//If the value from ground station is 0, use the default value
 
+				delay_abortable(Delay_AfterSOE);
 				if (dryRun == 0) {
 					if (!ValveRun(GS_Delay_OnGoingValve)) continue;
 				}
@@ -672,9 +674,9 @@ float temp_data(void) {
 	return temp_millideg / 1000.0;
 }
 uint8_t temp_stat(float temp) {
-	if (temp < 5.0) return 1;		//cold
-	else if (temp < 30.0) return 2;	//normal
-	else if (temp < 55.0) return 3;	//warm
+	if (temp < 20.0) return 1;		//cold
+	else if (temp < 70.0) return 2;	//normal
+	else if (temp < 80.0) return 3;	//warm
 	else return 4;					//hot
 }
 

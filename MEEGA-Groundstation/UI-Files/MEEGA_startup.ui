@@ -12,8 +12,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>386</width>
+    <height>314</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -131,7 +131,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="connectionLabel">
        <property name="text">
-        <string>Connection</string>
+        <string>Connector</string>
        </property>
       </widget>
      </item>
@@ -144,7 +144,7 @@
         <bool>false</bool>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>3</number>
        </property>
        <property name="frame">
         <bool>true</bool>
@@ -154,12 +154,47 @@
        </property>
        <item>
         <property name="text">
-         <string>Automatic</string>
+         <string>COM1</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Manual</string>
+         <string>COM2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>COM9</string>
         </property>
        </item>
       </widget>
