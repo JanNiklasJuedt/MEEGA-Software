@@ -1177,7 +1177,7 @@ class GSStart(QDialog):
 
         #lateInit for events that need DataHandling to be running
         self.collection.mainWindow.connect()
-        time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
+        time.sleep(0.3)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
         self.collection.calibrationWindow.initializeCalibrationPoints()
 
 #class that defines window for defining (approximate) launch time
