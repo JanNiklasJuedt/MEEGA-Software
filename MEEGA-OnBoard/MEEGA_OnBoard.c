@@ -515,9 +515,9 @@ void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 100) degree = 100;
 	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
-	int minR = 970;
+	int minR = 1030;
 	//static int previousPwm = 1000;
-	int maxR = 1970;
+	int maxR = 2030;
 	int pulse_us = minR + degree * (maxR - minR) / 100;
 	pwmWrite(Servo_Pin, pulse_us / 10);
 #elif (SERVO_VERSION == SERVO_v2)
