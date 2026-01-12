@@ -987,7 +987,13 @@ class GSMain(QMainWindow):
         #if value isnt negative (lift off isnt in the past), set the lift off counter to the difference
         if secstoLO >= 0:
             timetoLO = QTime(0, 0).addSecs(secstoLO)
+            self.ui.label_time.setText("T - ")
             self.ui.time_counter.setText(timetoLO.toString("h:mm:ss"))
+
+        else:
+            timesinceLO = QTime(0, 0).addSecs(-secstoLO)
+            self.ui.label_time.setText("T + ")
+            self.ui.time_counter.setText(timesinceLO.toString("h:mm:ss"))
 
     @Slot()
     def updateProgressBar(self):
@@ -1159,12 +1165,20 @@ class GSStart(QDialog):
     #fetch settings from ui elements and store them in settings
     @Slot()
     def fetchSettings(self):
+        #Start DataHandling loop
+        self.collection.dataHandlingThread.start()
+
         self.collection.settings.language = self.ui.languageComboBox.currentData()
         self.collection.settings.connector = self.ui.connectionComboBox.currentText().encode("utf-8")
         #DataHandling.SetPort(self.collection.settings.connector)
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeTimeEdit.time(), self.collection.settings.timeZone)
+
+        #lateInit for events that need DataHandling to be running
+        self.collection.mainWindow.connect()
+        time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
+        self.collection.calibrationWindow.initializeCalibrationPoints()
 
 #class that defines window for defining (approximate) launch time
 class GSLaunchTime(QDialog):
@@ -2497,14 +2511,6 @@ class ClassCollection:
         self.dataHandlingThread.sendStepSignal.connect(self.telecommand.sendStep)
         self.dataHandlingThread.updateProgressBarSignal.connect(self.mainWindow.updateProgressBar)
         self.dataHandlingThread.updateLOTimerSignal.connect(self.mainWindow.updateLOTimer)
-
-        #Start DataHandling loop
-        self.dataHandlingThread.start()
-
-        #lateInit for events that need DataHandling to be running
-        self.mainWindow.connect()
-        time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
-        self.calibrationWindow.initializeCalibrationPoints()
 
     #inter-window connections
     def interWindowConnection(self):
