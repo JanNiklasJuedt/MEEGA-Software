@@ -185,7 +185,7 @@ int main() {
 			int dryRun = ReadFrame(FrameTC, Dry_Run);
 			int testRun = ReadFrame(FrameTC, Test_Run);
 
-			if (testRun == 1 || SoESignal == LOW) {
+			if (testRun == 1) {
 				SoEReceived = 1;
 				digitalWrite(Servo_On, ServoOn);
 				digitalWrite(LEDs_Pin, LEDsOn);
