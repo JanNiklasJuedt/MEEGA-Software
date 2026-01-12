@@ -505,10 +505,10 @@ int LOSignal() {
 #if (SERVO_VERSION == SERVO_v1)
 void ServoInit(void) {
 	pinMode(Servo_Pin, PWM_OUTPUT);
-	pwmWrite(Servo_Pin, 0);
 	pwmSetMode(PWM_MODE_MS); //Use Mark-Space mode
-	pwmSetRange(2000); //Set range to 20ms (50Hz)
 	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
+	pwmSetRange(2000); //Set range to 20ms (50Hz)
+	pwmWrite(Servo_Pin, 0);
 }
 
 void ServoRotation(int degree) {
