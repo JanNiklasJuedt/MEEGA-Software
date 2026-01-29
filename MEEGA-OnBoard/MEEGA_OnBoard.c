@@ -64,6 +64,7 @@ int main() {
 		//RESET
 		//TestStatus = 0;
 		SoEReceived = 0;
+		EoE = 0;
 		digitalWrite(Servo_On, ServoOff);
 		digitalWrite(LEDs_Pin, LEDsOff);
 		//RESET
@@ -152,7 +153,7 @@ int main() {
 #if (MODE == DEBUG)
 					if (!NozzleOpened) printf("End of Experiment: Error\n");
 #endif
-					EoE = 1;
+					//EoE = 1;
 					delay_abortable(Delay_PowerOff);
 					//return (NozzleOpened) ? 0 : 404;	//End of Experiment
 					currentState = SHUTDOWN_SLEEP;
@@ -160,6 +161,7 @@ int main() {
 				case SHUTDOWN_SLEEP:
 					break;
 				}
+				if (currentState == SHUTDOWN_SLEEP && LOSignal == 1) break;
 			}
 		}
 		else if (modeSel == test) {	//Test Mode
