@@ -103,7 +103,7 @@ int main() {
 					break;
 
 				case NOSECONE_SEPARATION:
-					digitalWrite(LEDs_Pin, LEDsOn);	//LED on
+					//digitalWrite(LEDs_Pin, LEDsOn);	//LED on (deprecated)
 #if (MODE == DEBUG)
 					printf("Nose Cone Separation\n");
 #endif
