@@ -237,32 +237,53 @@ void _CloseBuffer_()
 }
 
 //External functions:
-int Initialize()
+int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte CreateNewSaveFile)
 {
 	DebugLog("Setting up DataHandling:");
 	if (!ReadFailSafe()) {
 		if (!CreateFailSafe()) return 0;
 	}
-	int readExisting = 1;
-	if (dataHandling.failSafe == NULL) readExisting = 0;
+	char* saveFilePath = "", * calPath = "", * comPath = "";
+	if (dataHandling.failSafe != NULL) {
+		saveFilePath = dataHandling.failSafe->saveFilePath;
+		calPath = dataHandling.failSafe->calPath;
+		comPath = dataHandling.failSafe->comPath;
+	}
+	if (SaveFileName != NULL && SaveFileName[0] != '\0') {
+		strncpy(saveFilePath, SaveFileName, PATH_LENGTH);
+		saveFilePath[PATH_LENGTH - 1] = '\0';
+	}
+	if (CalibrationName != NULL && CalibrationName[0] != '\0') {
+		strncpy(calPath, CalibrationName, PATH_LENGTH);
+		calPath[PATH_LENGTH - 1] = '\0';
+	}
+	if (PortName != NULL && PortName[0] != '\0') {
+		strncpy(comPath, PortName, PATH_LENGTH);
+		comPath[PATH_LENGTH - 1] = '\0';
+	}
+	if (saveFilePath[0] == '\0' && USE_DEFAULT_VALUES) {
+		strcpy(saveFilePath, SAVEFILE_NAME);
+	}
+	if (calPath[0] == '\0' && USE_DEFAULT_VALUES) {
+		strcpy(calPath, CALIBRATION_NAME);
+	}
+	if (comPath[0] == '\0' && USE_DEFAULT_VALUES) {
+		strcpy(comPath, DEFAULTCOMPATH);
+	}
+	int readExisting = 1; 
+	if (CreateNewSaveFile) readExisting = 0;
+	else if (dataHandling.failSafe == NULL) readExisting = 0;
 	else readExisting = !(dataHandling.failSafe->nominalExit) && !(dataHandling.failSafe->complete) && dataHandling.failSafe->saveFilePath[0] != '\0';
 	if (readExisting) {
-		DebugLog("Existing SaveFile found at", dataHandling.failSafe->saveFilePath);
-		ReadSave(dataHandling.failSafe->saveFilePath);
+		DebugLog("Existing SaveFile found at", saveFilePath);
+		ReadSave(saveFilePath);
 	}
-	if (USE_DEFAULT_VALUES && (dataHandling.saveFile == NULL)) {
-		if (!CreateSave(SAVEFILE_NAME)) return 0;
+	if (dataHandling.saveFile == NULL) {
+		if (!CreateSave(saveFilePath)) return 0;
 	}
 	if (CALIBRATION_METHOD != NONE) {
-		if (dataHandling.failSafe != NULL) {
-			if (dataHandling.failSafe->calPath[0] != '\0') {
-				if (ReadCalibration(dataHandling.failSafe->calPath) == -1)
-					CreateCalibration(dataHandling.failSafe->calPath);
-			}
-			else if (USE_DEFAULT_VALUES) {
-				CreateCalibration(CALIBRATION_NAME);
-			}
-		}
+		if (ReadCalibration(calPath) == -1)
+			CreateCalibration(calPath);
 	}
 	else DebugLog("Skipping Calibration");
 
@@ -272,7 +293,8 @@ int Initialize()
 	_CreateHandler_();
 	DebugLog("Creating Buffer?");
 	if (CreateBuffer()) DebugLog("Buffer created");
-	if (USE_DEFAULT_VALUES)	LoadPort();
+	SetPort(comPath);
+	LoadPort();
 	DebugLog("Misc tasks completed_");
 	DebugLog("Setup done_");
 	return 1;

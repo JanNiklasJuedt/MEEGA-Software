@@ -457,7 +457,7 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 /// Initializes Memory and loads Data from files if possible
 /// </summary>
 /// <returns>Whether successful</returns>
-DATAHANDLINGLIBRARY_API int Initialize();
+DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte CreateNewSaveFile);
 
 /// <summary>
 /// </summary>
