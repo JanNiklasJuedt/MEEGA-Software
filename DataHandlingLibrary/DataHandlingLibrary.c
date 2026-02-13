@@ -1690,6 +1690,9 @@ int LoadPort()
 		DebugLog("!Uninitialized DataHandling_");
 		return 0;
 	}
+	if (PortIsOpen()) {
+		ClosePort();
+	}
 #if (TRANSMISSION_DEBUG)
 	DebugLog("Opened CommPort_");
 	return 1;
@@ -1859,7 +1862,7 @@ int SetPort(const char name[])
 	}
 	strcpy(dataHandling.handler->comPath, name);
 	if (dataHandling.failSafe != NULL) {
-		strcpy(dataHandling.failSafe->calPath, name);
+		strcpy(dataHandling.failSafe->comPath, name);
 		dataHandling.failSafe->changed = 1;
 	}
 	else DebugLog("!Could not find FailSafe");
