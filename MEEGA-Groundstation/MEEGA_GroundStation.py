@@ -4,6 +4,7 @@ from __future__ import annotations #for forward type references
 from enum import IntEnum
 from math import floor
 from math import sin, radians
+from xml.sax.handler import property_interning_dict
 import numpy as np
 import sys
 import time
@@ -112,7 +113,7 @@ class Telecommand(QObject):
     #creating Telecommand in DataHandling, writing program mode (test/flight))
     def newTCFrame(self):
         self.tcframe = DataHandling.CreateTC()
-        DataHandling.WriteFrame(self.tcframe, 0, self.collection.settings.mode)
+        DataHandling.WriteFrame(self.tcframe, TCID.Mode_Change, self.collection.settings.mode)
 
     #initialize sending of 10 identical telecommands to ensure reception
     def sendInit(self):
@@ -130,6 +131,38 @@ class Telecommand(QObject):
             self.newTCFrame()
             self.collection.controlPanel.updateTCFrame()
             self.sendInit()
+
+#enum class for keeping track of python internal indexing of sensors and household entries
+class PyID(IntEnum):
+    Ambient_Pressure = 0
+    Compare_Temperature = 1
+    Accumulator_Pressure = 2
+    Accumulator_Temperature = 3
+    Chamber_Pressure = 4
+    Chamber_Temperature_1 = 5
+    Chamber_Temperature_2 = 6
+    Nozzle_1_Pressure = 7
+    Nozzle_1_Temperature = 8
+    Nozzle_2_Pressure = 9
+    Nozzle_2_Temperature = 10
+    Nozzle_3_Pressure = 11
+    Nozzle_3_Temperature = 12
+    Nozzle_Open = 13
+    Nozzle_Closed = 14
+    Nozzle_Servo = 15
+    Reservoir_Valve = 16
+    LEDs = 17
+    Sensorboard_P = 18
+    Sensorboard_T = 19
+    Mainboard = 20
+    Mainboard_T = 21
+    Mainboard_V = 22
+    System_Time = 23
+    Lift_Off = 24
+    Start_Experiment = 25
+    End_Experiment = 26
+    Mode = 27
+    Experiment_State = 28
 
 #class to define the Main Window
 class GSMain(QMainWindow):
@@ -218,11 +251,6 @@ class GSMain(QMainWindow):
         self.ui.label_logo.setPixmap(self.logo)
 
         #creating menubar actiongroups (for exclusivity of selected options)
-        self.languageGroup = QActionGroup(self.ui.menuLanguage)
-        self.languageGroup.setExclusive(True)
-        for i in self.ui.menuLanguage.actions():
-            self.languageGroup.addAction(i)
-
         self.modeGroup = QActionGroup(self.ui.menuStart)
         self.modeGroup.setExclusive(True)
         self.modeGroup.addAction(self.ui.actionFlight_Mode)
@@ -237,224 +265,6 @@ class GSMain(QMainWindow):
         self.app = QApplication.instance()
         
     #internal functions
-
-    #functions to apply darkmode/lightmode to app and charts, called by menu actions
-    def setLightTheme(self):
-        palette = QPalette()
-
-        palette.setColor(QPalette.Window, QColor(245, 245, 245))
-        palette.setColor(QPalette.WindowText, QColor(20, 20, 20))
-
-        palette.setColor(QPalette.Base, QColor(255, 255, 255))
-        palette.setColor(QPalette.AlternateBase, QColor(240, 240, 240))
-
-        palette.setColor(QPalette.Text, QColor(20, 20, 20))
-        palette.setColor(QPalette.Button, QColor(240, 240, 240))
-        palette.setColor(QPalette.ButtonText, QColor(20, 20, 20))
-
-        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
-        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
-
-        palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
-        palette.setColor(QPalette.ToolTipText, QColor(20, 20, 20))
-
-        self.app.setPalette(palette)
-
-        self.app.setStyleSheet("""
-            QMenuBar { background:#f5f5f5; color:#141414; }
-            QMenuBar::item:selected { background:#e6e6e6; border-radius: 6px;}
-            QToolBar, QStatusBar { background:#f5f5f5; color:#141414; }
-
-            QProgressBar {
-                min-height: 20px;
-                max-height: 20px;
-                border: none;
-                border-radius: 7px;
-                background: #e6e6e6;
-                color: #000000;
-                text-align: center;
-            }
-            QProgressBar::chunk {
-                border-radius: 7px;
-            }
-            QTreeWidget {
-                background: #f5f5f5;
-                alternate-background-color: #f5f5f5;
-                border: none;
-            }
-
-            QTreeWidget::item:selected {
-                background: #0078d7;
-                color: white;
-            }
-
-            QTreeWidget::item:hover {
-                background: #e6e6e6;
-            }
-        """)
-
-        self.applyLightmodeToCharts()
-        self.updateLineSeriesThemes()
-        self.collection.liveValuesWidget.applyLightMode()
-
-    def setDarkTheme(self):
-        palette = QPalette()
-
-        palette.setColor(QPalette.Window, QColor(43, 43, 43))
-        palette.setColor(QPalette.WindowText, QColor(220, 220, 220))
-
-        palette.setColor(QPalette.Base, QColor(30, 30, 30))
-        palette.setColor(QPalette.AlternateBase, QColor(37, 37, 38))
-
-        palette.setColor(QPalette.Text, QColor(220, 220, 220))
-        palette.setColor(QPalette.Button, QColor(60, 63, 65))
-        palette.setColor(QPalette.ButtonText, QColor(220, 220, 220))
-
-        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
-        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
-
-        palette.setColor(QPalette.ToolTipBase, QColor(50, 50, 50))
-        palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
-
-        self.app.setPalette(palette)
-
-        self.app.setStyleSheet("""
-            QMenuBar { background:#2b2b2b; color:#dcdcdc; }
-            QMenuBar::item:selected { background:#3c3f41; border-radius: 6px;}
-            QToolBar, QStatusBar { background:#2b2b2b; color:#dcdcdc; }
-
-            QMenu {
-                background: #2b2b2b;
-                color: #dcdcdc;
-                border: 1px solid #3a3a3a;
-                border-radius: 8px;
-                padding: 0px;
-            }
-
-            QMenu::item {
-                padding: 4px 14px 4px 28px;
-                margin: 0px;
-                border-radius: 6px;
-            }
-
-            QMenu::item:selected {
-                background: #3c3f41;
-                color: #ffffff;
-            }
-
-            QMenu::item:disabled {
-                color: #8a8a8a;
-            }
-
-            QMenu::indicator {
-                left: 8px;
-            }
-
-            QMenu::separator {
-                height: 1px;
-                background: #3a3a3a;
-                margin: 4px 8px;
-            }
-
-            QProgressBar {
-                min-height: 20px;
-                max-height: 20px;
-                border: none;
-                border-radius: 7px;
-                background: #3c3f41;
-                color: #ffffff;
-                text-align: center;
-            }
-            QProgressBar::chunk {
-                border-radius: 7px;
-            }
-            QTreeWidget {
-                background: #2b2b2b;
-                alternate-background-color: #2b2b2b;
-                border: none;
-            }
-
-            QTreeWidget::item:selected {
-                background: #0078d7;
-                color: white;
-            }
-
-            QTreeWidget::item:hover {
-                background: #3c3f41;
-            }
-        """)
-
-        self.applyDarkmodeToCharts()
-        self.updateLineSeriesThemes()
-        self.collection.liveValuesWidget.applyDarkMode()
-
-    def updateLineSeriesThemes(self):
-        #get 1 for darkmode and 0 for light mode
-        theme = self.ui.actionDarkMode.isChecked()
-
-        #go through all series
-        for i, s in enumerate(self.timeSeries):
-
-            #create QPen with correct color
-            pen = QPen(QColor(self.seriesColors[theme][i]))
-
-            #set width of the line
-            pen.setWidth(2)
-
-            #apply the style to series
-            s.setPen(pen)
-
-        coloredSquares = []
-        for i in range(len(self.timeSeries)):
-            pixmap = QPixmap(15, 15)
-            pixmap.fill(Qt.transparent)
-            painter = QPainter(pixmap)
-            painter.setBrush(QColor(self.seriesColors[theme][i]))
-            painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(0, 0, 15, 15, 4, 4)
-            painter.end()
-            coloredSquares.append(pixmap)
-
-        #update the icon of the tree Widget items. hard coded because not really possible with a loop :(
-        #(except for a recursicve algorithm that would be overkill at this point)
-        tree = self.ui.treeWidget
-        tree.topLevelItem(0).child(0).child(3).setIcon(0 ,coloredSquares[0])  # Ambient Pressure
-        tree.topLevelItem(0).child(1).child(3).setIcon(0, coloredSquares[1])  # Compare Temperature
-        tree.topLevelItem(0).child(0).child(2).setIcon(0, coloredSquares[2])  # Accumulator Pressure
-        tree.topLevelItem(0).child(1).child(2).setIcon(0, coloredSquares[3])  # Accumulator Temperature
-        tree.topLevelItem(0).child(0).child(1).setIcon(0, coloredSquares[4])  # Chamber Pressure
-        tree.topLevelItem(0).child(1).child(1).child(0).setIcon(0, coloredSquares[5])  # Chamber 1 Temperature
-        tree.topLevelItem(0).child(1).child(1).child(1).setIcon(0, coloredSquares[6]) #Chamber 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(0).setIcon(0, coloredSquares[7])  # Nozzle 1 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(0).setIcon(0, coloredSquares[8])  # Nozzle 1 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(1).setIcon(0, coloredSquares[9])  # Nozzle 2 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(1).setIcon(0, coloredSquares[10])  # Nozzle 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(2).setIcon(0, coloredSquares[11])  # Nozzle 3 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(2).setIcon(0, coloredSquares[12])  # Nozzle 3 Temperature
-
-    def connect(self):
-        #connection of signals and slots, called in late-init in ClassCollection after all components are created
-        self.languageGroup.triggered.connect(self.languageChanges)
-
-        self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
-        self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
-
-        self.ui.actionDarkMode.triggered.connect(self.setDarkTheme)
-        self.ui.actionLightMode.triggered.connect(self.setLightTheme)
-
-        self.ui.actionReset_Progress_Bar.triggered.connect(self.resetProgressBar)
-
-        self.ui.actionQuit.triggered.connect(self.collection.shutdown)
-
-        self.ui.treeWidget.itemChanged.connect(self.onItemChanged)
-
-        self.ui.actionReconnect.triggered.connect(self.collection.connectionWindow.applySettings)
-
-    #override closeEvent to ensure proper thread termination and application exit when trying to close the main window
-    def closeEvent(self, event):
-        self.collection.shutdown()
-        event.accept()
-        super().closeEvent(event)
 
     def scalePixmaps(self):
             #adjust pixmap sizes to label sizes
@@ -476,26 +286,6 @@ class GSMain(QMainWindow):
     def resizeEvent(self, event):
             self.scalePixmaps()
             super().resizeEvent(event)
-
-    def retranslateUi(self):
-        self.ui.retranslateUi()
-
-    #functionality for changing language not implemented yet
-    def languageChanges(self):
-        translator = QTranslator()
-        locale = self.collection.settings.locale
-        language = QLocale.languageToCode(locale.language())
-        for i in self.languageGroup.actions():
-            if i.property("data") == language:
-                i.setChecked(True)
-        #Baustelle:
-        if translator.load(locale, "MEEGA_Language"):
-            self.app.removeTranslator(translator)
-            self.app.installTranslator(translator)
-            self.retranslateUi(self)
-
-    def filePathChanges(self):
-        pass
 
     #update of status displays according to current data in DataAccumulation, called every new frame
     @Slot()
@@ -777,21 +567,8 @@ class GSMain(QMainWindow):
         settings = self.collection.settings
         dataAccu = self.collection.dataAccumulation
 
-        #if in scrolling mode, adjust time axis range from first to last point in arbitrarily chosen series (here: first series, ambient pressure)
-        if settings.timespanMode == Settings.SCROLLING:
-            self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
-        else:
-            #in expanding mode, set range from according starting index to last index, if index not reached yet, set from 0 to 1
-            if settings.expandFrom == Settings.ALL:
-                self.timeAxis.setRange(dataAccu.systemTime[0], dataAccu.systemTime[dataAccu.gatherIndex])
-            else:
-                if settings.expandFrom == Settings.LO and dataAccu.liftOffIndex != -1:
-                    self.timeAxis.setRange(dataAccu.systemTime[dataAccu.liftOffIndex])
-                else:
-                    if settings.expandFrom == Settings.SOE and dataAccu.startOfExperimentIndex != -1:
-                        self.timeAxis.setRange(dataAccu.systemTime[dataAccu.liftOffIndex])
-                    else:
-                        self.timeAxis.setRange(0, 1)
+        #adjust time axis range from first to last point in arbitrarily chosen series (here: first series, ambient pressure)
+        self.timeAxis.setRange(self.timeSeries[0].at(0).x(), self.timeSeries[0].at(self.timeSeries[0].count()-1).x())
 
     #function to update axes ranges according to current highest values and settings
     def updateAxes(self):
@@ -833,6 +610,273 @@ class GSMain(QMainWindow):
         tree.topLevelItem(0).child(0).child(0).child(2).setData(0, Qt.UserRole, 11)  # Nozzle 3 Pressure
         tree.topLevelItem(0).child(1).child(0).child(2).setData(0, Qt.UserRole, 12)  # Nozzle 3 Temperature
 
+    #functions to apply darkmode/lightmode to app and charts, called by menu actions
+    def setLightTheme(self):
+        palette = QPalette()
+
+        palette.setColor(QPalette.Window, QColor(245, 245, 245))
+        palette.setColor(QPalette.WindowText, QColor(20, 20, 20))
+
+        palette.setColor(QPalette.Base, QColor(255, 255, 255))
+        palette.setColor(QPalette.AlternateBase, QColor(240, 240, 240))
+
+        palette.setColor(QPalette.Text, QColor(20, 20, 20))
+        palette.setColor(QPalette.Button, QColor(240, 240, 240))
+        palette.setColor(QPalette.ButtonText, QColor(20, 20, 20))
+
+        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
+        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+
+        palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))
+        palette.setColor(QPalette.ToolTipText, QColor(20, 20, 20))
+
+        self.app.setPalette(palette)
+
+        self.app.setStyleSheet("""
+            QMenuBar { background:#f5f5f5; color:#141414; }
+            QMenuBar::item:selected { background:#e6e6e6; border-radius: 6px;}
+            QToolBar, QStatusBar { background:#f5f5f5; color:#141414; }
+
+            QProgressBar {
+                min-height: 20px;
+                max-height: 20px;
+                border: none;
+                border-radius: 7px;
+                background: #e6e6e6;
+                color: #000000;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                border-radius: 7px;
+            }
+            QTreeWidget {
+                background: #f5f5f5;
+                alternate-background-color: #f5f5f5;
+                border: none;
+            }
+
+            QTreeWidget::item:selected {
+                background: #0078d7;
+                color: white;
+            }
+
+            QTreeWidget::item:hover {
+                background: #e6e6e6;
+            }
+        """)
+
+        self.applyLightmodeToCharts()
+        self.updateLineSeriesThemes()
+        self.collection.liveValuesWidget.applyLightMode()
+
+    def setDarkTheme(self):
+        palette = QPalette()
+
+        palette.setColor(QPalette.Window, QColor(43, 43, 43))
+        palette.setColor(QPalette.WindowText, QColor(220, 220, 220))
+
+        palette.setColor(QPalette.Base, QColor(30, 30, 30))
+        palette.setColor(QPalette.AlternateBase, QColor(37, 37, 38))
+
+        palette.setColor(QPalette.Text, QColor(220, 220, 220))
+        palette.setColor(QPalette.Button, QColor(60, 63, 65))
+        palette.setColor(QPalette.ButtonText, QColor(220, 220, 220))
+
+        palette.setColor(QPalette.Highlight, QColor(0, 120, 215))
+        palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
+
+        palette.setColor(QPalette.ToolTipBase, QColor(50, 50, 50))
+        palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
+
+        self.app.setPalette(palette)
+
+        self.app.setStyleSheet("""
+            QMenuBar { background:#2b2b2b; color:#dcdcdc; }
+            QMenuBar::item:selected { background:#3c3f41; border-radius: 6px;}
+            QToolBar, QStatusBar { background:#2b2b2b; color:#dcdcdc; }
+
+            QMenu {
+                background: #2b2b2b;
+                color: #dcdcdc;
+                border: 1px solid #3a3a3a;
+                border-radius: 8px;
+                padding: 0px;
+            }
+
+            QMenu::item {
+                padding: 4px 14px 4px 28px;
+                margin: 0px;
+                border-radius: 6px;
+            }
+
+            QMenu::item:selected {
+                background: #3c3f41;
+                color: #ffffff;
+            }
+
+            QMenu::item:disabled {
+                color: #8a8a8a;
+            }
+
+            QMenu::indicator {
+                left: 8px;
+            }
+
+            QMenu::separator {
+                height: 1px;
+                background: #3a3a3a;
+                margin: 4px 8px;
+            }
+
+            QProgressBar {
+                min-height: 20px;
+                max-height: 20px;
+                border: none;
+                border-radius: 7px;
+                background: #3c3f41;
+                color: #ffffff;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                border-radius: 7px;
+            }
+            QTreeWidget {
+                background: #2b2b2b;
+                alternate-background-color: #2b2b2b;
+                border: none;
+            }
+
+            QTreeWidget::item:selected {
+                background: #0078d7;
+                color: white;
+            }
+
+            QTreeWidget::item:hover {
+                background: #3c3f41;
+            }
+        """)
+
+        self.applyDarkmodeToCharts()
+        self.updateLineSeriesThemes()
+        self.collection.liveValuesWidget.applyDarkMode()
+
+    def updateLineSeriesThemes(self):
+        #get 1 for darkmode and 0 for light mode
+        theme = self.ui.actionDarkMode.isChecked()
+
+        #go through all series
+        for i, s in enumerate(self.timeSeries):
+
+            #create QPen with correct color
+            pen = QPen(QColor(self.seriesColors[theme][i]))
+
+            #set width of the line
+            pen.setWidth(2)
+
+            #apply the style to series
+            s.setPen(pen)
+
+        coloredSquares = []
+        for i in range(len(self.timeSeries)):
+            pixmap = QPixmap(15, 15)
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            painter.setBrush(QColor(self.seriesColors[theme][i]))
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(0, 0, 15, 15, 4, 4)
+            painter.end()
+            coloredSquares.append(pixmap)
+
+        #update the icon of the tree Widget items. hard coded because not really possible with a loop :(
+        #(except for a recursicve algorithm that would be overkill at this point)
+        tree = self.ui.treeWidget
+        tree.topLevelItem(0).child(0).child(3).setIcon(0 ,coloredSquares[0])  # Ambient Pressure
+        tree.topLevelItem(0).child(1).child(3).setIcon(0, coloredSquares[1])  # Compare Temperature
+        tree.topLevelItem(0).child(0).child(2).setIcon(0, coloredSquares[2])  # Accumulator Pressure
+        tree.topLevelItem(0).child(1).child(2).setIcon(0, coloredSquares[3])  # Accumulator Temperature
+        tree.topLevelItem(0).child(0).child(1).setIcon(0, coloredSquares[4])  # Chamber Pressure
+        tree.topLevelItem(0).child(1).child(1).child(0).setIcon(0, coloredSquares[5])  # Chamber 1 Temperature
+        tree.topLevelItem(0).child(1).child(1).child(1).setIcon(0, coloredSquares[6]) #Chamber 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(0).setIcon(0, coloredSquares[7])  # Nozzle 1 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(0).setIcon(0, coloredSquares[8])  # Nozzle 1 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(1).setIcon(0, coloredSquares[9])  # Nozzle 2 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(1).setIcon(0, coloredSquares[10])  # Nozzle 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(2).setIcon(0, coloredSquares[11])  # Nozzle 3 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(2).setIcon(0, coloredSquares[12])  # Nozzle 3 Temperature
+
+    #function to make diagrams darkmode themed
+    def applyDarkmodeToCharts(self):
+        #Chart Background
+        self.timeChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
+        self.distanceChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
+
+        #Title
+        self.timeChart.setTitleBrush(QBrush(QColor("#dddddd")))
+        self.distanceChart.setTitleBrush(QBrush(QColor("#dddddd")))
+
+        #Legend
+        self.distanceChart.legend().setLabelColor(QColor("#dddddd"))
+        self.distanceChart.legend().setBrush(QBrush(QColor("#2b2b2b")))
+        self.timeChart.legend().setPen(QPen(QColor("#555555")))
+
+        #Axes
+        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
+            axis.setLabelsColor(QColor("#dddddd"))
+            axis.setLinePen(QPen(QColor("#777777")))
+            axis.setGridLinePen(QPen(QColor("#444444")))
+            axis.setMinorGridLinePen(QPen(QColor("#333333")))
+            axis.setTitleBrush(QBrush(QColor("#dddddd")))
+
+    #function to make diagrams lightmode themed
+    def applyLightmodeToCharts(self):
+        #Chart Background
+        self.timeChart.setBackgroundBrush(QBrush())
+        self.distanceChart.setBackgroundBrush(QBrush())
+
+        #Title
+        self.timeChart.setTitleBrush(QBrush())
+        self.distanceChart.setTitleBrush(QBrush())
+
+        #Legend
+        self.timeChart.legend().setLabelColor(QColor())
+        self.timeChart.legend().setBrush(QBrush())
+        self.timeChart.legend().setPen(QPen())
+
+        self.distanceChart.legend().setLabelColor(QColor())
+        self.distanceChart.legend().setBrush(QBrush())
+        self.distanceChart.legend().setPen(QPen())
+
+        #Axes
+        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
+            axis.setLabelsColor(QColor())
+            axis.setLinePen(QPen(QColor(150, 150, 150)))
+            axis.setGridLinePen(QPen(QColor(200, 200, 200), 1))
+            axis.setMinorGridLinePen(QPen(QColor(220, 220, 220), 1))
+            axis.setTitleBrush(QBrush())
+
+    def connect(self):
+        #connection of signals and slots, called in late-init in ClassCollection after all components are created
+
+        self.ui.actionFlight_Mode.triggered.connect(self.modeSwitched)
+        self.ui.actionTest_Mode.triggered.connect(self.modeSwitched)
+
+        self.ui.actionDarkMode.triggered.connect(self.setDarkTheme)
+        self.ui.actionLightMode.triggered.connect(self.setLightTheme)
+
+        self.ui.actionReset_Progress_Bar.triggered.connect(self.resetProgressBar)
+
+        self.ui.actionQuit.triggered.connect(self.collection.shutdown)
+
+        self.ui.treeWidget.itemChanged.connect(self.onItemChanged)
+
+        self.ui.actionReconnect.triggered.connect(self.collection.connectionWindow.applySettings)
+
+    #override closeEvent to ensure proper thread termination and application exit when trying to close the main window
+    def closeEvent(self, event):
+        self.collection.shutdown()
+        event.accept()
+        super().closeEvent(event)
+
     #external functions (slots)
 
     #onNewFrame is called by Signal in DataAccumulation every time a new frame has been added, calls extendPlots, which is necessary updates for every new frame
@@ -871,15 +915,6 @@ class GSMain(QMainWindow):
         self.collection.telecommand.newTCFrame()
         self.collection.telecommand.sendInit()
 
-    #function only used for connection mode changes from menubar, not implemented yet, not planned to be implemented, outdated
-    @Slot()
-    def fetchSettings(self):
-        if self.connectionModeGroup.checkedAction() == self.ui.actionAutomatic:
-            connectionMode = Settings.AUTOMATIC
-        else:
-            connectionMode = Settings.MANUAL
-        self.collection.settings.connectionMode = connectionMode
-
     #function to apply settings from collection to main window ui elements, called after startup dialog is closed
     @Slot()
     def applySettings(self):
@@ -888,62 +923,7 @@ class GSMain(QMainWindow):
         else:
             self.ui.actionTest_Mode.setChecked(True)
         self.setLocale(self.collection.settings.locale)
-        self.languageChanges()
         self.modeSwitched()
-        self.filePathChanges()
-
-    #function to make diagrams darkmode themed
-    @Slot()
-    def applyDarkmodeToCharts(self):
-        #Chart Background
-        self.timeChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
-        self.distanceChart.setBackgroundBrush(QBrush(QColor("#2b2b2b")))
-
-        #Title
-        self.timeChart.setTitleBrush(QBrush(QColor("#dddddd")))
-        self.distanceChart.setTitleBrush(QBrush(QColor("#dddddd")))
-
-        #Legend
-        self.distanceChart.legend().setLabelColor(QColor("#dddddd"))
-        self.distanceChart.legend().setBrush(QBrush(QColor("#2b2b2b")))
-        self.timeChart.legend().setPen(QPen(QColor("#555555")))
-
-        #Axes
-        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
-            axis.setLabelsColor(QColor("#dddddd"))
-            axis.setLinePen(QPen(QColor("#777777")))
-            axis.setGridLinePen(QPen(QColor("#444444")))
-            axis.setMinorGridLinePen(QPen(QColor("#333333")))
-            axis.setTitleBrush(QBrush(QColor("#dddddd")))
-
-    #function to make diagrams lightmode themed
-    @Slot()
-    def applyLightmodeToCharts(self):
-        #Chart Background
-        self.timeChart.setBackgroundBrush(QBrush())
-        self.distanceChart.setBackgroundBrush(QBrush())
-
-        #Title
-        self.timeChart.setTitleBrush(QBrush())
-        self.distanceChart.setTitleBrush(QBrush())
-
-        #Legend
-        self.timeChart.legend().setLabelColor(QColor())
-        self.timeChart.legend().setBrush(QBrush())
-        self.timeChart.legend().setPen(QPen())
-
-        self.distanceChart.legend().setLabelColor(QColor())
-        self.distanceChart.legend().setBrush(QBrush())
-        self.distanceChart.legend().setPen(QPen())
-
-        #Axes
-        for axis in [self.timeAxis, self.timePressureAxis, self.timeTemperatureAxis, self.distanceAxis, self.distancePressureAxis, self.distanceTemperatureAxis]:
-            axis.setLabelsColor(QColor())
-            axis.setLinePen(QPen(QColor(150, 150, 150)))
-            axis.setGridLinePen(QPen(QColor(200, 200, 200), 1))
-            axis.setMinorGridLinePen(QPen(QColor(220, 220, 220), 1))
-            axis.setTitleBrush(QBrush())
-
 
     #override of itemChanged signal from treeWidget in main window, called when user checks or unchecks an item in the tree to add or remove the according series from the time plot
     @Slot(QTreeWidgetItem, int)
@@ -975,6 +955,28 @@ class GSMain(QMainWindow):
         else:
             if series in self.timeChart.series():
                 self.timeChart.removeSeries(series)
+
+    #slot to replace series, called by PlotWorker Thread when needing to replace entire series
+    @Slot(int, list)
+    def replaceSeries(self, seriesIndex: int, points: list[QPointF]):
+        self.timeSeries[seriesIndex].replace(points)
+
+    #slot to clear series, called by PlotWorker Thread when needing to clear entire series
+    @Slot(int)
+    def clearSeries(self, seriesIndex: int):
+        self.timeSeries[seriesIndex].clear()
+    
+    #update currentIndex, highest values after plot Rebuild, called by PlotWorker Thread
+    @Slot(int, float, float)
+    def updatePlotMetrics(self, currentIndex: int, highestPres: float, highestTemp: float):
+        self.currentIndex = currentIndex
+        self.timeHighestPres = highestPres
+        self.timeHighestTemp = highestTemp
+
+    #slot to set connection status, called by DataAccumulation when connection status changes, needed for proper decoupling of threads
+    @Slot(int)
+    def setConnectionStatus(self, status: int):
+        self.connectionStatus = status
 
     @Slot()
     def updateLOTimer(self):
@@ -1117,28 +1119,6 @@ class GSMain(QMainWindow):
         self.ui.progressBar_ER.setFormat("00:00")
         self.ui.progressBar_SD.setFormat("00:00")
 
-    #slot to replace series, called by PlotWorker Thread when needing to replace entire series
-    @Slot(int, list)
-    def replaceSeries(self, seriesIndex: int, points: list[QPointF]):
-        self.timeSeries[seriesIndex].replace(points)
-
-    #slot to clear series, called by PlotWorker Thread when needing to clear entire series
-    @Slot(int)
-    def clearSeries(self, seriesIndex: int):
-        self.timeSeries[seriesIndex].clear()
-    
-    #update currentIndex, highest values after plot Rebuild, called by PlotWorker Thread
-    @Slot(int, float, float)
-    def updatePlotMetrics(self, currentIndex: int, highestPres: float, highestTemp: float):
-        self.currentIndex = currentIndex
-        self.timeHighestPres = highestPres
-        self.timeHighestTemp = highestTemp
-
-    #slot to set connection status, called by DataAccumulation when connection status changes, needed for proper decoupling of threads
-    @Slot(int)
-    def setConnectionStatus(self, status: int):
-        self.connectionStatus = status
-
 #class to define the startup dialog window
 class GSStart(QDialog):
     def __init__(self, collection: ClassCollection):
@@ -1170,15 +1150,15 @@ class GSStart(QDialog):
 
         self.collection.settings.language = self.ui.languageComboBox.currentData()
         self.collection.settings.connector = self.ui.connectionComboBox.currentText().encode("utf-8")
-        #DataHandling.SetPort(self.collection.settings.connector)
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeTimeEdit.time(), self.collection.settings.timeZone)
 
         #lateInit for events that need DataHandling to be running
         self.collection.mainWindow.connect()
-        time.sleep(0.3)  #ensure DataHandling is initialized before CalibrationWindow tries to read points
+        time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points and ComPort is set
         self.collection.calibrationWindow.initializeCalibrationPoints()
+        DataHandling.SetPort(self.collection.settings.connector)
 
 #class that defines window for defining (approximate) launch time
 class GSLaunchTime(QDialog):
@@ -1195,24 +1175,6 @@ class GSLaunchTime(QDialog):
     @Slot()
     def fetchSettings(self):
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeEdit.time(), self.collection.settings.timeZone)
-
-#class that defines window for displaying results in table form
-class GSResults(QWidget):
-    def __init__(self, collection: ClassCollection):
-        super().__init__()
-        self.ui = Ui_ResultsWidget()
-        self.ui.setupUi(self)
-        self.collection = collection
-
-        self.ui.buttonBox.clicked.connect(self.hide)
-
-#class that defines window for displaying documentation of software
-class GSDocumentation(QWidget):
-    def __init__(self, collection: ClassCollection):
-        super().__init__()
-        self.ui = Ui_Documentation()
-        self.ui.setupUi(self)
-        self.collection = collection
 
 #class that defines window for displaying error messages
 class GSError(QDialog):
@@ -1430,20 +1392,20 @@ class GSCalibration(QWidget):
         self.currentUnit = "" #unit string for currently selected sensor
 
         #create calibration point storage lists
-        self.analogValues = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
-        self.digitalValues = [[0] * 3 for x in range(DataAccumulation.sensorSize)]
+        self.analogValues = [[0] * 2 for x in range(DataAccumulation.sensorSize)]
+        self.digitalValues = [[0] * 2 for x in range(DataAccumulation.sensorSize)]
 
         #create exclusive button group for radio buttons
         self.buttonGroup = QButtonGroup(self)
         self.buttonGroup.addButton(self.ui.radioButton1)
         self.buttonGroup.addButton(self.ui.radioButton2)
-        self.buttonGroup.addButton(self.ui.radioButton3)
+        #self.buttonGroup.addButton(self.ui.radioButton3)
         self.buttonGroup.setExclusive(True)
 
         #connect clicking of radio buttons and state change of use current digital checkbox to disablingLogic function
         self.ui.radioButton1.clicked.connect(self.disablingLogic)
         self.ui.radioButton2.clicked.connect(self.disablingLogic)
-        self.ui.radioButton3.clicked.connect(self.disablingLogic)
+        #self.ui.radioButton3.clicked.connect(self.disablingLogic)
         self.ui.useCurrentDigital.stateChanged.connect(self.disablingLogic)
 
         #click once to ensure proper enabling/disabling of lineEdits at startup
@@ -1454,7 +1416,7 @@ class GSCalibration(QWidget):
         self.ui.okButton.clicked.connect(self.newCalibrationPoint)
     
     #initialize calibration point storage lists from Calibration Point savefile using DataHandling function
-    #is called in late initialization of ClassCollection to ensure DataHandling has been initialized before using its functions
+    #is called in late initialization in GSMain to ensure DataHandling has been initialized before using its functions
     def initializeCalibrationPoints(self):
         #go through all sensors
         for sensorID, pointSet in enumerate(self.analogValues):
@@ -1481,8 +1443,8 @@ class GSCalibration(QWidget):
                     self.ui.digitalEdit1.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
                 case 1:
                     self.ui.digitalEdit2.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
-                case 2:
-                    self.ui.digitalEdit3.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
+                #case 2:
+                #    self.ui.digitalEdit3.setText(str(self.collection.dataAccumulation.currentDigitals[self.selectedSensor]))
     
     #select sensor and display currently existing calibration points of this sensor and their units
     @Slot()
@@ -1493,10 +1455,10 @@ class GSCalibration(QWidget):
         #update lineEdits from local storage lists
         self.ui.analogEdit1.setText(str(self.analogValues[self.selectedSensor][0]))
         self.ui.analogEdit2.setText(str(self.analogValues[self.selectedSensor][1]))
-        self.ui.analogEdit3.setText(str(self.analogValues[self.selectedSensor][2]))
+        #self.ui.analogEdit3.setText(str(self.analogValues[self.selectedSensor][2]))
         self.ui.digitalEdit1.setText(str(self.digitalValues[self.selectedSensor][0]))
         self.ui.digitalEdit2.setText(str(self.digitalValues[self.selectedSensor][1]))
-        self.ui.digitalEdit3.setText(str(self.digitalValues[self.selectedSensor][2]))
+        #self.ui.digitalEdit3.setText(str(self.digitalValues[self.selectedSensor][2]))
 
         #get unit by checking if selected sensor index is in pressureIndices list from main window
         if self.selectedSensor in self.collection.mainWindow.pressureIndices:
@@ -1507,7 +1469,7 @@ class GSCalibration(QWidget):
         #update unit labels
         self.ui.unitLabel1.setText(self.currentUnit)
         self.ui.unitLabel2.setText(self.currentUnit)
-        self.ui.unitLabel3.setText(self.currentUnit)
+        #self.ui.unitLabel3.setText(self.currentUnit)
 
     #enable lineEdit corresponding to selected radioButton, disable the others
     #if "use current digital" is checked, disable digital lineEdits as well, if not enable the one corresponding to selected radioButton
@@ -1520,7 +1482,7 @@ class GSCalibration(QWidget):
                 #enable corresponding analog lineEdit, disable others
                 self.ui.analogEdit1.setEnabled(True)
                 self.ui.analogEdit2.setDisabled(True)
-                self.ui.analogEdit3.setDisabled(True)
+                #self.ui.analogEdit3.setDisabled(True)
 
                 #set selectedEntry variable accordingly
                 self.selectedEntry = 0
@@ -1531,33 +1493,33 @@ class GSCalibration(QWidget):
                 else:
                     self.ui.digitalEdit1.setDisabled(True)
                 self.ui.digitalEdit2.setDisabled(True)
-                self.ui.digitalEdit3.setDisabled(True)
+                #self.ui.digitalEdit3.setDisabled(True)
 
             #radioButton2 case equivalent to radioButton1
             case self.ui.radioButton2:
                 self.ui.analogEdit1.setDisabled(True)
                 self.ui.analogEdit2.setEnabled(True)
-                self.ui.analogEdit3.setDisabled(True)
+               # self.ui.analogEdit3.setDisabled(True)
                 self.selectedEntry = 1
                 self.ui.digitalEdit1.setDisabled(True)
                 if not self.ui.useCurrentDigital.isChecked():
                     self.ui.digitalEdit2.setEnabled(True)
                 else:
                     self.ui.digitalEdit2.setDisabled(True)
-                self.ui.digitalEdit3.setDisabled(True)
+                #self.ui.digitalEdit3.setDisabled(True)
 
             #radioButton3 case equivalent to radioButton1
-            case self.ui.radioButton3:
-                self.ui.analogEdit1.setDisabled(True)
-                self.ui.analogEdit2.setDisabled(True)
-                self.ui.analogEdit3.setEnabled(True)
-                self.selectedEntry = 2
-                self.ui.digitalEdit1.setDisabled(True)
-                self.ui.digitalEdit2.setDisabled(True)
-                if not self.ui.useCurrentDigital.isChecked():
-                    self.ui.digitalEdit3.setEnabled(True)
-                else:
-                    self.ui.digitalEdit3.setDisabled(True)
+            # case self.ui.radioButton3:
+            #     self.ui.analogEdit1.setDisabled(True)
+            #     self.ui.analogEdit2.setDisabled(True)
+            #     self.ui.analogEdit3.setEnabled(True)
+            #     self.selectedEntry = 2
+            #     self.ui.digitalEdit1.setDisabled(True)
+            #     self.ui.digitalEdit2.setDisabled(True)
+            #     if not self.ui.useCurrentDigital.isChecked():
+            #         self.ui.digitalEdit3.setEnabled(True)
+            #     else:
+            #         self.ui.digitalEdit3.setDisabled(True)
 
         #if "use current digital" is checked, the selected sensor will show current digital value in the corresponding digital lineEdit, so call selectSensor for the case that it is now unchecked and the set digital value needs to be updated
         if not self.ui.useCurrentDigital.isChecked():
@@ -1576,8 +1538,8 @@ class GSCalibration(QWidget):
                 analogValue = float(self.ui.analogEdit1.text())
             case 1:
                 analogValue = float(self.ui.analogEdit2.text())
-            case 2:
-                analogValue = float(self.ui.analogEdit3.text())
+            # case 2:
+            #     analogValue = float(self.ui.analogEdit3.text())
 
         #save analog value in local storage list
         self.analogValues[self.selectedSensor][self.selectedEntry] = analogValue
@@ -1589,12 +1551,12 @@ class GSCalibration(QWidget):
                     digitalValue = int(self.ui.digitalEdit1.text())
                 case 1:
                     digitalValue = int(self.ui.digitalEdit2.text())
-                case 2:
-                    digitalValue = int(self.ui.digitalEdit3.text())
+                # case 2:
+                #     digitalValue = int(self.ui.digitalEdit3.text())
 
         #if use currentDigital is checked, fetch current digital value from DataAccumulation
         else:
-            digitalValue = self.collection.dataAccumulation.sensorData[self.collection.dataAccumulation.gatherIndex][self.selectedSensor]
+            digitalValue = self.collection.dataAccumulation.currentDigitals[self.selectedSensor]
 
         #save digital value in local storage list
         self.digitalValues[self.selectedSensor][self.selectedEntry] = digitalValue
@@ -1926,6 +1888,156 @@ class ExportWorker(QThread):
         #call GetSaveFrame with newest index, so that internal counting is set back to the newest index and GetNextFrame() works as wanted for DataAccumulation
         DataHandling.GetSaveFrame(-1)
 
+class PlotWorker(QThread):
+    replaceSeriesSignal = Signal(int, list)
+    clearSeriesSignal = Signal(int)
+    updatePlotMetricsSignal = Signal(int, float, float)
+    updateTimeAxisSignal = Signal()
+
+    REBUILDPLOT = 1
+    REDUCEPOINTS = 2
+
+    def __init__(self, collection: ClassCollection):
+        super().__init__()
+        self.collection = collection
+
+        self.task = 0
+
+    #override run function of QThread, only then will it run on separate thread
+    def run(self):
+        #check which type of work to do
+        if self.task == self.REBUILDPLOT:
+            self.doRebuildPlot()
+        if self.task == self.REDUCEPOINTS:
+            self.doReduceSeries()
+
+    #funtcion that starts the worker with given task, is called from employing class via Signal
+    @Slot(int)
+    def doTask(self, task: int):
+        self.task = task
+        self.start()
+
+    def doRebuildPlot(self):
+        #fetch necessary data
+        settings = self.collection.settings
+        dataAcc = self.collection.dataAccumulation
+        gatherIndex = dataAcc.gatherIndex
+        sensorData = dataAcc.sensorData
+        systemTime = dataAcc.systemTime
+        mainWindow = self.collection.mainWindow
+
+        #variable to track if plot should be cleared instead of rebuilt
+        clear = False
+
+        #determine start and end indices for plot data according to settings
+        #start Index 0 by default
+        startIndex = 0
+
+        #endIndex should always be gatherIndex (newest index after system time)
+        endIndex = dataAcc.gatherIndex
+
+        #start index determination for expaning mode
+        if settings.timespanMode == Settings.EXPANDING:
+            match settings.expandFrom:
+                case Settings.LO:
+                    #if liftOffIndex is set, use it as start index, else clear plot, no data should be shown until lift off
+                    if dataAcc.liftOffIndex != -1:
+                        startIndex = dataAcc.liftOffIndex
+                    else:
+                        clear = True
+
+                #start index determination for start of experiment same as lift off
+                case Settings.SOE:
+                    if dataAcc.startOfExperimentIndex != -1:
+                        startIndex = dataAcc.startOfExperimentIndex
+                    else:
+                        clear = True
+
+        #start index determination for scrolling mode
+        else:
+            #start index is either as many indices from gatherIndex, as fit into scrolling time, or 0 if not enough data points yet
+            startIndex = max(0, gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
+
+        #check if endIndex is lower or equal to startIndex, if so, clear plot, should not happen due to previous checks, but just in case
+        if endIndex <= startIndex:
+            clear = True
+
+        #clear plot if demanded
+        if clear:
+            for i in range(self.collection.mainWindow.sensorSize):
+                self.clearSeriesSignal.emit(i)
+            return
+        
+        #if startIndex is 0, relevant data can be sliced from full array directly
+        if startIndex == 0:
+            xValues = systemTime[:endIndex]
+            yMatrix = sensorData[:endIndex, :DataAccumulation.sensorSize]
+
+        #for arbitrary startIndex, slicing needs to be done with ascontiguousarray
+        else:
+            xValues = np.ascontiguousarray(systemTime[startIndex:endIndex])
+            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :DataAccumulation.sensorSize])
+
+        #for every sensor, create list of QPointF from x and y values and replace time series data in main window
+        for i in range(DataAccumulation.sensorSize):
+            #get y values of this sensor from previously sliced yMatrix
+            yValues =  yMatrix[:, i]
+
+            #create list of QPointF from x and y values
+            points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
+
+            #reduce number of points if necessary
+            while len(points) > self.collection.settings.maxPlotPoints:
+                points = self.reduceArray(points)
+
+            #replace time series data in main window
+            self.replaceSeriesSignal.emit(i, points)
+
+        #update main window variables for highest pressure, highest temperature and currently newest global Index
+        self.updatePlotMetricsSignal.emit(gatherIndex, np.max(yMatrix[:, self.collection.mainWindow.pressureIndices]), np.max(yMatrix[:, self.collection.mainWindow.temperatureIndices]))
+
+        #update the time range on the x-axis
+        self.updateTimeAxisSignal.emit()
+
+        #reset rebuildPlot flag
+        self.rebuildPlot = False
+
+    #reduces number of points in time series by averaging every two points in the left 2/3 of the series
+    def doReduceSeries(self):
+
+        #go through all time series to reduce their points
+        for seriesIndex, series in enumerate(self.collection.mainWindow.timeSeries):
+
+            #convert QLineSeries to array of QPointF
+            points = series.points()
+
+            reducedPoints = self.reduceArray(points)
+
+            self.replaceSeriesSignal.emit(seriesIndex, reducedPoints)
+
+    #putting actual reducing functionality in separate function, so it can be used in both doRebuildPlot and doReduceSeries
+    def reduceArray(self, points: list[QPointF]):
+        length = len(points)
+
+        #split the series at 2/3 length into left and right part
+        splitIndex = (2 * length) // 3
+        left = points[:splitIndex]
+        right = points[splitIndex:]
+
+        #initialize reduced left part
+        reducedLeft = []
+
+        for i in range(0, len(left) - 1, 2):
+            point1 = left[i]
+            point2 = left[i+1]
+
+            reducedLeft.append(QPointF((point1.x() + point2.x()) / 2, (point1.y() + point2.y()) / 2))
+
+        if len(left) % 2 != 0:
+            reducedLeft.append(left[-1])
+
+        return (reducedLeft + right)
+
 #class for accumulating incoming data frames and sorting them into numpy arrays
 class DataAccumulation(QObject):
     #signal emitted when a new frame has been processed, sends the index of the new data point in the arrays to interested slots
@@ -1937,7 +2049,6 @@ class DataAccumulation(QObject):
     setSOETimeSignal = Signal(QDateTime)
     setNozzleOpenTimeSignal = Signal(QDateTime)
     setEOETimeSignal = Signal(QDateTime)
-    resetProgressBarSignal = Signal()
 
     #class variables for amount of sensors and household entries
     sensorSize = 13
@@ -1983,7 +2094,7 @@ class DataAccumulation(QObject):
             else:
                 self.setConnectionStatusSignal.emit(GSMain.NOCONNECTION)
 
-        #while true loop to process multiple conecutive frames, as long as they are available. empty frame will break the loop
+        #while true loop to process multiple consecutive frames, as long as they are available. empty frame will break the loop
         while True:
             if not testData:
 
@@ -2071,7 +2182,7 @@ class DataAccumulation(QObject):
 
                 if testData:
                     ###
-                    self.sensorData[self.newIndex][i] = int(150*sin(radians((10*self.gatherIndex)%360 + 10*i))+150) ###only for testing purposes###
+                    self.sensorData[self.newIndex][i] = int(150*sin(radians((10*self.newIndex)%360 + 10*i))+150) ###only for testing purposes###
                     ###
 
                 else:
@@ -2192,188 +2303,6 @@ class DataAccumulation(QObject):
                 break ###only for testing purposes###
                 ###
 
-#enum class for keeping track of python internal indexing of sensors and household entries
-class PyID(IntEnum):
-    Ambient_Pressure = 0
-    Compare_Temperature = 1
-    Accumulator_Pressure = 2
-    Accumulator_Temperature = 3
-    Chamber_Pressure = 4
-    Chamber_Temperature_1 = 5
-    Chamber_Temperature_2 = 6
-    Nozzle_1_Pressure = 7
-    Nozzle_1_Temperature = 8
-    Nozzle_2_Pressure = 9
-    Nozzle_2_Temperature = 10
-    Nozzle_3_Pressure = 11
-    Nozzle_3_Temperature = 12
-    Nozzle_Open = 13
-    Nozzle_Closed = 14
-    Nozzle_Servo = 15
-    Reservoir_Valve = 16
-    LEDs = 17
-    Sensorboard_P = 18
-    Sensorboard_T = 19
-    Mainboard = 20
-    Mainboard_T = 21
-    Mainboard_V = 22
-    System_Time = 23
-    Lift_Off = 24
-    Start_Experiment = 25
-    End_Experiment = 26
-    Mode = 27
-    Experiment_State = 28
-
-
-class PlotWorker(QThread):
-    replaceSeriesSignal = Signal(int, list)
-    clearSeriesSignal = Signal(int)
-    updatePlotMetricsSignal = Signal(int, float, float)
-    updateTimeAxisSignal = Signal()
-
-    REBUILDPLOT = 1
-    REDUCEPOINTS = 2
-
-    def __init__(self, collection: ClassCollection):
-        super().__init__()
-        self.collection = collection
-
-        self.task = 0
-
-    #override run function of QThread, only then will it run on separate thread
-    def run(self):
-        #check which type of work to do
-        if self.task == self.REBUILDPLOT:
-            self.doRebuildPlot()
-        if self.task == self.REDUCEPOINTS:
-            self.doReduceSeries()
-
-    #funtcion that starts the worker with given task, is called from employing class via Signal
-    @Slot(int)
-    def doTask(self, task: int):
-        self.task = task
-        self.start()
-
-    def doRebuildPlot(self):
-        #fetch necessary data
-        settings = self.collection.settings
-        dataAcc = self.collection.dataAccumulation
-        sensorData = dataAcc.sensorData
-        systemTime = dataAcc.systemTime
-        mainWindow = self.collection.mainWindow
-
-        #variable to track if plot should be cleared instead of rebuilt
-        clear = False
-
-        #determine start and end indices for plot data according to settings
-        #start Index 0 by default
-        startIndex = 0
-
-        #endIndex should always be gatherIndex (newest index after system time)
-        endIndex = dataAcc.gatherIndex
-
-        #start index determination for expaning mode
-        if settings.timespanMode == Settings.EXPANDING:
-            match settings.expandFrom:
-                case Settings.LO:
-                    #if liftOffIndex is set, use it as start index, else clear plot, no data should be shown until lift off
-                    if dataAcc.liftOffIndex != -1:
-                        startIndex = dataAcc.liftOffIndex
-                    else:
-                        clear = True
-
-                #start index determination for start of experiment same as lift off
-                case Settings.SOE:
-                    if dataAcc.startOfExperimentIndex != -1:
-                        startIndex = dataAcc.startOfExperimentIndex
-                    else:
-                        clear = True
-
-        #start index determination for scrolling mode
-        else:
-            #start index is either as many indices from gatherIndex, as fit into scrolling time, or 0 if not enough data points yet
-            startIndex = max(0, dataAcc.gatherIndex - (self.collection.dataHandlingThread.frequency * settings.scrollingTimeSeconds))
-
-        #check if endIndex is lower or equal to startIndex, if so, clear plot, should not happen due to previous checks, but just in case
-        if endIndex <= startIndex:
-            clear = True
-
-        #clear plot if demanded
-        if clear:
-            for i in range(self.collection.mainWindow.sensorSize):
-                self.clearSeriesSignal.emit(i)
-            return
-        
-        #if startIndex is 0, relevant data can be sliced from full array directly
-        if startIndex == 0:
-            xValues = systemTime[:endIndex]
-            yMatrix = sensorData[:endIndex, :DataAccumulation.sensorSize]
-
-        #for arbitrary startIndex, slicing needs to be done with ascontiguousarray
-        else:
-            xValues = np.ascontiguousarray(systemTime[startIndex:endIndex])
-            yMatrix = np.ascontiguousarray(sensorData[startIndex:endIndex, :DataAccumulation.sensorSize])
-
-        #for every sensor, create list of QPointF from x and y values and replace time series data in main window
-        for i in range(DataAccumulation.sensorSize):
-            #get y values of this sensor from previously sliced yMatrix
-            yValues =  yMatrix[:, i]
-
-            #create list of QPointF from x and y values
-            points = [QPointF(x, y) for x, y in zip(xValues, yValues)]
-
-            #reduce number of points if necessary
-            while len(points) > self.collection.settings.maxPlotPoints:
-                points = self.reduceArray(points)
-
-            #replace time series data in main window
-            self.replaceSeriesSignal.emit(i, points)
-
-        #update main window variables for highest pressure, highest temperature and currently newest global Index
-        self.updatePlotMetricsSignal.emit(dataAcc.gatherIndex, np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.pressureIndices]), np.max(yMatrix[startIndex:endIndex, self.collection.mainWindow.temperatureIndices]))
-
-        #update the time range on the x-axis
-        self.updateTimeAxisSignal.emit()
-
-        #reset rebuildPlot flag
-        self.rebuildPlot = False
-
-    #reduces number of points in time series by averaging every two points in the left 2/3 of the series
-    def doReduceSeries(self):
-
-        #go through all time series to reduce their points
-        for seriesIndex, series in enumerate(self.collection.mainWindow.timeSeries):
-
-            #convert QLineSeries to array of QPointF
-            points = series.points()
-
-            reducedPoints = self.reduceArray(points)
-
-            self.replaceSeriesSignal.emit(seriesIndex, reducedPoints)
-
-    #putting actual reducing functionality in separate function, so it can be used in both doRebuildPlot and doReduceSeries
-    def reduceArray(self, points: list[QPointF]):
-        length = len(points)
-
-        #split the series at 2/3 length into left and right part
-        splitIndex = (2 * length) // 3
-        left = points[:splitIndex]
-        right = points[splitIndex:]
-
-        #initialize reduced left part
-        reducedLeft = []
-
-        for i in range(0, len(left) - 1, 2):
-            point1 = left[i]
-            point2 = left[i+1]
-
-            reducedLeft.append(QPointF((point1.x() + point2.x()) / 2, (point1.y() + point2.y()) / 2))
-
-        if len(left) % 2 != 0:
-            reducedLeft.append(left[-1])
-
-        return (reducedLeft + right)
-
 #class that hosts the DataHandling loop in a separate thread
 class DataHandlingThread(QThread):
     sendStepSignal = Signal()
@@ -2387,13 +2316,13 @@ class DataHandlingThread(QThread):
         #frequency of DataHandling loop in Hz
         self.frequency = 20
 
-    #override run function of QThread, is triggered from constructor of ClassCollection
+    #override run function of QThread, is triggered from GSStart when DataHandlingThread.start() is called
     def run(self):
         #calculate period in milliseconds from frequency
         period_ms = 1000 / self.frequency
 
-        i = 0 ###only for debugging
-        times = [0]*50 ###only for debugging
+        #i = 0 ###only for debugging
+        #times = [0]*50 ###only for debugging
 
         #initialize DataHandling
         DataHandling.Initialize()
@@ -2403,7 +2332,7 @@ class DataHandlingThread(QThread):
             #get starting time of loop iteration
             clock = time.monotonic_ns()
 
-            DataHandling.DebugLastFrame()####only for debugging
+            #DataHandling.DebugLastFrame()####only for debugging
 
             #make all updates in DataHandling
             DataHandling.UpdateAll()
@@ -2443,19 +2372,19 @@ class DataHandlingThread(QThread):
             if (endTime - clock)/1000000 < period_ms:
                 time.sleep((period_ms - (endTime - clock) / 1000000)/1000)
 
-            clock6 = time.monotonic_ns() ####only for debugging
+            #clock6 = time.monotonic_ns() ####only for debugging
             # print("rest-time: " + str((clock6-clock5)/1000000))
 
             #debugging loop time measurement
-            times[i] = (clock6-clock)/1000000
-            i += 1
-            if i == 50:
-                average = 0
-                for timeVal in times:
-                    average += timeVal
-                average = average/50
-                print("DataHandling Loop-time average: " + str(average) + " with " + str(self.collection.dataAccumulation.gatherIndex + 1) + " points\n")
-                i = 0
+            #times[i] = (clock6-clock)/1000000
+            #i += 1
+            #if i == 50:
+            #    average = 0
+            #    for timeVal in times:
+            #        average += timeVal
+            #    average = average/50
+            #    print("DataHandling Loop-time average: " + str(average) + " with " + str(self.collection.dataAccumulation.gatherIndex + 1) + " points\n")
+            #    i = 0
 
 #class that collects all instantiated classes and connects them as necessary
 #other classes only need to have access to this class to access other classes
@@ -2468,9 +2397,7 @@ class ClassCollection:
         self.startWindow = GSStart(self)
         self.controlPanel = GSControl(self)
         self.timeWindow = GSLaunchTime(self)
-        self.documentationWindow = GSDocumentation(self)
         self.errorWindow = GSError(self)
-        self.resultsWindow = GSResults(self)
         self.connectionWindow = GSConnection(self)
         self.calibrationWindow = GSCalibration(self)
         self.plotWorker = PlotWorker(self)
@@ -2492,7 +2419,6 @@ class ClassCollection:
         self.dataAccumulation.setSOETimeSignal.connect(self.settings.setSOETime)
         self.dataAccumulation.setNozzleOpenTimeSignal.connect(self.settings.setNozzleOpenTime)
         self.dataAccumulation.setEOETimeSignal.connect(self.settings.setEOETime)
-        self.dataAccumulation.resetProgressBarSignal.connect(self.mainWindow.resetProgressBar)
 
         #connect doTask signals to plotWorker
         self.mainWindow.doTaskSignal.connect(self.plotWorker.doTask)
@@ -2517,9 +2443,7 @@ class ClassCollection:
         self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
         self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
         self.mainWindow.ui.actionControl_Panel.triggered.connect(self.controlPanel.show)
-        self.mainWindow.ui.actionDocumentation.triggered.connect(self.documentationWindow.show)
         self.mainWindow.ui.actionConnection.triggered.connect(self.connectionWindow.show)
-        self.mainWindow.ui.actionResults.triggered.connect(self.resultsWindow.show)
         self.mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(self.timeWindow.show)
         self.startWindow.accepted.connect(self.mainWindow.applySettings)
         self.startWindow.accepted.connect(self.mainWindow.show)
