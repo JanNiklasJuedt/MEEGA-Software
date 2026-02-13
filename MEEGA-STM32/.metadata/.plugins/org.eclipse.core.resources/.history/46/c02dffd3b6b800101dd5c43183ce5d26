@@ -1,0 +1,540 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body for Pressure Sensors
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2025 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <stm32g0xx_hal.h>
+#include <stdint.h>
+#include <string.h>
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+SPI_HandleTypeDef hspi2;
+
+/* USER CODE BEGIN PV */
+#define LEDs_PORT GPIOA
+#define LED1 GPIO_PIN_11
+#define LED2 GPIO_PIN_8
+
+#define CS_RPi_PORT GPIOB
+#define CS_RPi_PIN GPIO_PIN_1
+
+#define CS_SENSORS_PORT GPIOB
+#define CS_TPR_PIN GPIO_PIN_8
+#define CS_PT_PIN GPIO_PIN_7
+#define CS_P0_PIN GPIO_PIN_6
+#define CS_P1_PIN GPIO_PIN_5
+#define CS_P2_PIN GPIO_PIN_4
+#define CS_P3_PIN GPIO_PIN_3
+
+//Honeywell MPR SPI Sensor
+#define TIMEOUT_SPI 20 //in ms Timeout check busy bit: Normal 5ms --Should not block the 20Hz RPi rate
+
+//CMD from RPi to read sensors data
+#define CMD_READ 0xA1
+
+//Transfer length
+#define TxPACKET_LENGTH 17 //bytes 2 bytes from 16bit, 3 bytes from 24bit ---- CHANGE if needed
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_SPI2_Init(void);
+/* USER CODE BEGIN PFP */
+uint16_t Sensors16bits(uint8_t high,uint8_t low) {
+	return (high << 8) | low;
+}
+
+uint32_t Sensors24bits(uint8_t high, uint8_t middle, uint8_t low) {
+	return ((uint32_t)high << 16) | ((uint32_t)middle << 8) | low;
+}
+
+static uint8_t rxBuf16[2];
+//static uint8_t rxBuf24[4];
+
+static uint8_t txPacket[TxPACKET_LENGTH];
+static uint8_t txLatest[TxPACKET_LENGTH];
+static uint8_t rxCMD;
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+int SPI_COM_SetUp(uint16_t CS_PIN, uint8_t SensorData[3]) {
+	uint32_t comStart = HAL_GetTick();
+
+	//Step 1 Tab. 18 SPI COMMUNICATION
+	uint8_t txCMDStart[3] = {0xAA, 0x00, 0x00};
+	uint8_t rxCMDStart[3];
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_RESET);
+	HAL_SPI_TransmitReceive(&hspi1, txCMDStart, rxCMDStart, 3, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_SET);
+
+	//Step 2 Tab. 18 SPI COMM Option 1
+	uint8_t txStatus = 0xF0;
+	uint8_t rxStatus;
+	while ((HAL_GetTick() - comStart) < TIMEOUT_SPI) {
+		HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_RESET);
+		HAL_SPI_TransmitReceive(&hspi1, &txStatus, &rxStatus, 1, HAL_MAX_DELAY);
+		HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_SET);
+
+		if(!(rxStatus & 0x20)) break; //bit 5 0b0010 0000 busy flag, continue if not busy
+	}
+	/*
+	//Step 2 Tab. 18 SPI COMM Option 2
+	HAL_Delay(5);
+	 */
+
+	//Step 3 Tab. 18 SPI COMM
+	uint8_t txData[4] = {0xF0, 0x00, 0x00, 0x00};
+	uint8_t rxData[4];
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_RESET);
+	HAL_SPI_TransmitReceive(&hspi1, txData, rxData, 4, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PIN, GPIO_PIN_SET);
+
+	SensorData[0] = rxData[1];
+	SensorData[1] = rxData[2];
+	SensorData[2] = rxData[3];
+
+	if ((SensorData[0] == 0x00 && SensorData[1] == 0x00 && SensorData[2] == 0x00) ||
+		(SensorData[0] == 0xFF && SensorData[1] == 0xFF && SensorData[2] == 0xFF)) {
+		return -1;
+	}
+
+	return 0; //Total 4 sensors ~20ms
+}
+
+void createtxPacket(void) {
+	uint16_t TPR280_Ambient, PT5494_Analog;
+	uint8_t SensorValue[3];
+	uint8_t SensorError = 0; //Error flag
+
+	//CS1 12bit - TPR ADC Ambient 16bit
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_TPR_PIN, GPIO_PIN_RESET);	//CS LOW to start communication
+	HAL_SPI_Receive(&hspi1, rxBuf16, 2, HAL_MAX_DELAY);	//read data
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_TPR_PIN, GPIO_PIN_SET);		//CS HIGH to end communication
+	TPR280_Ambient = Sensors16bits(rxBuf16[0], rxBuf16[1]); //RAW Output
+	if (TPR280_Ambient == 0 || TPR280_Ambient == 0xFFFF) SensorError = 1;
+
+	//CS2 12bit - PT5494 ADC Hyd Acc Pressure Transmitter -14,5 until 145 psi
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PT_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Receive(&hspi1, rxBuf16, 2, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_PT_PIN, GPIO_PIN_SET);
+	PT5494_Analog = Sensors16bits(rxBuf16[0], rxBuf16[1]); //RAW Output
+	if (PT5494_Analog == 0 || PT5494_Analog == 0xFFFF) SensorError = 1;
+
+	//Packing
+	//TPR280 ADC 16bit
+	txPacket[0] = (TPR280_Ambient >> 8);
+	txPacket[1] = (TPR280_Ambient & 0xFF);
+	//PT6494 ADC 16bit
+	txPacket[2] = (PT5494_Analog >> 8);
+	txPacket[3] = (PT5494_Analog & 0xFF);
+	//MPRLS P0 24bit
+	if (SPI_COM_SetUp(CS_P0_PIN, SensorValue) == 0) {
+		txPacket[4] = SensorValue[0];
+		txPacket[5] = SensorValue[1];
+		txPacket[6] = SensorValue[2];
+	}
+	else {
+		txPacket[4] = txPacket[5] = txPacket[6] = 0;
+		SensorError = 1;
+	}
+	//MPRLS P1 24bit
+	if (SPI_COM_SetUp(CS_P1_PIN, SensorValue) == 0) {
+		txPacket[7] = SensorValue[0];
+		txPacket[8] = SensorValue[1];
+		txPacket[9] = SensorValue[2];
+	}
+	else {
+		txPacket[7] = txPacket[8] = txPacket[9] = 0;
+		SensorError = 1;
+	}
+	//MPRLS P2 24bit
+	if (SPI_COM_SetUp(CS_P2_PIN, SensorValue) == 0) {
+		txPacket[10] = SensorValue[0];
+		txPacket[11] = SensorValue[1];
+		txPacket[12] = SensorValue[2];
+	}
+	else {
+		txPacket[10] = txPacket[11] = txPacket[12] = 0;
+		SensorError = 1;
+	}
+	//MPRLS P3 24bit
+	if (SPI_COM_SetUp(CS_P3_PIN, SensorValue) == 0) {
+		txPacket[13] = SensorValue[0];
+		txPacket[14] = SensorValue[1];
+		txPacket[15] = SensorValue[2];
+	}
+	else {
+		txPacket[13] = txPacket[14] = txPacket[15] = 0;
+		SensorError = 1;
+	}
+
+	/*
+	TEST FOR DEBUG
+	if (SPI_COM_SetUp(CS_P0_PIN, SensorValue) != 0) {
+		HAL_GPIO_WritePin(LEDs_PORT, LED1, GPIO_PIN_RESET);
+		SensorError = 1;
+	}
+	 */
+
+	if (SensorError == 0) {
+		txPacket[16] = 1;
+		HAL_GPIO_WritePin(LEDs_PORT, LED1, GPIO_PIN_RESET);
+	}
+	else {
+		txPacket[16] = 3;
+		HAL_GPIO_WritePin(LEDs_PORT, LED1, GPIO_PIN_RESET);
+	}
+	/*
+	//SPI Sensors
+	uint32_t P0_SPI, P1_SPI, P2_SPI, P3_SPI;
+	//CS3 24bit - MPRLS Pressure Sensor SPI 0 - 25 psi
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P0_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Receive(&hspi1, rxBuf24, 3, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P0_PIN, GPIO_PIN_SET);
+	P0_SPI = Sensors24bits(rxBuf24[1], rxBuf24[2], rxBuf24[3]); //RAW Output
+
+	//CS4 24bit - MPRLS Pressure Sensor SPI 0 - 25 psi
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P1_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Receive(&hspi1, rxBuf24, 3, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P1_PIN, GPIO_PIN_SET);
+	P1_SPI = Sensors24bits(rxBuf24[1], rxBuf24[2], rxBuf24[3]); //RAW Output
+
+	//CS5 24bit - MPRLS Pressure Sensor SPI 0 - 25 psi
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P2_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Receive(&hspi1, rxBuf24, 3, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P2_PIN, GPIO_PIN_SET);
+	P2_SPI = Sensors24bits(rxBuf24[1], rxBuf24[2], rxBuf24[3]); //RAW Output
+
+	//CS6 24bit - MPRLS Pressure Sensor SPI 0 - 25 psi
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P3_PIN, GPIO_PIN_RESET);
+	HAL_SPI_Receive(&hspi1, rxBuf24, 3, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_P3_PIN, GPIO_PIN_SET);
+	P3_SPI = Sensors24bits(rxBuf24[1], rxBuf24[2], rxBuf24[3]); //RAW Output
+
+	//MPRLS P0 24bit
+	txPacket[4] = ((P0_SPI >> 16) & 0xFF);
+	txPacket[5] = ((P0_SPI >> 8) & 0xFF);
+	txPacket[6] = (P0_SPI & 0xFF);
+	//MPRLS P1 24bit
+	txPacket[7] = ((P1_SPI >> 16) & 0xFF);
+	txPacket[8] = ((P1_SPI >> 8) & 0xFF);
+	txPacket[9] = (P1_SPI & 0xFF);
+	//MPRLS P2 24bit
+	txPacket[10] = ((P2_SPI >> 16) & 0xFF);
+	txPacket[11] = ((P2_SPI >> 8) & 0xFF);
+	txPacket[12] = (P2_SPI & 0xFF);
+	//MPRLS P3 24bit
+	txPacket[13] = ((P3_SPI >> 16) & 0xFF);
+	txPacket[14] = ((P3_SPI >> 8) & 0xFF);
+	txPacket[15] = (P3_SPI & 0xFF);
+	*/
+}
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_SPI1_Init();
+  MX_SPI2_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin(CS_SENSORS_PORT, CS_TPR_PIN | CS_PT_PIN | CS_P0_PIN | CS_P1_PIN | CS_P2_PIN | CS_P3_PIN, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(LEDs_PORT, LED1, GPIO_PIN_SET);
+
+  uint32_t last_UpdateTime = 0;
+  const uint32_t RefreshData_Timeout = 20; //refresh every 20 ms -CHANGEABLE-
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+	  if(HAL_GetTick() - last_UpdateTime >= RefreshData_Timeout) {
+		  HAL_GPIO_TogglePin(LEDs_PORT, LED2);
+		  createtxPacket();
+		  memcpy(txLatest, txPacket, TxPACKET_LENGTH); //stable data buffer ready to be transmitted
+		  last_UpdateTime = HAL_GetTick();
+	  }
+
+	  if(HAL_GPIO_ReadPin(CS_RPi_PORT, CS_RPi_PIN) == GPIO_PIN_RESET) {
+		  if(HAL_SPI_Receive(&hspi2, &rxCMD, 1, 10) == HAL_OK) {	//50ms timeout maximum request period
+		  		  if(rxCMD == CMD_READ) {
+		  			  HAL_SPI_Transmit(&hspi2, txLatest, TxPACKET_LENGTH, HAL_MAX_DELAY);
+		  			  HAL_Delay(1);
+		  		  }
+		  	  }
+	  }
+
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_SLAVE;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 7;
+  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+
+  /* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_Output_LED1_Pin|GPIO_Output_LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_Output_CS1_Pin|GPIO_Output_CS2_Pin|GPIO_Output_CS3_Pin|GPIO_Output_CS4_Pin
+                          |GPIO_Output_CS5_Pin|GPIO_Output_CS6_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : GPIO_Input_CSPSB_Pin */
+  GPIO_InitStruct.Pin = GPIO_Input_CSPSB_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIO_Input_CSPSB_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO_Output_LED1_Pin GPIO_Output_LED2_Pin */
+  GPIO_InitStruct.Pin = GPIO_Output_LED1_Pin|GPIO_Output_LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO_Output_CS1_Pin GPIO_Output_CS2_Pin GPIO_Output_CS3_Pin GPIO_Output_CS4_Pin
+                           GPIO_Output_CS5_Pin GPIO_Output_CS6_Pin */
+  GPIO_InitStruct.Pin = GPIO_Output_CS1_Pin|GPIO_Output_CS2_Pin|GPIO_Output_CS3_Pin|GPIO_Output_CS4_Pin
+                          |GPIO_Output_CS5_Pin|GPIO_Output_CS6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  /* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+#ifdef USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
