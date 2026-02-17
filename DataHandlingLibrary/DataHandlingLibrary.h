@@ -121,7 +121,7 @@ typedef unsigned char byte;
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
 
-DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.1f;
+DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.2f;
 DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFE_NAME[] = "MEEGA_FailSafe.txt";
 
 DATAHANDLINGLIBRARY_CONSTANT const float CALIBRATION_VERSION = 1.1f;
@@ -130,7 +130,7 @@ DATAHANDLINGLIBRARY_CONSTANT const char CALIBRATION_NAME[] = "MEEGA_Calibration.
 DATAHANDLINGLIBRARY_CONSTANT const float SAVEFILE_VERSION = 1.0f;
 DATAHANDLINGLIBRARY_CONSTANT const char SAVEFILE_NAME[] = "MEEGA_SaveFile.meega";
 
-DATAHANDLINGLIBRARY_CONSTANT const float VERSION = 0.5f;
+DATAHANDLINGLIBRARY_CONSTANT const float VERSION = 0.9f;
 DATAHANDLINGLIBRARY_CONSTANT const char DEBUGLOG_NAME[] = "MEEGA_DataHandlingLog.txt";
 
 //Enums and Structs
@@ -218,6 +218,8 @@ typedef struct DATAHANDLINGLIBRARY_API FailSafe {
 	time_t dateTime;
 	//path used to look up the newest savefile
 	char saveFilePath[PATH_LENGTH];
+	//incrementing number to create unique savefile names for each experiment run
+	int saveFileNumber;
 	//if the experiment run of the newest savefile has been completed (Bool)
 	byte complete;
 	//if the program has exited nominally (Bool)
@@ -259,6 +261,7 @@ typedef struct DATAHANDLINGLIBRARY_API SaveFile {
 	struct DataFrame currentTC;
 	//path to the associated file
 	char saveFilePath[PATH_LENGTH];
+	int saveFileNumber;
 } SaveFile;
 
 /// <summary>
@@ -457,7 +460,7 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 /// Initializes Memory and loads Data from files if possible
 /// </summary>
 /// <returns>Whether successful</returns>
-DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte CreateNewSaveFile);
+DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe);
 
 /// <summary>
 /// </summary>
