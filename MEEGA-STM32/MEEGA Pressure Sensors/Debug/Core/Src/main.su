@@ -1,0 +1,10 @@
+../Core/Src/main.c:82:10:Sensors16bits	16	static
+../Core/Src/main.c:86:10:Sensors24bits	24	static
+../Core/Src/main.c:100:5:SPI_COM_SetUp	56	static
+../Core/Src/main.c:144:6:createtxPacket	32	static
+../Core/Src/main.c:278:5:main	24	static
+../Core/Src/main.c:349:6:SystemClock_Config	88	static
+../Core/Src/main.c:390:13:MX_SPI1_Init	8	static
+../Core/Src/main.c:430:13:MX_SPI2_Init	8	static
+../Core/Src/main.c:469:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:522:6:Error_Handler	8	static,ignoring_inline_asm

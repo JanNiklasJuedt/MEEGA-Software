@@ -1,0 +1,10 @@
+../Core/Src/main.c:82:10:Sensors16bits	1
+../Core/Src/main.c:86:10:Sensors24bits	1
+../Core/Src/main.c:100:5:SPI_COM_SetUp	9
+../Core/Src/main.c:144:6:createtxPacket	10
+../Core/Src/main.c:278:5:main	2
+../Core/Src/main.c:349:6:SystemClock_Config	3
+../Core/Src/main.c:390:13:MX_SPI1_Init	2
+../Core/Src/main.c:430:13:MX_SPI2_Init	2
+../Core/Src/main.c:469:13:MX_GPIO_Init	1
+../Core/Src/main.c:522:6:Error_Handler	1

@@ -64,6 +64,7 @@ int main() {
 		//RESET
 		//TestStatus = 0;
 		SoEReceived = 0;
+		EoE = 0;
 		digitalWrite(Servo_On, ServoOff);
 		digitalWrite(LEDs_Pin, LEDsOff);
 		//RESET
@@ -102,7 +103,7 @@ int main() {
 					break;
 
 				case NOSECONE_SEPARATION:
-					digitalWrite(LEDs_Pin, LEDsOn);	//LED on
+					//digitalWrite(LEDs_Pin, LEDsOn);	//LED on (deprecated)
 #if (MODE == DEBUG)
 					printf("Nose Cone Separation\n");
 #endif
@@ -152,7 +153,7 @@ int main() {
 #if (MODE == DEBUG)
 					if (!NozzleOpened) printf("End of Experiment: Error\n");
 #endif
-					EoE = 1;
+					//EoE = 1;
 					delay_abortable(Delay_PowerOff);
 					//return (NozzleOpened) ? 0 : 404;	//End of Experiment
 					currentState = SHUTDOWN_SLEEP;
@@ -160,6 +161,7 @@ int main() {
 				case SHUTDOWN_SLEEP:
 					break;
 				}
+				if (currentState == SHUTDOWN_SLEEP && LOSignal == 1) break;
 			}
 		}
 		else if (modeSel == test) {	//Test Mode
@@ -185,7 +187,7 @@ int main() {
 			int dryRun = ReadFrame(FrameTC, Dry_Run);
 			int testRun = ReadFrame(FrameTC, Test_Run);
 
-			if (testRun == 1 || SoESignal == LOW) {
+			if (testRun == 1) {
 				SoEReceived = 1;
 				digitalWrite(Servo_On, ServoOn);
 				digitalWrite(LEDs_Pin, LEDsOn);
@@ -505,19 +507,19 @@ int LOSignal() {
 #if (SERVO_VERSION == SERVO_v1)
 void ServoInit(void) {
 	pinMode(Servo_Pin, PWM_OUTPUT);
-	pwmWrite(Servo_Pin, 0);
 	pwmSetMode(PWM_MODE_MS); //Use Mark-Space mode
-	pwmSetRange(2000); //Set range to 20ms (50Hz)
 	pwmSetClock(192); //Set clock to 19.2MHz/192=50Hz
+	pwmSetRange(2000); //Set range to 20ms (50Hz)
+	pwmWrite(Servo_Pin, 0);
 }
 
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 100) degree = 100;
 	//Range: 1000-2000us Theoretisch; Range: 1050-2050us Real (Excel Table and Calculation)
-	int minR = 970;
+	int minR = 1030;
 	//static int previousPwm = 1000;
-	int maxR = 1970;
+	int maxR = 2030;
 	int pulse_us = minR + degree * (maxR - minR) / 100;
 	pwmWrite(Servo_Pin, pulse_us / 10);
 #elif (SERVO_VERSION == SERVO_v2)
