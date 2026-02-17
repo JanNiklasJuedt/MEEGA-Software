@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>421</width>
     <height>448</height>
    </rect>
   </property>
@@ -79,8 +79,14 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QDoubleSpinBox" name="servoValueBox">
+            <property name="minimum">
+             <double>-1.000000000000000</double>
+            </property>
             <property name="maximum">
              <double>360.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-1.000000000000000</double>
             </property>
            </widget>
           </item>

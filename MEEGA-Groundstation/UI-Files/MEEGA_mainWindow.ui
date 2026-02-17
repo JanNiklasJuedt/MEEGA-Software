@@ -2425,7 +2425,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>17</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="font">
@@ -2459,22 +2459,12 @@
     <addaction name="separator"/>
     <addaction name="actionFileSave_as"/>
     <addaction name="separator"/>
-    <addaction name="actionResults"/>
     <addaction name="actionExport"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
     </property>
-    <widget class="QMenu" name="menuLanguage">
-     <property name="title">
-      <string>Language</string>
-     </property>
-     <addaction name="actionEnglish"/>
-     <addaction name="actionGerman"/>
-    </widget>
-    <addaction name="menuLanguage"/>
-    <addaction name="separator"/>
     <addaction name="actionConnection"/>
     <addaction name="actionReconnect"/>
     <addaction name="separator"/>
@@ -2497,8 +2487,6 @@
     <addaction name="actionControl_Panel"/>
     <addaction name="separator"/>
     <addaction name="actionLive_Values_Widget"/>
-    <addaction name="separator"/>
-    <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="menuAppearance"/>
     <addaction name="separator"/>

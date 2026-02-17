@@ -24,7 +24,7 @@ class Ui_controlPanel(object):
     def setupUi(self, controlPanel):
         if not controlPanel.objectName():
             controlPanel.setObjectName(u"controlPanel")
-        controlPanel.resize(400, 448)
+        controlPanel.resize(421, 448)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -74,7 +74,9 @@ class Ui_controlPanel(object):
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.servoValueBox = QDoubleSpinBox(self.groupBox)
         self.servoValueBox.setObjectName(u"servoValueBox")
+        self.servoValueBox.setMinimum(-1.000000000000000)
         self.servoValueBox.setMaximum(360.000000000000000)
+        self.servoValueBox.setValue(-1.000000000000000)
 
         self.horizontalLayout_2.addWidget(self.servoValueBox)
 
