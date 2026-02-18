@@ -458,37 +458,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="6">
-            <widget class="QLabel" name="statusLabelTChamber1">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
            <item row="4" column="6">
             <widget class="QLabel" name="statusLabelTNozzle1">
              <property name="sizePolicy">
@@ -998,19 +967,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="5">
-            <widget class="QLabel" name="textLabelTChamber1">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>T Chamber 1</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="7">
             <widget class="QLabel" name="textLabelSOE">
              <property name="toolTip">
@@ -1213,50 +1169,6 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="5">
-            <widget class="QLabel" name="textLabelTChamber2">
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>T Chamber 2</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="6">
-            <widget class="QLabel" name="statusLabelTChamber2">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>25</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::NoFrame</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Sunken</enum>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
            <item row="4" column="2">
             <widget class="QLabel" name="textLabelPNozzle1">
              <property name="toolTip">
@@ -1425,6 +1337,50 @@
              </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage normal&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = voltage too low&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Sunken</enum>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="5">
+            <widget class="QLabel" name="textLabelTChamber2">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>T Chamber</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="6">
+            <widget class="QLabel" name="statusLabelTChamber2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/activeBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is ok&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/issuesBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is the same as last value&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/qrc/resources/inactiveBorderless.png&quot; width=&quot;18&quot; height=&quot;18&quot; style=&quot;vertical-align: middle;&quot;/&gt; = value is all 1 or all 0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::NoFrame</enum>
@@ -1797,28 +1753,6 @@
                 <property name="flags">
                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled|ItemIsAutoTristate</set>
                 </property>
-                <item>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                 <property name="checkState">
-                  <enum>Checked</enum>
-                 </property>
-                 <property name="flags">
-                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>2</string>
-                 </property>
-                 <property name="checkState">
-                  <enum>Checked</enum>
-                 </property>
-                 <property name="flags">
-                  <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
-                 </property>
-                </item>
                </item>
                <item>
                 <property name="text">
@@ -2425,7 +2359,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>23</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">
