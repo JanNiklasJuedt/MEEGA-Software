@@ -4,19 +4,18 @@ from __future__ import annotations #for forward type references
 from enum import IntEnum
 from math import floor
 from math import sin, radians
-from xml.sax.handler import property_interning_dict
 import numpy as np
 import sys
 import time
 import winreg
 from winsdk.windows.ui.viewmanagement import UISettings, UIColorType
 import csv
-from tkinter import filedialog
+import os
 
 #import of qt modules
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPalette)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory, QProgressBar)
-from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject, QTimeZone)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory, QProgressBar, QFileDialog)
+from PySide6.QtCore import (QFile, Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject, QTimeZone)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
 from PySide6.QtSvg import QSvgRenderer
 
@@ -267,6 +266,9 @@ class GSMain(QMainWindow):
         self.app = QApplication.instance()
         
     #internal functions
+
+    def newFile(self):
+        DataHandling.
 
     def scalePixmaps(self):
             #adjust pixmap sizes to label sizes
@@ -1131,6 +1133,8 @@ class GSStart(QDialog):
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
+        self.ui.saveFileButton.clicked.connect(self.getFilepath)
+
         #if dialog i rejected, call shutdown of collection to terminate application
         self.rejected.connect(self.collection.shutdown)
         #if dialog is accepted, fetch settings from ui elements
@@ -1141,6 +1145,18 @@ class GSStart(QDialog):
         self.collection.shutdown()
         event.accept()
         super().closeEvent(event)
+
+    @Slot()
+    def getFilepath(self):
+        #open explorer for choosing filepath
+        filepath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Save File",
+            os.path.dirname(os.path.abspath(__file__)),
+            "MEEGA-Dateien (*.meega)"
+        )
+
+        self.ui.saveFileEdit.setText(filepath)
     
     #fetch settings from ui elements and store them in settings
     @Slot()
@@ -1745,11 +1761,11 @@ class GSExport(QDialog):
     @Slot()
     def export(self):
         #open explorer for choosing filepath
-        self.filepath = filedialog.asksaveasfilename(
-            title="save as csv",
-            defaultextension=".csv",
-            filetypes=[("CSV-files", "*.csv")],
-            confirmoverwrite=True
+        self.filepath = QFileDialog.getSaveFileName(
+            self,
+            "Save As CSV",
+            os.path.join(os.path.expanduser("~"), "Documents"),
+            "CSV-files (*.csv)"
         )
 
         self.collection.exportWorker.start()
