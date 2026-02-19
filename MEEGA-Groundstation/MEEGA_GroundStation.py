@@ -273,7 +273,7 @@ class GSMain(QMainWindow):
             "New File",
             self.collection.settings.defaultFilePath,
             "MEEGA-Files (*.meega)")
-        if(DataHandling.CreateSave(filepath)):
+        if(DataHandling.CreateSave(bytes(filepath, "utf-8"))):
             self.collection.dataAccumulation.clearData()
 
     def openFile(self):
@@ -282,7 +282,7 @@ class GSMain(QMainWindow):
             "Open File",
             self.collection.settings.defaultFilePath,
             "MEEGA-Files (*.meega)")
-        if(DataHandling.ReadSave(filepath)):
+        if(DataHandling.ReadSave(bytes(filepath,"utf-8"))):
             self.collection.dataAccumulation.clearData()
 
     def scalePixmaps(self):
@@ -2083,6 +2083,10 @@ class DataAccumulation(QObject):
     setNozzleOpenTimeSignal = Signal(QDateTime)
     setEOETimeSignal = Signal(QDateTime)
 
+    #clearing signals
+    clearSeriesSignal = Signal(int)
+    updatePlotMetricsSignal = Signal(int, float, float)
+
     #class variables for amount of sensors and household entries
     sensorSize = 13
     householdSize = 29
@@ -2353,6 +2357,16 @@ class DataAccumulation(QObject):
         self.risingEdgeLO = 0
         self.risingEdgeSOE = 0
 
+        self.setPowerOnTimeSignal.emit(None)
+        self.setLOTimeSignal.emit(None)
+        self.setSOETimeSignal.emit(None)
+        self.setNozzleOpenTimeSignal.emit(None)
+        self.setEOETimeSignal.emit(None)
+
+        for i in range(self.sensorSize):
+            self.clearSeriesSignal.emit(i)
+        self.updatePlotMetricsSignal.emit(0, 0, 0)
+
 #class that hosts the DataHandling loop in a separate thread
 class DataHandlingThread(QThread):
     sendStepSignal = Signal()
@@ -2475,6 +2489,9 @@ class ClassCollection:
         self.dataAccumulation.setSOETimeSignal.connect(self.settings.setSOETime)
         self.dataAccumulation.setNozzleOpenTimeSignal.connect(self.settings.setNozzleOpenTime)
         self.dataAccumulation.setEOETimeSignal.connect(self.settings.setEOETime)
+
+        self.dataAccumulation.clearSeriesSignal.connect(self.mainWindow.clearSeries)
+        self.dataAccumulation.updatePlotMetricsSignal.connect(self.mainWindow.updatePlotMetrics)
 
         #connect doTask signals to plotWorker
         self.mainWindow.doTaskSignal.connect(self.plotWorker.doTask)
