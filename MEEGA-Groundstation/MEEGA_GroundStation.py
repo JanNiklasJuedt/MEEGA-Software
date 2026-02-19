@@ -268,7 +268,22 @@ class GSMain(QMainWindow):
     #internal functions
 
     def newFile(self):
-        DataHandling.
+        filepath = QFileDialog.getSaveFileName(
+            self,
+            "New File",
+            self.collection.settings.defaultFilePath,
+            "MEEGA-Files (*.meega)")
+        if(DataHandling.CreateSave(filepath)):
+            self.collection.dataAccumulation.clearData()
+
+    def openFile(self):
+        filepath = QFileDialog.getOpenFileName(
+            self,
+            "Open File",
+            self.collection.settings.defaultFilePath,
+            "MEEGA-Files (*.meega)")
+        if(DataHandling.ReadSave(filepath)):
+            self.collection.dataAccumulation.clearData()
 
     def scalePixmaps(self):
             #adjust pixmap sizes to label sizes
@@ -2318,6 +2333,23 @@ class DataAccumulation(QObject):
                 break ###only for testing purposes###
                 ###
 
+    def clearData(self):
+        #initialize variables
+        self.gatherIndex = -1 #index of the last data point in the arrays (point with highest system time). -1 by default
+        self.newIndex = -1 #index of the newly added data point to the arrays. -1 by default
+        self.liftOffIndex = -1 #index of the data point corresponding to launch time. -1 by default
+        self.startOfExperimentIndex = -1 #index of the data point corresponding to start of experiment. -1 by default
+        self.noPacketCount = 0 #counter for number of consecutive empty frames received, used for connection status tracking
+
+        #initialize data arrays with initial allocation size
+        self.sensorData = np.ones((self.allocationSize, self.sensorSize))
+        self.household = np.ones(self.householdSize)
+        self.systemTime = np.ones(self.allocationSize)
+
+        #variables to keep track of rising edge of LO and SOE, to determine where the corresponding indices should be set
+        self.risingEdgeLO = 0
+        self.risingEdgeSOE = 0
+
 #class that hosts the DataHandling loop in a separate thread
 class DataHandlingThread(QThread):
     sendStepSignal = Signal()
@@ -2344,7 +2376,8 @@ class DataHandlingThread(QThread):
             bytes(self.collection.settings.filePath, "utf-8"),
             bytes(self.collection.settings.calibrationPath, "utf-8"),
             bytes(self.collection.settings.connector, "utf-8"),
-            c_byte(0)
+            1,
+            1
         )
 
         #main loop
