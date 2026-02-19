@@ -1829,7 +1829,7 @@
      </layout>
     </item>
     <item row="1" column="0" colspan="2">
-     <layout class="QGridLayout" name="layout_progressbars" columnstretch="4,1,4,1,10,1,0,0,30,0,0,1,30,1,4">
+     <layout class="QGridLayout" name="layout_progressbars" columnstretch="4,0,4,0,16,0,12,0,4">
       <property name="sizeConstraint">
        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
       </property>
@@ -1845,26 +1845,7 @@
       <property name="verticalSpacing">
        <number>10</number>
       </property>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_LO">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Lift Off</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="12">
+      <item row="0" column="6">
        <widget class="QProgressBar" name="progressBar_ER">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -1906,71 +1887,16 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_PF">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Pre-Flight</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QProgressBar" name="progressBar_PF">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>75</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-          <italic>false</italic>
-          <bold>false</bold>
-          <underline>false</underline>
-          <strikeout>false</strikeout>
-          <kerning>true</kerning>
-         </font>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-        <property name="format">
-         <string>00:00</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="11">
-       <spacer name="horizontalSpacer_4">
+      <item row="0" column="7">
+       <spacer name="horizontalSpacer_9">
         <property name="locale">
          <locale language="English" country="Germany"/>
         </property>
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -1980,55 +1906,7 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="14">
-       <widget class="QProgressBar" name="progressBar_SD">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>75</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="baseSize">
-         <size>
-          <width>97</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-          <italic>false</italic>
-          <bold>false</bold>
-          <underline>false</underline>
-          <strikeout>false</strikeout>
-          <kerning>true</kerning>
-         </font>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-        <property name="textVisible">
-         <bool>false</bool>
-        </property>
-        <property name="format">
-         <string>00:00</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="14">
+      <item row="1" column="8">
        <widget class="QLabel" name="label_SD">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -2053,36 +1931,27 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="5">
-       <spacer name="horizontalSpacer">
-        <property name="locale">
-         <locale language="English" country="Germany"/>
+      <item row="1" column="6">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Experiment Run</string>
         </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
-      <item row="0" column="4">
-       <widget class="QProgressBar" name="progressBar_SODS">
+      <item row="0" column="2">
+       <widget class="QProgressBar" name="progressBar_LO">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>5</horstretch>
+          <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>50</width>
+          <width>75</width>
           <height>0</height>
          </size>
         </property>
@@ -2100,21 +1969,21 @@
         <property name="locale">
          <locale language="English" country="Germany"/>
         </property>
-        <property name="minimum">
-         <number>0</number>
-        </property>
         <property name="value">
          <number>0</number>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
         <property name="format">
          <string>00:00</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="8">
+      <item row="1" column="4">
        <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,5,20,1">
         <property name="spacing">
          <number>20</number>
@@ -2170,6 +2039,25 @@
         </item>
        </layout>
       </item>
+      <item row="0" column="1">
+       <spacer name="horizontalSpacer_5">
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
       <item row="0" column="3">
        <spacer name="horizontalSpacer_3">
         <property name="locale">
@@ -2189,7 +2077,7 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="8">
+      <item row="0" column="4">
        <widget class="QProgressBar" name="progressBar_SOE">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2228,55 +2116,8 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <spacer name="horizontalSpacer_5">
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLabel" name="label_SODS">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>127</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LayoutDirection::LeftToRight</enum>
-        </property>
-        <property name="locale">
-         <locale language="English" country="Germany"/>
-        </property>
-        <property name="text">
-         <string>Nose Cone Ejection</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QProgressBar" name="progressBar_LO">
+      <item row="0" column="0">
+       <widget class="QProgressBar" name="progressBar_PF">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>1</horstretch>
@@ -2309,24 +2150,18 @@
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
-        <property name="textVisible">
-         <bool>true</bool>
-        </property>
         <property name="format">
          <string>00:00</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="13">
-       <spacer name="horizontalSpacer_9">
+      <item row="0" column="5">
+       <spacer name="horizontalSpacer_4">
         <property name="locale">
          <locale language="English" country="Germany"/>
         </property>
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -2336,10 +2171,86 @@
         </property>
        </spacer>
       </item>
-      <item row="1" column="12">
-       <widget class="QLabel" name="label_3">
+      <item row="0" column="8">
+       <widget class="QProgressBar" name="progressBar_SD">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>75</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="baseSize">
+         <size>
+          <width>97</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial</family>
+          <pointsize>12</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+        <property name="textVisible">
+         <bool>false</bool>
+        </property>
+        <property name="format">
+         <string>00:00</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_LO">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
         <property name="text">
-         <string>Experiment Run</string>
+         <string>Lift Off</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_PF">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="English" country="Germany"/>
+        </property>
+        <property name="text">
+         <string>Pre-Flight</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
