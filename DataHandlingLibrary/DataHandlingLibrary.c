@@ -263,7 +263,7 @@ int Initialize()
 	return Initialize(NULL, NULL, NULL, 0, 0);
 }
 
-int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe)
+int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte ForceOpeningSaveFile, byte SkipReadingFailSafe)
 {
 	DebugLog("Setting up DataHandling:");
 	if (SkipReadingFailSafe || !ReadFailSafe()) {
@@ -297,13 +297,12 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 		strcpy(comPath, DEFAULTCOMPATH);
 	}
 	int readExisting = !(dataHandling.failSafe->nominalExit) && !(dataHandling.failSafe->complete) && dataHandling.failSafe->saveFilePath[0] != '\0';
-	if (readExisting && !SkipOpeningSaveFile) {
+	if (readExisting || ForceOpeningSaveFile) {
 		_ReadSaveFile_(saveFilePath, saveFileNumber);
 	}
-	if (dataHandling.saveFile == NULL && !SkipOpeningSaveFile) {
+	if (dataHandling.saveFile == NULL) {
 		if (!CreateSave(saveFilePath)) return 0;
 	}
-	else if (!VirtualSave()) return 0;
 	if (CALIBRATION_METHOD != NONE) {
 		if (ReadCalibration(calPath) == -1)
 			CreateCalibration(calPath);
