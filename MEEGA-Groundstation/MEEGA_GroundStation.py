@@ -1146,8 +1146,6 @@ class GSStart(QDialog):
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
         self.collection = collection
-        self.ui.languageComboBox.setItemData(0, "en")
-        self.ui.languageComboBox.setItemData(1, "de")
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
@@ -1179,7 +1177,6 @@ class GSStart(QDialog):
     #fetch settings from ui elements and store them in settings
     @Slot()
     def fetchSettings(self):
-        self.collection.settings.language = self.ui.languageComboBox.currentData()
         self.collection.settings.connector = self.ui.connectionComboBox.currentText()
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
