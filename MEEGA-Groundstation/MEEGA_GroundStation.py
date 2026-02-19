@@ -51,7 +51,7 @@ class Settings:
     ALL = 0
     LO = 1
     SOE = 2
-    defaultFilePath = "Default.meega"
+    defaultFilePath = "MEEGA_SaveFile.meega"
     defaultCalibrationPath = "MEEGA_Calibration.txt"
     defaultLaunchTime = QDateTime(QDate.currentDate(), QTime(12,0,0), QTimeZone(b"Europe/Berlin"))
 

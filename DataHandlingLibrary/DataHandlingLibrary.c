@@ -274,16 +274,16 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 	saveFilePath = dataHandling.failSafe->saveFilePath;
 	calPath = dataHandling.failSafe->calPath;
 	comPath = dataHandling.failSafe->comPath;
-	if (SaveFileName != NULL && SaveFileName[0] != '\0') {
-		strncpy(saveFilePath, SaveFileName, PATH_LENGTH); 
+	if (SaveFileName != NULL && SaveFileName[0] != '\0' && SaveFileName[0] != ' ') {
+		strncpy(saveFilePath, SaveFileName, PATH_LENGTH);
 		saveFileNumber = dataHandling.failSafe->saveFileNumber;
 		saveFilePath[PATH_LENGTH - 1] = '\0';
 	}
-	if (CalibrationName != NULL && CalibrationName[0] != '\0') {
+	if (CalibrationName != NULL && CalibrationName[0] != '\0' && CalibrationName[0] != ' ') {
 		strncpy(calPath, CalibrationName, PATH_LENGTH);
 		calPath[PATH_LENGTH - 1] = '\0';
 	}
-	if (PortName != NULL && PortName[0] != '\0') {
+	if (PortName != NULL && PortName[0] != '\0' && PortName[0] != ' ') {
 		strncpy(comPath, PortName, PATH_LENGTH);
 		comPath[PATH_LENGTH - 1] = '\0';
 	}
@@ -1473,6 +1473,8 @@ static int _ReadSaveFile_(const char path[], int number)
 	file = fopen(modifiedPath, "rb");
 	if (file == NULL) {
 		DebugLog("!SaveFile file could not be opened_");
+		free(dataHandling.saveFile);
+		dataHandling.saveFile = NULL;
 		return 0;
 	}
 	DebugLog("Opened SaveFile file");
@@ -1481,11 +1483,15 @@ static int _ReadSaveFile_(const char path[], int number)
 	int i = 0;
 	if (fscanf(file, "%f", &dataHandling.saveFile->version) == EOF) {
 		DebugLog("!Unexpected End of File_");
+		free(dataHandling.saveFile);
+		dataHandling.saveFile = NULL;
 		return 0;
 	}
 	for (; i < sizeof(dataHandling.saveFile->dateTime); i++, writePtr++) {
 		if (fscanf(file, "%c", writePtr) == EOF) {
 			DebugLog("!Unexpected End of File_");
+			free(dataHandling.saveFile);
+			dataHandling.saveFile = NULL;
 			return 0;
 		}
 	}
