@@ -257,6 +257,12 @@ void _ModifySaveFilePath_(char* out)
 }
 
 //External functions:
+int Initialize() 
+{
+	//Calls Initialize with default values
+	return Initialize(NULL, NULL, NULL, 0, 0);
+}
+
 int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe)
 {
 	DebugLog("Setting up DataHandling:");

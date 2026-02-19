@@ -463,6 +463,12 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe);
 
 /// <summary>
+/// Calls Initialize with default values
+/// </summary>
+/// <returns></returns>
+DATAHANDLINGLIBRARY_API int Initialize();
+
+/// <summary>
 /// </summary>
 /// <returns>A new DataFrame</returns>
 DATAHANDLINGLIBRARY_API DataFrame CreateFrame();
@@ -657,7 +663,11 @@ DATAHANDLINGLIBRARY_API int PortIsOpen();
 /// <returns></returns>
 DATAHANDLINGLIBRARY_API void ClosePort();
 
-//Tries to open the comm Port with the specified name
+/// <summary>
+/// Tries to open the comm Port with the specified name
+/// </summary>
+/// <param name="name"></param>
+/// <returns></returns>
 DATAHANDLINGLIBRARY_API int SetPort(const char name[]);
 
 #endif // DATAHANDLINGLIBRARY_H
