@@ -17,6 +17,8 @@ static void _ShiftArray_(void* array, int elementSize, int arraySize, int offset
 static void _ShiftBuffer_(void** buffer, int bufferLength, int offset);
 static int _SetPortConfig_(); //Configures Port settings, needs an opened Port
 static void _CloseBuffer_(); //Frees allocated memory of the buffer
+static void _ModifySaveFilePath_(char* output); //Returns a modified file name to use in opening files (expects PATH_LENGTH size buffer)
+static int _ReadSaveFile_(const char path[], int number); //Internal version of ReadSave() to read a SaveFile into the SaveFile-struct
 
 //EX-EXPORT (INTERNAL) Declarations:
 DataPacket GetInPacket(); //Returns the first incoming Packet
@@ -236,21 +238,45 @@ void _CloseBuffer_()
 	return;
 }
 
+void _ModifySaveFilePath_(char* out)
+{
+	char filePath[PATH_LENGTH] = "";
+	char modifiedPath[PATH_LENGTH] = "";
+	char numberStr[10] = "";
+	char ending[] = ".meega";
+	if (dataHandling.saveFile == NULL) {
+		DebugLog("!Could not find SaveFile, incorrect order of operation");
+		return;
+	}
+	sscanf(dataHandling.saveFile->saveFilePath, "%[^.]s", filePath);
+	filePath[PATH_LENGTH - 1] = '\0';
+	if (dataHandling.saveFile->saveFileNumber > 0) sprintf(numberStr, "_%i", dataHandling.saveFile->saveFileNumber);
+	strncpy(modifiedPath, strcat(strcat(filePath, numberStr), ending), PATH_LENGTH);
+	modifiedPath[PATH_LENGTH - 1] = '\0';
+	strncpy(out, modifiedPath, PATH_LENGTH);
+}
+
 //External functions:
-int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte CreateNewSaveFile)
+int Initialize() 
+{
+	//Calls Initialize with default values
+	return Initialize(NULL, NULL, NULL, 0, 0);
+}
+
+int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe)
 {
 	DebugLog("Setting up DataHandling:");
-	if (!ReadFailSafe()) {
+	if (SkipReadingFailSafe || !ReadFailSafe()) {
 		if (!CreateFailSafe()) return 0;
 	}
 	char* saveFilePath = "", * calPath = "", * comPath = "";
-	if (dataHandling.failSafe != NULL) {
-		saveFilePath = dataHandling.failSafe->saveFilePath;
-		calPath = dataHandling.failSafe->calPath;
-		comPath = dataHandling.failSafe->comPath;
-	}
+	int saveFileNumber = 0;
+	saveFilePath = dataHandling.failSafe->saveFilePath;
+	calPath = dataHandling.failSafe->calPath;
+	comPath = dataHandling.failSafe->comPath;
 	if (SaveFileName != NULL && SaveFileName[0] != '\0') {
-		strncpy(saveFilePath, SaveFileName, PATH_LENGTH);
+		strncpy(saveFilePath, SaveFileName, PATH_LENGTH); 
+		saveFileNumber = dataHandling.failSafe->saveFileNumber;
 		saveFilePath[PATH_LENGTH - 1] = '\0';
 	}
 	if (CalibrationName != NULL && CalibrationName[0] != '\0') {
@@ -270,17 +296,14 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 	if (comPath[0] == '\0' && USE_DEFAULT_VALUES) {
 		strcpy(comPath, DEFAULTCOMPATH);
 	}
-	int readExisting = 1; 
-	if (CreateNewSaveFile) readExisting = 0;
-	else if (dataHandling.failSafe == NULL) readExisting = 0;
-	else readExisting = !(dataHandling.failSafe->nominalExit) && !(dataHandling.failSafe->complete) && dataHandling.failSafe->saveFilePath[0] != '\0';
-	if (readExisting) {
-		DebugLog("Existing SaveFile found at", saveFilePath);
-		ReadSave(saveFilePath);
+	int readExisting = !(dataHandling.failSafe->nominalExit) && !(dataHandling.failSafe->complete) && dataHandling.failSafe->saveFilePath[0] != '\0';
+	if (readExisting && !SkipOpeningSaveFile) {
+		_ReadSaveFile_(saveFilePath, saveFileNumber);
 	}
-	if (dataHandling.saveFile == NULL) {
+	if (dataHandling.saveFile == NULL && !SkipOpeningSaveFile) {
 		if (!CreateSave(saveFilePath)) return 0;
 	}
+	else if (!VirtualSave()) return 0;
 	if (CALIBRATION_METHOD != NONE) {
 		if (ReadCalibration(calPath) == -1)
 			CreateCalibration(calPath);
@@ -386,7 +409,7 @@ float MapSensorValue(int id, long long value)
 		if (!(points[0].valid & points[1].valid)) return out;
 		//exponential mapping for ambient pressure sensor
 		if (id == Ambient_Pressure) {
-			out = pow(10.0f, (double) value * 3.3*(22.1+38.3)/22.1/65535 - 3.5f);
+			out = (float)(pow(10.0f, (double)value * 3.3 * (22.1 + 38.3) / 22.1 / 65535 - 3.5f));
 			return out;
 		}
 		//linear interpolation
@@ -1127,6 +1150,7 @@ int AddInFrame(DataFrame frame, byte counter)
 #define FAILSAFE_DATE_STRING "Datetime:%lli;\n"
 #define FAILSAFE_SAVEFILE_READER "Savefile:%100[^;];\n"
 #define FAILSAFE_SAVEFILE_STRING "Savefile:%s;\n"
+#define FAILSAFE_SAVEFILE_NUMBER "SaveNumber:%i;\n"
 #define FAILSAFE_CALIBRATION_READER "Calibrationfile:%100[^;];\n"
 #define FAILSAFE_CALIBRATION_STRING "Calibrationfile:%s;\n"
 #define FAILSAFE_COMPLETE_STRING "Complete:%c;\n"
@@ -1150,6 +1174,7 @@ int CreateFailSafe()
 	new->complete = 1;
 	new->dateTime = time(NULL);
 	new->version = FAILSAFE_VERSION;
+	new->saveFileNumber = 0;
 	new->changed = 1;
 	if (USE_DEFAULT_VALUES) {
 		strcpy(new->saveFilePath, SAVEFILE_NAME);
@@ -1189,6 +1214,32 @@ int ReadFailSafe()
 			if (fscanf(file, FAILSAFE_VERSION_STRING, &ReadVersion) != EOF) {
 				if (ReadVersion == this->version) {
 					//Newest FileReader here:
+					char ReadChar;
+					int length = PATH_LENGTH;
+					if (fscanf(file, FAILSAFE_DATE_STRING, &this->dateTime) != EOF) {
+						if (fscanf(file, FAILSAFE_SAVEFILE_READER, &this->saveFilePath) != EOF) {
+							if (fscanf(file, FAILSAFE_SAVEFILE_NUMBER, &this->saveFileNumber) != EOF) {
+								//fscanf(file, "%[^;]s", debug);
+								if (fscanf(file, FAILSAFE_CALIBRATION_READER, &this->calPath) != EOF) {
+									length = 1;
+									if (fscanf(file, FAILSAFE_COMPLETE_STRING, &ReadChar) != EOF) {
+										this->complete = (ReadChar == 'y') ? 1 : 0;
+										if (fscanf(file, FAILSAFE_NOMINAL_STRING, &ReadChar) != EOF) {
+											this->nominalExit = (ReadChar == 'y') ? 1 : 0;
+											DebugLog("Failsafe read@_", this);
+											fclose(file);
+											return 1;
+										}
+									}
+								}
+							}
+						}
+					}
+					DebugLog("!Could not parse FailSafe file");
+					fclose(file);
+				}
+				else if (ReadVersion == 1.1f){
+					//Older FileReader:
 					char ReadChar;
 					int length = PATH_LENGTH;
 					if (fscanf(file, FAILSAFE_DATE_STRING, &this->dateTime) != EOF) {
@@ -1269,6 +1320,7 @@ int WriteFailSafe()
 		fprintf(file, FAILSAFE_VERSION_STRING, failsafe->version);
 		fprintf(file, FAILSAFE_DATE_STRING, failsafe->dateTime);
 		fprintf(file, FAILSAFE_SAVEFILE_STRING, failsafe->saveFilePath);
+		fprintf(file, FAILSAFE_SAVEFILE_NUMBER, failsafe->saveFileNumber);
 		if (CALIBRATION_METHOD != NONE) fprintf(file, FAILSAFE_CALIBRATION_STRING, failsafe->calPath);
 		else fprintf(file, FAILSAFE_CALIBRATION_STRING, " ");
 		fprintf(file, FAILSAFE_COMPLETE_STRING, (failsafe->complete) ? 'y' : 'n');
@@ -1313,11 +1365,32 @@ int CreateSave(const char path[])
 		return 0;
 	}
 	dataHandling.saveFile->savedAmount = 0;
+	dataHandling.saveFile->saveFileNumber = 0;
 	FILE* file = NULL;
-	if (path != NULL) {
-		file = fopen(path, "wb");
+	char modifiedPath[PATH_LENGTH] = "";
+	byte emptyFileFound = 0;
+	if (path != NULL && path[0] != '\0') {
 		strcpy(dataHandling.saveFile->saveFilePath, path);
 	}
+	else if (USE_DEFAULT_VALUES) { 
+		strcpy(dataHandling.saveFile->saveFilePath, SAVEFILE_NAME);
+	}
+	else {
+		DebugLog("!Empty string passed to CreateSave()");
+		return 0;
+	}
+	while (!emptyFileFound) {
+		_ModifySaveFilePath_(modifiedPath);
+		file = fopen(modifiedPath, "rb");
+		if (file != NULL) {
+			if (fscanf(file, "%*c") != EOF) dataHandling.saveFile->saveFileNumber++;
+			else emptyFileFound = 1;
+			fclose(file);
+			file = NULL;
+		}
+		else emptyFileFound = 1;
+	}
+	file = fopen(modifiedPath, "wb");
 	if (file != NULL) {
 		fprintf(file, "%f", SAVEFILE_VERSION);
 		fwrite(&(dataHandling.saveFile->dateTime), sizeof(dataHandling.saveFile->dateTime), 1, file);
@@ -1331,7 +1404,8 @@ int CreateSave(const char path[])
 		return 0;
 	}
 	if (dataHandling.failSafe != NULL) {
-		strcpy(dataHandling.failSafe->saveFilePath, path);
+		strcpy(dataHandling.failSafe->saveFilePath, dataHandling.saveFile->saveFilePath);
+		dataHandling.failSafe->saveFileNumber = dataHandling.saveFile->saveFileNumber;
 		dataHandling.failSafe->complete = 0;
 		dataHandling.failSafe->changed = 1;
 	}
@@ -1374,37 +1448,45 @@ int CheckSave()
 	*/
 	return 1;
 }
-
 int ReadSave(const char path[])
+{
+	return _ReadSaveFile_(path, 0);
+}
+
+static int _ReadSaveFile_(const char path[], int number)
 {
 	DebugLog("Reading SaveFile:");
 	FILE* file;
-	char filePath[PATH_LENGTH] = "";
+	char modifiedPath[PATH_LENGTH] = "";
 	if (!VirtualSave()) return 0;
-	if (path == NULL || path[0] == '\0')
-		if (USE_DEFAULT_VALUES) strcpy(filePath, SAVEFILE_NAME);
+	if (path == NULL || path[0] == '\0') {
+		if (USE_DEFAULT_VALUES) strcpy(dataHandling.saveFile->saveFilePath, SAVEFILE_NAME);
 		else {
-			DebugLog("!Empty string passed to ReadSave()");
+			DebugLog("!Empty string passed to ReadSave()_");
 			return 0;
 		}
-	else strcpy(filePath, path);
-	file = fopen(filePath, "rb");
+	}
+	else {
+		strcpy(dataHandling.saveFile->saveFilePath, path);
+	}
+	dataHandling.saveFile->saveFileNumber = number;
+	_ModifySaveFilePath_(modifiedPath);
+	file = fopen(modifiedPath, "rb");
 	if (file == NULL) {
 		DebugLog("!SaveFile file could not be opened_");
 		return 0;
 	}
-	strcpy(dataHandling.saveFile->saveFilePath, filePath);
 	DebugLog("Opened SaveFile file");
 	byte* writePtr = (byte*) &dataHandling.saveFile->dateTime;
 	byte temp = 0;
 	int i = 0;
 	if (fscanf(file, "%f", &dataHandling.saveFile->version) == EOF) {
-		DebugLog("!Unexpected End of File");
+		DebugLog("!Unexpected End of File_");
 		return 0;
 	}
 	for (; i < sizeof(dataHandling.saveFile->dateTime); i++, writePtr++) {
 		if (fscanf(file, "%c", writePtr) == EOF) {
-			DebugLog("!Unexpected End of File");
+			DebugLog("!Unexpected End of File_");
 			return 0;
 		}
 	}
@@ -1425,7 +1507,8 @@ int ReadSave(const char path[])
 	DebugLog("Amount of Frames read#_", dataHandling.saveFile->frameAmount);
 	dataHandling.saveFile->savedAmount = dataHandling.saveFile->frameAmount;
 	if (dataHandling.failSafe != NULL) {
-		strcpy(dataHandling.failSafe->saveFilePath, filePath);
+		strcpy(dataHandling.failSafe->saveFilePath, dataHandling.saveFile->saveFilePath);
+		dataHandling.failSafe->saveFileNumber = dataHandling.saveFile->saveFileNumber;
 		dataHandling.failSafe->changed = 1;
 	}
 	return 1;
@@ -1444,8 +1527,10 @@ int WriteSave()
 		return 0;
 	}
 	FILE* file = NULL;
-	if (dataHandling.saveFile->saveFilePath[0] != '\0') {
-		file = fopen(dataHandling.saveFile->saveFilePath, "ab");
+	char modifiedPath[PATH_LENGTH] = "";
+	_ModifySaveFilePath_(modifiedPath);
+	if (modifiedPath[0] != '\0') {
+		file = fopen(modifiedPath, "ab");
 		if (file != NULL) {
 			SaveFrame* current = dataHandling.saveFile->firstFrame;
 			for (int i = 0; i < dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount; i++) {
@@ -1471,7 +1556,7 @@ int WriteSave()
 		}
 		else DebugLog("!Could not open SaveFile file");
 	}
-	//DebugLog("Could not write SaveFile at$_", dataHandling.saveFile->saveFilePath);
+	DebugLog("!No valid SaveFile to write");
 	return 0;
 }
 
