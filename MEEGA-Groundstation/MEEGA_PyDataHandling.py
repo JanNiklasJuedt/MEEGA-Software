@@ -97,7 +97,7 @@ DataHandling.DebugLog.argtypes = [c_char_p]
 DataHandling.MapSensorValue.argtypes = [c_int, c_int64]
 DataHandling.MapSensorValue.restype = c_float
 
-DataHandling.Initalize.argtypes = [c_char_p, c_char_p, c_char_p, c_byte, c_byte]
+DataHandling.Initialize.argtypes = [c_char_p, c_char_p, c_char_p, c_byte, c_byte]
 
 DataHandling.AddPoint.argtypes = [c_int, c_int, CalibrationPoint]
 

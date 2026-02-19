@@ -4,19 +4,18 @@ from __future__ import annotations #for forward type references
 from enum import IntEnum
 from math import floor
 from math import sin, radians
-from xml.sax.handler import property_interning_dict
 import numpy as np
 import sys
 import time
 import winreg
 from winsdk.windows.ui.viewmanagement import UISettings, UIColorType
 import csv
-from tkinter import filedialog
+import os
 
 #import of qt modules
 from PySide6.QtGui import (QAction, QActionGroup, QIcon, QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPalette)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory, QProgressBar)
-from PySide6.QtCore import (Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject, QTimeZone)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QMainWindow, QDialog, QWidget, QVBoxLayout, QStyleFactory, QProgressBar, QFileDialog)
+from PySide6.QtCore import (QFile, Signal, Slot, QTranslator, QLocale, QThread, QPointF, QObject, QTimeZone)
 from PySide6.QtCharts import (QChart, QChartView, QLineSeries, QValueAxis)
 from PySide6.QtSvg import QSvgRenderer
 
@@ -53,6 +52,7 @@ class Settings:
     LO = 1
     SOE = 2
     defaultFilePath = "Default.meega"
+    defaultCalibrationPath = "MEEGA_Calibration.txt"
     defaultLaunchTime = QDateTime(QDate.currentDate(), QTime(12,0,0), QTimeZone(b"Europe/Berlin"))
 
     def __init__(self, locale: QLocale = None):
@@ -63,6 +63,7 @@ class Settings:
         self.mode = self.TEST
         self.connector = "COM4"
         self.filePath = self.defaultFilePath
+        self.calibrationPath = self.defaultCalibrationPath
         self.estimatedLaunchTime = self.defaultLaunchTime
         self.pressureAxeMode = self.SELFSCALING
         self.temperatureAxeMode = self.SELFSCALING
@@ -191,29 +192,29 @@ class GSMain(QMainWindow):
         self.collection = collection
 
         #creating local list of status display labels from ui files
-        self.statusDisplay = [None]*22
+        #not using PyID because not all householding data have a status display
+        self.statusDisplay = [None]*21
         self.statusDisplay[0] = self.ui.statusLabelPAmbient
         self.statusDisplay[1] = self.ui.statusLabelTCompare
         self.statusDisplay[2] = self.ui.statusLabelPAccumulator
         self.statusDisplay[3] = self.ui.statusLabelTAccumulator
         self.statusDisplay[4] = self.ui.statusLabelPChamber
-        self.statusDisplay[5] = self.ui.statusLabelTChamber1
-        self.statusDisplay[6] = self.ui.statusLabelTChamber2
-        self.statusDisplay[7] = self.ui.statusLabelPNozzle1
-        self.statusDisplay[8] = self.ui.statusLabelTNozzle1
-        self.statusDisplay[9] = self.ui.statusLabelPNozzle2
-        self.statusDisplay[10] = self.ui.statusLabelTNozzle2
-        self.statusDisplay[11] = self.ui.statusLabelPNozzle3
-        self.statusDisplay[12] = self.ui.statusLabelTNozzle3
-        self.statusDisplay[13] = self.ui.statusLabelServo
-        self.statusDisplay[14] = self.ui.statusLabelValve
-        self.statusDisplay[15] = self.ui.statusLabelLED
-        self.statusDisplay[16] = self.ui.statusLabelPChip
-        self.statusDisplay[17] = self.ui.statusLabelTChip
-        self.statusDisplay[18] = self.ui.statusLabelMainboardT
-        self.statusDisplay[19] = self.ui.statusLabelMainboardV
-        self.statusDisplay[20] = self.ui.statusLabelLiftOff
-        self.statusDisplay[21] = self.ui.statusLabelSOE
+        self.statusDisplay[5] = self.ui.statusLabelTChamber2
+        self.statusDisplay[6] = self.ui.statusLabelPNozzle1
+        self.statusDisplay[7] = self.ui.statusLabelTNozzle1
+        self.statusDisplay[8] = self.ui.statusLabelPNozzle2
+        self.statusDisplay[9] = self.ui.statusLabelTNozzle2
+        self.statusDisplay[10] = self.ui.statusLabelPNozzle3
+        self.statusDisplay[11] = self.ui.statusLabelTNozzle3
+        self.statusDisplay[12] = self.ui.statusLabelServo
+        self.statusDisplay[13] = self.ui.statusLabelValve
+        self.statusDisplay[14] = self.ui.statusLabelLED
+        self.statusDisplay[15] = self.ui.statusLabelPChip
+        self.statusDisplay[16] = self.ui.statusLabelTChip
+        self.statusDisplay[17] = self.ui.statusLabelMainboardT
+        self.statusDisplay[18] = self.ui.statusLabelMainboardV
+        self.statusDisplay[19] = self.ui.statusLabelLiftOff
+        self.statusDisplay[20] = self.ui.statusLabelSOE
 
         #creating status pixmaps
         self.activepix = QPixmap("Resources\\active.png")
@@ -266,6 +267,9 @@ class GSMain(QMainWindow):
         
     #internal functions
 
+    def newFile(self):
+        DataHandling.
+
     def scalePixmaps(self):
             #adjust pixmap sizes to label sizes
             label_size = self.statusDisplay[0].size()
@@ -308,7 +312,7 @@ class GSMain(QMainWindow):
         gatherIndex = self.collection.dataAccumulation.gatherIndex
 
         #fitting most recent status values from dataAccumulation into a single list with order according to statusDisplay list for handling via for loop
-        statusList = np.concatenate((dataAccu.household[0:DataAccumulation.sensorSize], dataAccu.household[PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[PyID.Lift_Off:PyID.Start_Experiment+1]))
+        statusList = np.concatenate((np.atleast_1d(dataAccu.household[PyID.Ambient_Pressure]), np.atleast_1d(dataAccu.household[PyID.Chamber_Temperature_1]), dataAccu.household[PyID.Accumulator_Pressure:PyID.Chamber_Pressure+1], dataAccu.household[PyID.Chamber_Temperature_2:PyID.Nozzle_3_Temperature+1], dataAccu.household[PyID.Nozzle_Servo:PyID.Sensorboard_T+1], dataAccu.household[PyID.Mainboard_T:PyID.Mainboard_V+1], dataAccu.household[PyID.Lift_Off:PyID.Start_Experiment+1]))
             
         #updating each label in statusDisplay according to statusList that was just created
         for i, display in enumerate(self.statusDisplay):
@@ -364,7 +368,7 @@ class GSMain(QMainWindow):
                 "#1F77B4", "#1F77B4",  # blue (ambient P, compare T)
                 "#9467BD", "#9467BD",  # purple (accumulator P + T)
                 "#2CA02C", "#2CA02C",  # green (chamber P + T)
-                "#6DBF6D",             # different green (chamber 2 T)
+                "#2CA02C",             # same green (chamber 2 T) (only chamber temp in use)
                 "#8C564B", "#8C564B",  # brown (nozzle 1 P + T)
                 "#FF7F0E", "#FF7F0E",  # orange (nozzle 2 P + T)
                 "#D62728", "#D62728",  # red (nozzle 3 P + T)
@@ -374,7 +378,7 @@ class GSMain(QMainWindow):
                 "#4FA3D9", "#4FA3D9",
                 "#B999E5", "#B999E5",
                 "#5BC85B", "#5BC85B",
-                "#8FD98F",
+                "#5BC85B",
                 "#C08A7A", "#C08A7A",
                 "#FF9F4A", "#FF9F4A",
                 "#FF6B6B", "#FF6B6B", 
@@ -596,19 +600,18 @@ class GSMain(QMainWindow):
     #connect index value of series to according tree item so that it can be called in onItemChanged, when user checks or unchecks items in the tree
     def connectItemsToSeries(self):
         tree = self.ui.treeWidget
-        tree.topLevelItem(0).child(0).child(3).setData(0, Qt.UserRole, 0)  # Ambient Pressure
-        tree.topLevelItem(0).child(1).child(3).setData(0, Qt.UserRole, 1)  # Compare Temperature
-        tree.topLevelItem(0).child(0).child(2).setData(0, Qt.UserRole, 2)  # Accumulator Pressure
-        tree.topLevelItem(0).child(1).child(2).setData(0, Qt.UserRole, 3)  # Accumulator Temperature
-        tree.topLevelItem(0).child(0).child(1).setData(0, Qt.UserRole, 4)  # Chamber Pressure
-        tree.topLevelItem(0).child(1).child(1).child(0).setData(0, Qt.UserRole, 5)  # Chamber 1 Temperature
-        tree.topLevelItem(0).child(1).child(1).child(1).setData(0,Qt.UserRole,6) #Chamber 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(0).setData(0, Qt.UserRole, 7)  # Nozzle 1 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(0).setData(0, Qt.UserRole, 8)  # Nozzle 1 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(1).setData(0, Qt.UserRole, 9)  # Nozzle 2 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(1).setData(0, Qt.UserRole, 10)  # Nozzle 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(2).setData(0, Qt.UserRole, 11)  # Nozzle 3 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(2).setData(0, Qt.UserRole, 12)  # Nozzle 3 Temperature
+        tree.topLevelItem(0).child(0).child(3).setData(0, Qt.UserRole, PyID.Ambient_Pressure)  # Ambient Pressure
+        tree.topLevelItem(0).child(1).child(3).setData(0, Qt.UserRole, PyID.Compare_Temperature)  # Compare Temperature
+        tree.topLevelItem(0).child(0).child(2).setData(0, Qt.UserRole, PyID.Accumulator_Pressure)  # Accumulator Pressure
+        tree.topLevelItem(0).child(1).child(2).setData(0, Qt.UserRole, PyID.Accumulator_Temperature)  # Accumulator Temperature
+        tree.topLevelItem(0).child(0).child(1).setData(0, Qt.UserRole, PyID.Chamber_Pressure)  # Chamber Pressure
+        tree.topLevelItem(0).child(1).child(1).setData(0, Qt.UserRole, PyID.Chamber_Temperature_2)  # Chamber (2) Temperature
+        tree.topLevelItem(0).child(0).child(0).child(0).setData(0, Qt.UserRole, PyID.Nozzle_1_Pressure)  # Nozzle 1 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(0).setData(0, Qt.UserRole, PyID.Nozzle_1_Temperature)  # Nozzle 1 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(1).setData(0, Qt.UserRole, PyID.Nozzle_2_Pressure)  # Nozzle 2 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(1).setData(0, Qt.UserRole, PyID.Nozzle_2_Temperature)  # Nozzle 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(2).setData(0, Qt.UserRole, PyID.Nozzle_3_Pressure)  # Nozzle 3 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(2).setData(0, Qt.UserRole, PyID.Nozzle_3_Temperature)  # Nozzle 3 Temperature
 
     #functions to apply darkmode/lightmode to app and charts, called by menu actions
     def setLightTheme(self):
@@ -790,19 +793,18 @@ class GSMain(QMainWindow):
         #update the icon of the tree Widget items. hard coded because not really possible with a loop :(
         #(except for a recursicve algorithm that would be overkill at this point)
         tree = self.ui.treeWidget
-        tree.topLevelItem(0).child(0).child(3).setIcon(0 ,coloredSquares[0])  # Ambient Pressure
-        tree.topLevelItem(0).child(1).child(3).setIcon(0, coloredSquares[1])  # Compare Temperature
-        tree.topLevelItem(0).child(0).child(2).setIcon(0, coloredSquares[2])  # Accumulator Pressure
-        tree.topLevelItem(0).child(1).child(2).setIcon(0, coloredSquares[3])  # Accumulator Temperature
-        tree.topLevelItem(0).child(0).child(1).setIcon(0, coloredSquares[4])  # Chamber Pressure
-        tree.topLevelItem(0).child(1).child(1).child(0).setIcon(0, coloredSquares[5])  # Chamber 1 Temperature
-        tree.topLevelItem(0).child(1).child(1).child(1).setIcon(0, coloredSquares[6]) #Chamber 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(0).setIcon(0, coloredSquares[7])  # Nozzle 1 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(0).setIcon(0, coloredSquares[8])  # Nozzle 1 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(1).setIcon(0, coloredSquares[9])  # Nozzle 2 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(1).setIcon(0, coloredSquares[10])  # Nozzle 2 Temperature
-        tree.topLevelItem(0).child(0).child(0).child(2).setIcon(0, coloredSquares[11])  # Nozzle 3 Pressure
-        tree.topLevelItem(0).child(1).child(0).child(2).setIcon(0, coloredSquares[12])  # Nozzle 3 Temperature
+        tree.topLevelItem(0).child(0).child(3).setIcon(0 ,coloredSquares[PyID.Ambient_Pressure])  # Ambient Pressure
+        tree.topLevelItem(0).child(1).child(3).setIcon(0, coloredSquares[PyID.Compare_Temperature])  # Compare Temperature
+        tree.topLevelItem(0).child(0).child(2).setIcon(0, coloredSquares[PyID.Accumulator_Pressure])  # Accumulator Pressure
+        tree.topLevelItem(0).child(1).child(2).setIcon(0, coloredSquares[PyID.Accumulator_Temperature])  # Accumulator Temperature
+        tree.topLevelItem(0).child(0).child(1).setIcon(0, coloredSquares[PyID.Chamber_Pressure])  # Chamber Pressure
+        tree.topLevelItem(0).child(1).child(1).setIcon(0, coloredSquares[PyID.Chamber_Temperature_2]) #Chamber (2) Temperature
+        tree.topLevelItem(0).child(0).child(0).child(0).setIcon(0, coloredSquares[PyID.Nozzle_1_Pressure])  # Nozzle 1 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(0).setIcon(0, coloredSquares[PyID.Nozzle_1_Temperature])  # Nozzle 1 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(1).setIcon(0, coloredSquares[PyID.Nozzle_2_Pressure])  # Nozzle 2 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(1).setIcon(0, coloredSquares[PyID.Nozzle_2_Temperature])  # Nozzle 2 Temperature
+        tree.topLevelItem(0).child(0).child(0).child(2).setIcon(0, coloredSquares[PyID.Nozzle_3_Pressure])  # Nozzle 3 Pressure
+        tree.topLevelItem(0).child(1).child(0).child(2).setIcon(0, coloredSquares[PyID.Nozzle_3_Temperature])  # Nozzle 3 Temperature
 
     #function to make diagrams darkmode themed
     def applyDarkmodeToCharts(self):
@@ -1131,6 +1133,8 @@ class GSStart(QDialog):
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
+        self.ui.saveFileButton.clicked.connect(self.getFilepath)
+
         #if dialog i rejected, call shutdown of collection to terminate application
         self.rejected.connect(self.collection.shutdown)
         #if dialog is accepted, fetch settings from ui elements
@@ -1141,24 +1145,35 @@ class GSStart(QDialog):
         self.collection.shutdown()
         event.accept()
         super().closeEvent(event)
+
+    @Slot()
+    def getFilepath(self):
+        #open explorer for choosing filepath
+        filepath, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Save File",
+            os.path.dirname(os.path.abspath(__file__)),
+            "MEEGA-Dateien (*.meega)"
+        )
+
+        self.ui.saveFileEdit.setText(filepath)
     
     #fetch settings from ui elements and store them in settings
     @Slot()
     def fetchSettings(self):
-        #Start DataHandling loop
-        self.collection.dataHandlingThread.start()
-
         self.collection.settings.language = self.ui.languageComboBox.currentData()
-        self.collection.settings.connector = self.ui.connectionComboBox.currentText().encode("utf-8")
+        self.collection.settings.connector = self.ui.connectionComboBox.currentText()
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
         self.collection.settings.estimatedLaunchTime = QDateTime(QDate.currentDate(), self.ui.launchTimeTimeEdit.time(), self.collection.settings.timeZone)
+
+        #Start DataHandling loop
+        self.collection.dataHandlingThread.start()
 
         #lateInit for events that need DataHandling to be running
         self.collection.mainWindow.connect()
         time.sleep(0.1)  #ensure DataHandling is initialized before CalibrationWindow tries to read points and ComPort is set
         self.collection.calibrationWindow.initializeCalibrationPoints()
-        DataHandling.SetPort(self.collection.settings.connector)
 
 #class that defines window for defining (approximate) launch time
 class GSLaunchTime(QDialog):
@@ -1746,11 +1761,11 @@ class GSExport(QDialog):
     @Slot()
     def export(self):
         #open explorer for choosing filepath
-        self.filepath = filedialog.asksaveasfilename(
-            title="save as csv",
-            defaultextension=".csv",
-            filetypes=[("CSV-files", "*.csv")],
-            confirmoverwrite=True
+        self.filepath = QFileDialog.getSaveFileName(
+            self,
+            "Save As CSV",
+            os.path.join(os.path.expanduser("~"), "Documents"),
+            "CSV-files (*.csv)"
         )
 
         self.collection.exportWorker.start()
@@ -2084,7 +2099,7 @@ class DataAccumulation(QObject):
 
     def accumulate(self):
         #switch for testing purposes
-        testData = False
+        testData = True
 
         #Get Frame and check connection status
         if not testData:
@@ -2325,7 +2340,12 @@ class DataHandlingThread(QThread):
         #times = [0]*50 ###only for debugging
 
         #initialize DataHandling
-        DataHandling.Initialize()
+        DataHandling.Initialize(
+            bytes(self.collection.settings.filePath, "utf-8"),
+            bytes(self.collection.settings.calibrationPath, "utf-8"),
+            bytes(self.collection.settings.connector, "utf-8"),
+            c_byte(0)
+        )
 
         #main loop
         while True:
