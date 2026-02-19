@@ -889,7 +889,7 @@ class GSMain(QMainWindow):
         self.ui.actionReconnect.triggered.connect(self.collection.connectionWindow.applySettings)
 
         self.ui.actionFileNew.triggered.connect(self.newFile)
-        self.ui.actionFileOpen.triggered.connect(self.openFile)
+        self.ui.actionFileLoad.triggered.connect(self.openFile)
 
     #override closeEvent to ensure proper thread termination and application exit when trying to close the main window
     def closeEvent(self, event):
