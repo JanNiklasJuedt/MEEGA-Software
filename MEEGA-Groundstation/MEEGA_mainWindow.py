@@ -301,17 +301,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.statusLabelPNozzle1, 4, 4, 1, 1)
 
-        self.statusLabelTChamber1 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTChamber1.setObjectName(u"statusLabelTChamber1")
-        sizePolicy4.setHeightForWidth(self.statusLabelTChamber1.sizePolicy().hasHeightForWidth())
-        self.statusLabelTChamber1.setSizePolicy(sizePolicy4)
-        self.statusLabelTChamber1.setMinimumSize(QSize(25, 25))
-        self.statusLabelTChamber1.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTChamber1.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTChamber1.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelTChamber1, 2, 6, 1, 1)
-
         self.statusLabelTNozzle1 = QLabel(self.groupBox_sensorstatus)
         self.statusLabelTNozzle1.setObjectName(u"statusLabelTNozzle1")
         sizePolicy4.setHeightForWidth(self.statusLabelTNozzle1.sizePolicy().hasHeightForWidth())
@@ -511,12 +500,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.textLabelMainboardT, 0, 0, 1, 1)
 
-        self.textLabelTChamber1 = QLabel(self.groupBox_sensorstatus)
-        self.textLabelTChamber1.setObjectName(u"textLabelTChamber1")
-        self.textLabelTChamber1.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.textLabelTChamber1, 2, 5, 1, 1)
-
         self.textLabelSOE = QLabel(self.groupBox_sensorstatus)
         self.textLabelSOE.setObjectName(u"textLabelSOE")
         self.textLabelSOE.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -597,23 +580,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.textLabelPNozzle2, 5, 2, 1, 1)
 
-        self.textLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
-        self.textLabelTChamber2.setObjectName(u"textLabelTChamber2")
-        self.textLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.textLabelTChamber2, 3, 5, 1, 1)
-
-        self.statusLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
-        self.statusLabelTChamber2.setObjectName(u"statusLabelTChamber2")
-        sizePolicy4.setHeightForWidth(self.statusLabelTChamber2.sizePolicy().hasHeightForWidth())
-        self.statusLabelTChamber2.setSizePolicy(sizePolicy4)
-        self.statusLabelTChamber2.setMinimumSize(QSize(25, 25))
-        self.statusLabelTChamber2.setFrameShape(QFrame.Shape.NoFrame)
-        self.statusLabelTChamber2.setFrameShadow(QFrame.Shadow.Sunken)
-        self.statusLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.statusLabelTChamber2, 3, 6, 1, 1)
-
         self.textLabelPNozzle1 = QLabel(self.groupBox_sensorstatus)
         self.textLabelPNozzle1.setObjectName(u"textLabelPNozzle1")
         self.textLabelPNozzle1.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -685,6 +651,23 @@ class Ui_MainWindow(object):
         self.statusLabelMainboardV.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.statusLabelMainboardV, 1, 1, 1, 1)
+
+        self.textLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
+        self.textLabelTChamber2.setObjectName(u"textLabelTChamber2")
+        self.textLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.textLabelTChamber2, 2, 5, 1, 1)
+
+        self.statusLabelTChamber2 = QLabel(self.groupBox_sensorstatus)
+        self.statusLabelTChamber2.setObjectName(u"statusLabelTChamber2")
+        sizePolicy4.setHeightForWidth(self.statusLabelTChamber2.sizePolicy().hasHeightForWidth())
+        self.statusLabelTChamber2.setSizePolicy(sizePolicy4)
+        self.statusLabelTChamber2.setMinimumSize(QSize(25, 25))
+        self.statusLabelTChamber2.setFrameShape(QFrame.Shape.NoFrame)
+        self.statusLabelTChamber2.setFrameShadow(QFrame.Shadow.Sunken)
+        self.statusLabelTChamber2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.statusLabelTChamber2, 2, 6, 1, 1)
 
 
         self.horizontalLayout_2.addWidget(self.groupBox_sensorstatus)
@@ -791,18 +774,12 @@ class Ui_MainWindow(object):
         __qtreewidgetitem14 = QTreeWidgetItem(__qtreewidgetitem9)
         __qtreewidgetitem14.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled|Qt.ItemIsAutoTristate);
         __qtreewidgetitem14.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem14)
+        __qtreewidgetitem15 = QTreeWidgetItem(__qtreewidgetitem9)
         __qtreewidgetitem15.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem15.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem14)
+        __qtreewidgetitem16 = QTreeWidgetItem(__qtreewidgetitem9)
         __qtreewidgetitem16.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
         __qtreewidgetitem16.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem17 = QTreeWidgetItem(__qtreewidgetitem9)
-        __qtreewidgetitem17.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
-        __qtreewidgetitem17.setCheckState(0, Qt.Checked);
-        __qtreewidgetitem18 = QTreeWidgetItem(__qtreewidgetitem9)
-        __qtreewidgetitem18.setFlags(Qt.ItemIsSelectable|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled);
-        __qtreewidgetitem18.setCheckState(0, Qt.Checked);
         self.treeWidget.setObjectName(u"treeWidget")
         sizePolicy9 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         sizePolicy9.setHorizontalStretch(0)
@@ -1087,7 +1064,7 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setEnabled(True)
-        self.menubar.setGeometry(QRect(0, 0, 1366, 23))
+        self.menubar.setGeometry(QRect(0, 0, 1366, 20))
         self.menubar.setFont(font)
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
@@ -1199,10 +1176,6 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.statusLabelPNozzle1.setText("")
 #if QT_CONFIG(tooltip)
-        self.statusLabelTChamber1.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.statusLabelTChamber1.setText("")
-#if QT_CONFIG(tooltip)
         self.statusLabelTNozzle1.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.statusLabelTNozzle1.setText("")
@@ -1291,10 +1264,6 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.textLabelMainboardT.setText(QCoreApplication.translate("MainWindow", u"T Mainboard", None))
 #if QT_CONFIG(tooltip)
-        self.textLabelTChamber1.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.textLabelTChamber1.setText(QCoreApplication.translate("MainWindow", u"T Chamber 1", None))
-#if QT_CONFIG(tooltip)
         self.textLabelSOE.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = Start-Of-Experiment signal</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = no Start-Of-Experiment signal</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.textLabelSOE.setText(QCoreApplication.translate("MainWindow", u"Start of Experiment", None))
@@ -1335,14 +1304,6 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.textLabelPNozzle2.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 2", None))
 #if QT_CONFIG(tooltip)
-        self.textLabelTChamber2.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.textLabelTChamber2.setText(QCoreApplication.translate("MainWindow", u"T Chamber 2", None))
-#if QT_CONFIG(tooltip)
-        self.statusLabelTChamber2.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.statusLabelTChamber2.setText("")
-#if QT_CONFIG(tooltip)
         self.textLabelPNozzle1.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.textLabelPNozzle1.setText(QCoreApplication.translate("MainWindow", u"P Nozzle 1", None))
@@ -1378,6 +1339,14 @@ class Ui_MainWindow(object):
         self.statusLabelMainboardV.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = voltage normal</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = voltage too low</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.statusLabelMainboardV.setText("")
+#if QT_CONFIG(tooltip)
+        self.textLabelTChamber2.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.textLabelTChamber2.setText(QCoreApplication.translate("MainWindow", u"T Chamber", None))
+#if QT_CONFIG(tooltip)
+        self.statusLabelTChamber2.setToolTip(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><img src=\":/qrc/resources/activeBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is ok</p><p><img src=\":/qrc/resources/issuesBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is the same as last value</p><p><img src=\":/qrc/resources/inactiveBorderless.png\" width=\"18\" height=\"18\" style=\"vertical-align: middle;\"/> = value is all 1 or all 0</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.statusLabelTChamber2.setText("")
         self.label_logo.setText("")
         self.label_mode.setText(QCoreApplication.translate("MainWindow", u"Flight Mode", None))
         self.SensorSelectionGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Sensor Selection", None))
@@ -1416,14 +1385,10 @@ class Ui_MainWindow(object):
         ___qtreewidgetitem14.setText(0, QCoreApplication.translate("MainWindow", u"3", None));
         ___qtreewidgetitem15 = ___qtreewidgetitem10.child(1)
         ___qtreewidgetitem15.setText(0, QCoreApplication.translate("MainWindow", u"Chamber", None));
-        ___qtreewidgetitem16 = ___qtreewidgetitem15.child(0)
-        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"1", None));
-        ___qtreewidgetitem17 = ___qtreewidgetitem15.child(1)
-        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"2", None));
-        ___qtreewidgetitem18 = ___qtreewidgetitem10.child(2)
-        ___qtreewidgetitem18.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
-        ___qtreewidgetitem19 = ___qtreewidgetitem10.child(3)
-        ___qtreewidgetitem19.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
+        ___qtreewidgetitem16 = ___qtreewidgetitem10.child(2)
+        ___qtreewidgetitem16.setText(0, QCoreApplication.translate("MainWindow", u"Accumulator", None));
+        ___qtreewidgetitem17 = ___qtreewidgetitem10.child(3)
+        ___qtreewidgetitem17.setText(0, QCoreApplication.translate("MainWindow", u"Compare", None));
         self.treeWidget.setSortingEnabled(__sortingEnabled)
 
         self.timePlotGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Graph over Time", None))
