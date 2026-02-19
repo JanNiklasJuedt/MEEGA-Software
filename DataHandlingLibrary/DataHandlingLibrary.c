@@ -257,7 +257,7 @@ void _ModifySaveFilePath_(char* out)
 }
 
 //External functions:
-int Initialize() 
+int InitializeDefault() 
 {
 	//Calls Initialize with default values
 	return Initialize(NULL, NULL, NULL, 0, 0);

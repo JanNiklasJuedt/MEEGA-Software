@@ -466,7 +466,7 @@ DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* Cal
 /// Calls Initialize with default values
 /// </summary>
 /// <returns></returns>
-DATAHANDLINGLIBRARY_API int Initialize();
+DATAHANDLINGLIBRARY_API int InitializeDefault();
 
 /// <summary>
 /// </summary>
