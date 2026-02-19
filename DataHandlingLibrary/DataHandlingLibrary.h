@@ -460,13 +460,13 @@ DATAHANDLINGLIBRARY_API int CreateCalibration(const char* path);
 /// Initializes Memory and loads Data from files if possible
 /// </summary>
 /// <returns>Whether successful</returns>
-DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte SkipOpeningSaveFile, byte SkipReadingFailSafe);
+DATAHANDLINGLIBRARY_API int Initialize(const char* SaveFileName, const char* CalibrationName, const char* PortName, byte ForceOpeningSaveFile, byte SkipReadingFailSafe);
 
 /// <summary>
 /// Calls Initialize with default values
 /// </summary>
 /// <returns></returns>
-DATAHANDLINGLIBRARY_API int Initialize();
+DATAHANDLINGLIBRARY_API int InitializeDefault();
 
 /// <summary>
 /// </summary>
@@ -593,7 +593,7 @@ DATAHANDLINGLIBRARY_API int CheckSave();
 /// Reads a SaveFile-file into the Savefile-structure, discarding current memory
 /// </summary>
 /// <param name="path">System path and name of file</param>
-/// <returns></returns>
+/// <returns>Whether successful</returns>
 DATAHANDLINGLIBRARY_API int ReadSave(const char path[]);
 
 /// <summary>
