@@ -26,7 +26,7 @@ class Ui_StartDialog(object):
             StartDialog.setObjectName(u"StartDialog")
         StartDialog.setWindowModality(Qt.WindowModality.ApplicationModal)
         StartDialog.setEnabled(True)
-        StartDialog.resize(386, 314)
+        StartDialog.resize(386, 271)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -74,19 +74,19 @@ class Ui_StartDialog(object):
         self.modeLabel = QLabel(StartDialog)
         self.modeLabel.setObjectName(u"modeLabel")
 
-        self.formLayout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.modeLabel)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.modeLabel)
 
         self.modeComboBox = QComboBox(StartDialog)
         self.modeComboBox.addItem("")
         self.modeComboBox.addItem("")
         self.modeComboBox.setObjectName(u"modeComboBox")
 
-        self.formLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.modeComboBox)
+        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.modeComboBox)
 
         self.connectionLabel = QLabel(StartDialog)
         self.connectionLabel.setObjectName(u"connectionLabel")
 
-        self.formLayout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.connectionLabel)
+        self.formLayout.setWidget(1, QFormLayout.ItemRole.LabelRole, self.connectionLabel)
 
         self.connectionComboBox = QComboBox(StartDialog)
         self.connectionComboBox.addItem("")
@@ -104,12 +104,12 @@ class Ui_StartDialog(object):
         self.connectionComboBox.setFrame(True)
         self.connectionComboBox.setModelColumn(0)
 
-        self.formLayout.setWidget(2, QFormLayout.ItemRole.FieldRole, self.connectionComboBox)
+        self.formLayout.setWidget(1, QFormLayout.ItemRole.FieldRole, self.connectionComboBox)
 
         self.saveFileLabel = QLabel(StartDialog)
         self.saveFileLabel.setObjectName(u"saveFileLabel")
 
-        self.formLayout.setWidget(3, QFormLayout.ItemRole.LabelRole, self.saveFileLabel)
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.saveFileLabel)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
@@ -125,31 +125,19 @@ class Ui_StartDialog(object):
         self.horizontalLayout_3.addWidget(self.saveFileButton)
 
 
-        self.formLayout.setLayout(3, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
-
-        self.languageLabel = QLabel(StartDialog)
-        self.languageLabel.setObjectName(u"languageLabel")
-
-        self.formLayout.setWidget(0, QFormLayout.ItemRole.LabelRole, self.languageLabel)
-
-        self.languageComboBox = QComboBox(StartDialog)
-        self.languageComboBox.addItem(u"English")
-        self.languageComboBox.addItem(u"Deutsch")
-        self.languageComboBox.setObjectName(u"languageComboBox")
-
-        self.formLayout.setWidget(0, QFormLayout.ItemRole.FieldRole, self.languageComboBox)
+        self.formLayout.setLayout(2, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
 
         self.launchTimeLabel = QLabel(StartDialog)
         self.launchTimeLabel.setObjectName(u"launchTimeLabel")
 
-        self.formLayout.setWidget(4, QFormLayout.ItemRole.LabelRole, self.launchTimeLabel)
+        self.formLayout.setWidget(3, QFormLayout.ItemRole.LabelRole, self.launchTimeLabel)
 
         self.launchTimeTimeEdit = QTimeEdit(StartDialog)
         self.launchTimeTimeEdit.setObjectName(u"launchTimeTimeEdit")
         self.launchTimeTimeEdit.setCurrentSection(QDateTimeEdit.Section.HourSection)
         self.launchTimeTimeEdit.setTimeSpec(Qt.TimeSpec.LocalTime)
 
-        self.formLayout.setWidget(4, QFormLayout.ItemRole.FieldRole, self.launchTimeTimeEdit)
+        self.formLayout.setWidget(3, QFormLayout.ItemRole.FieldRole, self.launchTimeTimeEdit)
 
 
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 1)
@@ -185,8 +173,6 @@ class Ui_StartDialog(object):
         self.saveFileLabel.setText(QCoreApplication.translate("StartDialog", u"Save File", None))
         self.saveFileEdit.setText(QCoreApplication.translate("StartDialog", u"*\\default.meega", None))
         self.saveFileButton.setText(QCoreApplication.translate("StartDialog", u"...", None))
-        self.languageLabel.setText(QCoreApplication.translate("StartDialog", u"Language", None))
-
         self.launchTimeLabel.setText(QCoreApplication.translate("StartDialog", u"Launch Time", None))
         self.launchTimeTimeEdit.setDisplayFormat(QCoreApplication.translate("StartDialog", u"HH:mm:ss", None))
     # retranslateUi

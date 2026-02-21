@@ -1046,29 +1046,39 @@ class GSMain(QMainWindow):
                 #get time that has passed since liftOff
                 secsSinceLO = settings.LOTime.secsTo(currentTime)
 
+                ###old sequence###
+
                 #check if still in lift off-sequence, or already in nose cone ejection sequence
-                if secsSinceLO <= settings.LOtoExpPrepSecs and settings.SOETime is None:
+                #if secsSinceLO <= settings.LOtoExpPrepSecs and settings.SOETime is None:
+                #check if still in nose cone ejecion sequence, or already further into the sequence (SOE reached)
+                #elif settings.SOETime is None:
+
+                    #set nose cone ejection progress bar to percentage of nose cone ejection that has passed
+                    #secsSinceExpPrepStart = settings.LOTime.secsTo(currentTime) - settings.LOtoExpPrepSecs
+                    #self.ui.progressBar_SODS.setValue(100 * secsSinceExpPrepStart / settings.ExpPreptoSOESecs)
+                  
+                    #set exp prep timeTracker to current Time since expPrep Start
+                    #timeSinceExpPrepStart = QTime(0, 0).addSecs(secsSinceExpPrepStart)
+                    #self.ui.progressBar_SODS.setFormat(timeSinceExpPrepStart.toString("mm:ss"))
+
+                #fill exp prep progress bar, if not already filled
+                    #self.ui.progressBar_SODS.setValue(100)
+
+                ######
+
+
+                #check if still in lift-off sequence or already further into the sequence (SOE reached)
+                if settings.SOETime is None:
 
                     #set lift-off time tracker to current time since LO
                     timeSinceLO = QTime(0, 0).addSecs(secsSinceLO)
                     self.ui.progressBar_LO.setFormat(timeSinceLO.toString("mm:ss"))
 
-                #check if still in nose cone ejecion sequence, or already further into the sequence (SOE reached)
-                elif settings.SOETime is None:
-
-                    #set nose cone ejection progress bar to percentage of nose cone ejection that has passed
-                    secsSinceExpPrepStart = settings.LOTime.secsTo(currentTime) - settings.LOtoExpPrepSecs
-                    self.ui.progressBar_SODS.setValue(100 * secsSinceExpPrepStart / settings.ExpPreptoSOESecs)
-
-                    #set exp prep timeTracker to current Time since expPrep Start
-                    timeSinceExpPrepStart = QTime(0, 0).addSecs(secsSinceExpPrepStart)
-                    self.ui.progressBar_SODS.setFormat(timeSinceExpPrepStart.toString("mm:ss"))
-
                 #else, SOE has been reached
                 else:
 
                     #fill exp prep progress bar, if not already filled
-                    self.ui.progressBar_SODS.setValue(100)
+                    self.ui.progressBar_LO.setValue(100)
 
                     #check if still in valve sequence or already in experiment run sequence (nozzle cover opened)
                     if settings.NozzleOpenTime is None:
@@ -1146,8 +1156,6 @@ class GSStart(QDialog):
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
         self.collection = collection
-        self.ui.languageComboBox.setItemData(0, "en")
-        self.ui.languageComboBox.setItemData(1, "de")
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
@@ -1179,7 +1187,6 @@ class GSStart(QDialog):
     #fetch settings from ui elements and store them in settings
     @Slot()
     def fetchSettings(self):
-        self.collection.settings.language = self.ui.languageComboBox.currentData()
         self.collection.settings.connector = self.ui.connectionComboBox.currentText()
         self.collection.settings.mode = self.ui.modeComboBox.currentData()
         self.collection.settings.filepath = self.ui.saveFileEdit.text()
