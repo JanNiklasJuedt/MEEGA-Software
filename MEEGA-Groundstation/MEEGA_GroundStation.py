@@ -114,12 +114,12 @@ class Telecommand(QObject):
     #creating Telecommand in DataHandling, writing program mode (test/flight))
     def newTCFrame(self):
         self.tcframe = DataHandling.CreateTC()
-        DataHandling.WriteFrame(self.tcframe, TCID.Mode_Change, self.collection.settings.mode)
+        DataHandling.WriteFrame(pointer(self.tcframe), TCID.Mode_Change, self.collection.settings.mode)
 
     #initialize sending of 10 identical telecommands to ensure reception
     def sendInit(self):
         self.expStartQueue = False #reset to standard False, as sending dedicated turn off telecommands is unnecessary if one with additional changes is sent anyways
-        self.sendCounter = 10
+        self.sendCounter = 3
 
     #single sending step called by DataHandlingThread
     @Slot()
@@ -1374,18 +1374,18 @@ class GSControl(QWidget):
     # Update the telecommand frame with current control states and durations
     def updateTCFrame(self):
         #times are sent in milliseconds, so convert QTime to milliseconds
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Valve_Delay, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Delay, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.EoE_Delay, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Valve_Delay, (self.valveDelay.minute()*60 + self.valveDelay.second())*1000 + self.valveDelay.msec())
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Servo_Delay, (self.servoDelay.minute()*60 + self.servoDelay.second())*1000 + self.servoDelay.msec())
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.EoE_Delay, (self.EOEDelay.minute()*60 + self.EOEDelay.second())*1000 + self.EOEDelay.msec())
         #PowerOffDelay fehlt
         #NozzleOnDelay fehlt
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Dry_Run, self.dryRunActive)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.LED_Control, self.ledState)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Servo_Control, floor(self.servoAngle))
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Valve_Control, self.valveControl)
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Dry_Run, self.dryRunActive)
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.LED_Control, self.ledState)
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Servo_Control, floor(self.servoAngle))
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Valve_Control, self.valveControl)
         #Camera control fehlt
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Test_Abort, self.testRunStop)
-        DataHandling.WriteFrame(self.collection.telecommand.tcframe, TCID.Test_Run, self.testRunStart)
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Test_Abort, self.testRunStop)
+        DataHandling.WriteFrame(pointer(self.collection.telecommand.tcframe), TCID.Test_Run, self.testRunStart)
 
     # clearPanel is called when switching to flight mode to reset all control states and input elements to default values in order to avoid sending unintended data when first opening the control panel in test mode again
     def clearPanel(self):
@@ -2128,7 +2128,7 @@ class DataAccumulation(QObject):
 
     def accumulate(self):
         #switch for testing purposes
-        testData = True
+        testData = False
 
         #Get Frame and check connection status
         if not testData:
@@ -2400,7 +2400,7 @@ class DataHandlingThread(QThread):
             bytes(self.collection.settings.filePath, "utf-8"),
             bytes(self.collection.settings.calibrationPath, "utf-8"),
             bytes(self.collection.settings.connector, "utf-8"),
-            1,
+            0,
             1
         )
 

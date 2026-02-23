@@ -38,7 +38,7 @@ int main() {
 	pullUpDnControl(Nozzle_Cover_S2, PUD_UP);
 #endif
 
-	Initialize();
+	InitializeDefault();
 	FailSafeRecovery();
 
 	pthread_t logThread;
@@ -430,7 +430,7 @@ void Log() {
 		DataAcquisition(&frame);	//DataAcquisition function to fill the frame with data
 		AddFrame(frame);	//func from UPDATED DataHandlingLib
 		UpdateAll();
-		DebugLastFrame();
+		DebugSaveFrame(GetTC());
 		if (EoE) { //End Loop in case of End of Experiment
 			CloseAll();
 			break;
