@@ -1637,7 +1637,7 @@ DataFrame GetTC()
 	SaveFrame* currentFrame = dataHandling.saveFile->lastFrame;
 	for (; currentFrame->previousFrame != NULL; currentFrame = currentFrame->previousFrame) {
 		if (FrameIsTC(currentFrame->data)) {
-			if (!FrameIsEmpty(currentFrame->data)) {
+			if (!FrameIsEmpty(currentFrame->data) && FrameHasFlag(currentFrame->data, OK)) {
 				newestTC = currentFrame->data;
 				break;
 			}

@@ -62,7 +62,7 @@ class Settings:
             self.locale = QLocale(locale)
         self.mode = self.TEST
         self.connector = "COM4"
-        self.filePath = self.defaultFilePath
+        self.filePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.defaultFilePath)
         self.calibrationPath = self.defaultCalibrationPath
         self.estimatedLaunchTime = self.defaultLaunchTime
         self.pressureAxeMode = self.SELFSCALING
@@ -81,7 +81,7 @@ class Settings:
         self.EOETime = None
         self.LOtoExpPrepSecs = 70
         self.ExpPreptoSOESecs = 10
-        self.SOEtoNozzleOpenSecs = 27
+        self.SOEtoNozzleOpenSecs = 26
         self.nozzleOpenToEOESecs = 30
 
     @Slot(QDateTime)
@@ -103,6 +103,14 @@ class Settings:
     @Slot(QDateTime)
     def setEOETime(self, time: QDateTime):
         self.EOETime = time
+
+    @Slot()
+    def resetTimes(self):
+        self.powerOnTime = None
+        self.LOTime = None
+        self.SOETime = None
+        self.nozzleOpenTime = None
+        self.EOETime = None
 
 #class to handle telecommands
 class Telecommand(QObject):
@@ -273,8 +281,10 @@ class GSMain(QMainWindow):
             "New File",
             self.collection.settings.defaultFilePath,
             "MEEGA-Files (*.meega)")
-        if(DataHandling.CreateSave(bytes(filepath, "utf-8"))):
-            self.collection.dataAccumulation.clearData()
+        filepath = str(filepath[0])
+        self.collection.dataAccumulation.clearData()
+        DataHandling.CreateSave(bytes(filepath, "utf-8"))
+           # print("\n\n******************************************************************\n\n")
 
     def openFile(self):
         filepath = QFileDialog.getOpenFileName(
@@ -282,8 +292,16 @@ class GSMain(QMainWindow):
             "Open File",
             self.collection.settings.defaultFilePath,
             "MEEGA-Files (*.meega)")
-        if(DataHandling.ReadSave(bytes(filepath,"utf-8"))):
-            self.collection.dataAccumulation.clearData()
+        filepath = str(filepath[0])
+
+        self.collection.dataHandlingThread.doUpdate = False
+
+        self.collection.dataAccumulation.clearData()
+        DataHandling.ReadSave(bytes(filepath,"utf-8"))
+            #print("\n\n******************************************************************\n\n")
+
+        self.collection.dataHandlingThread.doUpdate = True
+
 
     def scalePixmaps(self):
             #adjust pixmap sizes to label sizes
@@ -1081,7 +1099,7 @@ class GSMain(QMainWindow):
                     self.ui.progressBar_LO.setValue(100)
 
                     #check if still in valve sequence or already in experiment run sequence (nozzle cover opened)
-                    if settings.NozzleOpenTime is None:
+                    if settings.nozzleOpenTime is None:
 
                         #get time since SOE
                         secsSinceSOE = settings.SOETime.secsTo(currentTime)
@@ -1104,7 +1122,7 @@ class GSMain(QMainWindow):
                         if settings.EOETime is None:
 
                             #get time since nozzleOpen
-                            secsSinceNozzleOpen = settings.NozzleOpenTime.secsTo(currentTime)
+                            secsSinceNozzleOpen = settings.nozzleOpenTime.secsTo(currentTime)
 
                             #set the progressBar value to fraction of experiment that has passed
                             if secsSinceNozzleOpen <= settings.nozzleOpenToEOESecs:
@@ -1156,6 +1174,7 @@ class GSStart(QDialog):
         self.ui = Ui_StartDialog()
         self.ui.setupUi(self)
         self.collection = collection
+        self.ui.saveFileEdit.setText(self.collection.settings.filePath)
         self.ui.modeComboBox.setItemData(0, Settings.TEST)
         self.ui.modeComboBox.setItemData(1, Settings.FLIGHT)
 
@@ -1235,7 +1254,7 @@ class GSControl(QWidget):
         #Initialize control states
         self.valveControl = 0  # closed
         self.ledState = 0      # False (Off)
-        self.servoAngle = 0 # in °
+        self.servoAngle = -1 # in °, -1 for power off
         self.dryRunActive = 0 #False
         self.testRunStart = 0 #False (no signal to start test run)
         self.testRunStop = 0 #False (no signal to abort test run)
@@ -1792,7 +1811,8 @@ class GSExport(QDialog):
             os.path.join(os.path.expanduser("~"), "Documents"),
             "CSV-files (*.csv)"
         )
-
+        self.filepath = self.filepath[0]
+        #print("\n\n\n\n\n\n" + self.filepath + "\n\n\n\n\n\n")
         self.collection.exportWorker.start()
 
 class ExportWorker(QThread):
@@ -1825,13 +1845,17 @@ class ExportWorker(QThread):
 
         #loop for finding the according start and end indices
         #run until both indices have been found
+
+        self.collection.dataHandlingThread.doUpdate = False #pause dataHandling updates to avoid conflicts with file writing process, will be set to True again at the end of this function
+
         while startIndex == -1 or endIndex == -1:
+            #print("Iteration zur indexfindung: " + str(currentIndex))
 
             #Get frame
             frame = DataHandling.GetSaveFrame(currentIndex)
 
             #abort if all frames have been passed. if endIndex hasnt been set yet, set it to last index
-            if DataHandling.FrameIsEmpty(frame):
+            if DataHandling.FrameIsEmpty(DataHandling.GetNextFrame()):
                 if endIndex == -1:
                     endIndex = currentIndex - 1
                 break
@@ -1867,9 +1891,12 @@ class ExportWorker(QThread):
 
             #continue with writing csv file
         
+        self.collection.dataHandlingThread.doUpdate = True #set dataHandling updates back to True, so that dataHandling can continue its work after index finding process is finished
 
         #open file with set filepath
         with open(filepath, mode="w", newline="", encoding="utf-8") as file:
+
+            #print("Datei erstellt")
 
             #open csv writer for this file
             writer = csv.writer(file, delimiter=";")
@@ -1924,6 +1951,9 @@ class ExportWorker(QThread):
 
                     #write row
                     writer.writerow(row)
+                    #print("Zeile geschrieben")
+
+        #print("Datei geschrieben")
 
         #call GetSaveFrame with newest index, so that internal counting is set back to the newest index and GetNextFrame() works as wanted for DataAccumulation
         DataHandling.GetSaveFrame(-1)
@@ -2004,7 +2034,7 @@ class PlotWorker(QThread):
 
         #clear plot if demanded
         if clear:
-            for i in range(self.collection.mainWindow.sensorSize):
+            for i in range(self.collection.dataAccumulation.sensorSize):
                 self.clearSeriesSignal.emit(i)
             return
         
@@ -2089,6 +2119,7 @@ class DataAccumulation(QObject):
     setSOETimeSignal = Signal(QDateTime)
     setNozzleOpenTimeSignal = Signal(QDateTime)
     setEOETimeSignal = Signal(QDateTime)
+    resetTimesSignal = Signal()
 
     #clearing signals
     clearSeriesSignal = Signal(int)
@@ -2128,7 +2159,7 @@ class DataAccumulation(QObject):
 
     def accumulate(self):
         #switch for testing purposes
-        testData = True
+        testData = False
 
         #Get Frame and check connection status
         if not testData:
@@ -2364,11 +2395,15 @@ class DataAccumulation(QObject):
         self.risingEdgeLO = 0
         self.risingEdgeSOE = 0
 
-        self.setPowerOnTimeSignal.emit(None)
-        self.setLOTimeSignal.emit(None)
-        self.setSOETimeSignal.emit(None)
-        self.setNozzleOpenTimeSignal.emit(None)
-        self.setEOETimeSignal.emit(None)
+        self.resetTimesSignal.emit()
+        #print("\n\n***************************************************************************************\n\n")
+        #print(self.collection.settings.powerOnTime)
+        #print(self.collection.settings.LOTime)
+        #print(self.collection.settings.SOETime)
+        #print(self.collection.settings.nozzleOpenTime)
+        #print(self.collection.settings.EOETime)
+        #print("\n\n***************************************************************************************\n\n")
+        
 
         for i in range(self.sensorSize):
             self.clearSeriesSignal.emit(i)
@@ -2383,6 +2418,7 @@ class DataHandlingThread(QThread):
     def __init__(self, collection: ClassCollection):
         super().__init__()
         self.collection = collection
+        self.doUpdate = True
 
         #frequency of DataHandling loop in Hz
         self.frequency = 20
@@ -2400,7 +2436,7 @@ class DataHandlingThread(QThread):
             bytes(self.collection.settings.filePath, "utf-8"),
             bytes(self.collection.settings.calibrationPath, "utf-8"),
             bytes(self.collection.settings.connector, "utf-8"),
-            1,
+            0,
             1
         )
 
@@ -2412,13 +2448,14 @@ class DataHandlingThread(QThread):
             #DataHandling.DebugLastFrame()####only for debugging
 
             #make all updates in DataHandling
-            DataHandling.UpdateAll()
+            if self.doUpdate:
+                DataHandling.UpdateAll()
 
-            # clock2 = time.monotonic_ns()
-            # print("DataHandlingUpdate-time: " + str((clock2-clock)/1000000))
+                # clock2 = time.monotonic_ns()
+                # print("DataHandlingUpdate-time: " + str((clock2-clock)/1000000))
 
-            #accumulate and sort incoming data frames into python local numpy arrays
-            self.collection.dataAccumulation.accumulate()
+                #accumulate and sort incoming data frames into python local numpy arrays
+                self.collection.dataAccumulation.accumulate()
 
             # clock3 = time.monotonic_ns()
             # print("dataAcc-time: " + str((clock3-clock2)/1000000))
@@ -2497,6 +2534,8 @@ class ClassCollection:
         self.dataAccumulation.setNozzleOpenTimeSignal.connect(self.settings.setNozzleOpenTime)
         self.dataAccumulation.setEOETimeSignal.connect(self.settings.setEOETime)
 
+        self.dataAccumulation.resetTimesSignal.connect(self.settings.resetTimes)
+
         self.dataAccumulation.clearSeriesSignal.connect(self.mainWindow.clearSeries)
         self.dataAccumulation.updatePlotMetricsSignal.connect(self.mainWindow.updatePlotMetrics)
 
@@ -2520,8 +2559,7 @@ class ClassCollection:
 
     #inter-window connections
     def interWindowConnection(self):
-        self.mainWindow.ui.actionRestart.triggered.connect(self.startWindow.show)
-        self.mainWindow.ui.actionRestart.triggered.connect(self.mainWindow.hide)
+        self.mainWindow.ui.actionRestart.triggered.connect(self.restart)
         self.mainWindow.ui.actionControl_Panel.triggered.connect(self.controlPanel.show)
         self.mainWindow.ui.actionConnection.triggered.connect(self.connectionWindow.show)
         self.mainWindow.ui.actionEstimated_Launch_Time.triggered.connect(self.timeWindow.show)
@@ -2533,7 +2571,35 @@ class ClassCollection:
         self.mainWindow.ui.actionExport.triggered.connect(self.exportWindow.show)
         self.mainWindow.ui.actionLive_Values_Widget.triggered.connect(self.liveValuesWidget.show)
 
+    @Slot()
+    def restart(self):
+        #request interruption of DataHandling thread, thread is running to the point at which it reacts to the interruption request and closes
+        thread = self.dataHandlingThread
+        thread.requestInterruption()
+
+        #get QApplication instance
+        app = QApplication.instance()
+
+        #initialize timeout variables
+        timeout_ms = 5000
+        interval_ms = 50
+        waited = 0
+
+        #process events and wait until thread has stopped or timeout is reached
+        while thread.isRunning() and waited < timeout_ms:
+            app.processEvents()
+            time.sleep(interval_ms/1000)
+            waited += interval_ms
+
+        for widget in app.topLevelWidgets():
+            widget.hide()
+
+        self.dataAccumulation.clearData()
+
+        self.startWindow.show()
+
     #shutdown procedure to stop DataHandling thread cleanly
+    @Slot()
     def shutdown(self):
         #request interruption of DataHandling thread, thread is running to the point at which it reacts to the interruption request and closes
         thread = self.dataHandlingThread
