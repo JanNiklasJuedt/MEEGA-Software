@@ -316,7 +316,6 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 	DebugLog("Creating Buffer?");
 	if (CreateBuffer()) DebugLog("Buffer created");
 	SetPort(comPath);
-	LoadPort();
 	DebugLog("Misc tasks completed_");
 	DebugLog("Setup done_");
 	return 1;
@@ -574,15 +573,18 @@ int ReadCalibration(const char* path)
 			}
 			else {
 				DebugLog("!Calibration Version is unhandled_");
+				fclose(file);
 				return 0;
 			}
 		}
 	}
 	if (!error) {
 		DebugLog("Calibration read from$_", path);
+		fclose(file);
 		return 1;
 	}
 	DebugLog("!Calibration File could not be parsed_");
+	fclose(file);
 	return 0;
 }
 
@@ -1290,6 +1292,8 @@ int ReadFailSafe()
 				}
 				else if (ReadVersion = 0.0f) {
 					//Even Older FileReader:
+					DebugLog("!Could not parse FailSafe file");
+					fclose(file);
 				}
 			}
 		}
@@ -1483,6 +1487,7 @@ static int _ReadSaveFile_(const char path[], int number)
 	int i = 0;
 	if (fscanf(file, "%f", &dataHandling.saveFile->version) == EOF) {
 		DebugLog("!Unexpected End of File_");
+		fclose(file);
 		free(dataHandling.saveFile);
 		dataHandling.saveFile = NULL;
 		return 0;
@@ -1490,6 +1495,7 @@ static int _ReadSaveFile_(const char path[], int number)
 	for (; i < sizeof(dataHandling.saveFile->dateTime); i++, writePtr++) {
 		if (fscanf(file, "%c", writePtr) == EOF) {
 			DebugLog("!Unexpected End of File_");
+			fclose(file);
 			free(dataHandling.saveFile);
 			dataHandling.saveFile = NULL;
 			return 0;
@@ -1510,6 +1516,7 @@ static int _ReadSaveFile_(const char path[], int number)
 		if (CalculateChecksum(current->data) != current->data.chksm) FrameSetFlag(&current->data, Partial);
 	}
 	DebugLog("Amount of Frames read#_", dataHandling.saveFile->frameAmount);
+	fclose(file);
 	dataHandling.saveFile->savedAmount = dataHandling.saveFile->frameAmount;
 	if (dataHandling.failSafe != NULL) {
 		strcpy(dataHandling.failSafe->saveFilePath, dataHandling.saveFile->saveFilePath);
@@ -1541,6 +1548,7 @@ int WriteSave()
 			for (int i = 0; i < dataHandling.saveFile->savedAmount - dataHandling.saveFile->unloadedAmount; i++) {
 				if (current == NULL) {
 					DebugLog("!Could not parse Frames");
+					fclose(file);
 					return 0;
 				}
 				current = current->nextFrame;
@@ -1767,7 +1775,7 @@ int _SetPortConfig_()
 	}
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
 	dataHandling.handler->options.DCBlength = sizeof(DCB);
-	COMMTIMEOUTS timeout = { MAXDWORD , MAXDWORD, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000, 0, COMM_TIMEOUT * CLOCKS_PER_SEC / 1000 };
+	COMMTIMEOUTS timeout = { MAXDWORD , MAXDWORD, COMM_TIMEOUT, 0, COMM_TIMEOUT };
 	dataHandling.handler->timeout = timeout;
 	if (GetCommState(dataHandling.handler->comHandle, &(dataHandling.handler->options))) {
 		dataHandling.handler->options.Parity = NOPARITY;
@@ -1783,7 +1791,7 @@ int _SetPortConfig_()
 		dataHandling.handler->options.c_lflag = 0;
 		cfsetispeed(&dataHandling.handler->options, BAUD_RATE);
 		cfsetospeed(&dataHandling.handler->options, BAUD_RATE);
-		dataHandling.handler->timeout = COMM_TIMEOUT * CLOCKS_PER_SEC / 1000;
+		dataHandling.handler->timeout = COMM_TIMEOUT;
 	}
 #else
 	if (0);
@@ -1920,11 +1928,9 @@ int Receive()
 		DebugLog("!CommPort not ready");
 		return -1;
 	}
-	int writeAmount = 0, didntTimeout = 0;
-#if (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-	clock_t start_time = 0;
-#endif
+	int writeAmount = 0;
 	byte readByte = 0, writeIndex = -1, *writePtr = NULL;
+
 #if (TRANSMISSION_DEBUG)
 	DataPacket readPacket = GetOutPacket();
 	for (int i = 0; i <= PACKET_LENGTH; i++) {
@@ -1932,33 +1938,69 @@ int Receive()
 		if (!PacketIsEmpty(readPacket)) readByte = ((byte*)&readPacket)[i];
 		else break;
 #else
-	//Listen for 1 Packet and 1 byte (to reset upon receiving the START_BYTE of a new Packet)
+	// Listen for up to PACKET_LENGTH bytes. On Linux use poll() for wall-clock timeout.
 	for (int i = 0; i <= PACKET_LENGTH; i++) {
-		//Reads 1 byte at a time from the system
 #if (DATAHANDLINGLIBRARY_OS == WINDOWS_OS)
+		int didntTimeout = 0;
 		if (!ReadFile(dataHandling.handler->comHandle, &readByte, 1, &didntTimeout, NULL)) break;
 		if (!didntTimeout) break;
 #elif (DATAHANDLINGLIBRARY_OS == LINUX_OS)
-		start_time = clock();
-		while (read(dataHandling.handler->comHandle, &readByte, 1) != 1 && dataHandling.handler->timeout >= clock() - start_time);
-		if (dataHandling.handler->timeout < clock() - start_time) break;
+		// wait for readability with a real-time timeout (COMM_TIMEOUT in milliseconds)
+		struct pollfd pfd;
+		pfd.fd = dataHandling.handler->comHandle;
+		pfd.events = POLLIN;
+		int pret = poll(&pfd, 1, COMM_TIMEOUT);
+		if (pret < 0) {
+			// poll error
+			if (errno == EINTR) { i--; continue; } // interrupted by signal, retry this iteration
+			break;
+		}
+		if (pret == 0) {
+			// timeout
+			break;
+		}
+		// data is available; read one byte
+		ssize_t r = read(dataHandling.handler->comHandle, &readByte, 1);
+		if (r == 1) {
+			// ok
+		}
+		else if (r == 0) {
+			// EOF (peer closed)
+			break;
+		}
+		else { // r < 0
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				// no data, try again until timeout
+				continue;
+			}
+			if (errno == EINTR) {
+				// interrupted, retry
+				i--; continue;
+			}
+			// other read error
+			break;
+		}
+#else
+		// Other platforms not supported in this branch
+		break;
 #endif
 #endif
-		//START_BYTE signals the beginning of a new Packet
+
+		// START_BYTE signals the beginning of a new Packet
 		if (readByte == START_BYTE) {
 			writeIndex = AddInPacket(EmptyPacket());
-			//Index of -1 == filled array, return to prevent buffer-overflow
+			// Index -1 == filled array / overflow -> stop to avoid further writes
 			if (writeIndex == -1) break;
 			writePtr = (byte*)dataHandling.buffer->inPackets[writeIndex];
-			//Reset for  new Packet
+			// Reset for new Packet
 			i = 0;
 		}
-		//Write read byte if there was a START_BYTE previously
+		// Write read byte if there was a START_BYTE previously
 		if (writePtr != NULL && i != PACKET_LENGTH) {
 			writePtr[i] = readByte;
 			writeAmount++;
 		}
-		//Reset until either timeout or first START_BYTE
+		// Reset until either timeout or first START_BYTE
 		else if (writeIndex == -1 && i == PACKET_LENGTH) i = 0;
 	}
 	if (writeAmount >= 0) DebugLog("Received# Bytes", writeAmount);

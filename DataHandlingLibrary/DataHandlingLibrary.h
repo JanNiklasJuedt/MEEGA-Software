@@ -58,6 +58,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <poll.h>
 
 #define DATAHANDLINGLIBRARY_CONSTANT
 #define DATAHANDLINGLIBRARY_API
@@ -85,7 +86,7 @@
 #define PACKET_LENGTH sizeof(DataPacket)
 
 #define PATH_LENGTH 100 //Chars
-#define BUFFER_LENGTH 10 //DataFrames
+#define BUFFER_LENGTH 20 //DataFrames
 
 #define DATA_LENGTH 48 //Bytes
 #define PAYLOAD_LENGTH 16 //Bytes
@@ -120,6 +121,7 @@ typedef unsigned char byte;
 
 DATAHANDLINGLIBRARY_CONSTANT const int PathLength = PATH_LENGTH;
 DATAHANDLINGLIBRARY_CONSTANT const int DataLength = DATA_LENGTH;
+DATAHANDLINGLIBRARY_CONSTANT const int DataReductionLength = DATA_REDUCTION_LENGTH;
 
 DATAHANDLINGLIBRARY_CONSTANT const float FAILSAFE_VERSION = 1.2f;
 DATAHANDLINGLIBRARY_CONSTANT const char FAILSAFE_NAME[] = "MEEGA_FailSafe.txt";
