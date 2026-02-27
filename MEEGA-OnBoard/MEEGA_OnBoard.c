@@ -66,7 +66,7 @@ int main() {
 		SoEReceived = 0;
 		EoE = 0;
 		digitalWrite(Servo_On, ServoOff);
-		digitalWrite(LEDs_Pin, LEDsOff);
+		//digitalWrite(LEDs_Pin, LEDsOff);
 		//RESET
 
 #if (MODE == DEBUG)
