@@ -240,18 +240,15 @@ void _CloseBuffer_()
 
 void _ModifySaveFilePath_(char* out)
 {
-	char filePath[PATH_LENGTH] = "";
-	char modifiedPath[PATH_LENGTH] = "";
-	char numberStr[10] = "";
-	char ending[] = ".meega";
+	char filePath[PATH_LENGTH] = "", modifiedPath[PATH_LENGTH] = "", numberStr[10] = "", ending[] = ".meega";
 	if (dataHandling.saveFile == NULL) {
 		DebugLog("!Could not find SaveFile, incorrect order of operation");
 		return;
 	}
 	sscanf(dataHandling.saveFile->saveFilePath, "%[^.]s", filePath);
 	filePath[PATH_LENGTH - 1] = '\0';
-	if (dataHandling.saveFile->saveFileNumber > 0) sprintf(numberStr, "_%i", dataHandling.saveFile->saveFileNumber);
-	strncpy(modifiedPath, strcat(strcat(filePath, numberStr), ending), PATH_LENGTH);
+	if (dataHandling.saveFile->saveFileNumber > 0) sprintf(numberStr, "_%03i", dataHandling.saveFile->saveFileNumber);
+	strncpy(modifiedPath, strncat(strncat(filePath, numberStr, 4), ending, 6), PATH_LENGTH);
 	modifiedPath[PATH_LENGTH - 1] = '\0';
 	strncpy(out, modifiedPath, PATH_LENGTH);
 }
@@ -269,13 +266,14 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 	if (SkipReadingFailSafe || !ReadFailSafe()) {
 		if (!CreateFailSafe()) return 0;
 	}
-	char* saveFilePath = "", * calPath = "", * comPath = "";
+	char saveFilePath[PATH_LENGTH], calPath[PATH_LENGTH], comPath[PATH_LENGTH];
 	int saveFileNumber = 0;
-	saveFilePath = dataHandling.failSafe->saveFilePath;
-	calPath = dataHandling.failSafe->calPath;
-	comPath = dataHandling.failSafe->comPath;
 	if (SaveFileName != NULL && SaveFileName[0] != '\0' && SaveFileName[0] != ' ') {
 		strncpy(saveFilePath, SaveFileName, PATH_LENGTH);
+		saveFilePath[PATH_LENGTH - 1] = '\0';
+	}
+	else {
+		strncpy(saveFilePath, dataHandling.failSafe->saveFilePath, PATH_LENGTH); 
 		saveFileNumber = dataHandling.failSafe->saveFileNumber;
 		saveFilePath[PATH_LENGTH - 1] = '\0';
 	}
@@ -283,8 +281,16 @@ int Initialize(const char* SaveFileName, const char* CalibrationName, const char
 		strncpy(calPath, CalibrationName, PATH_LENGTH);
 		calPath[PATH_LENGTH - 1] = '\0';
 	}
+	else {
+		strncpy(calPath, dataHandling.failSafe->calPath, PATH_LENGTH);
+		calPath[PATH_LENGTH - 1] = '\0';
+	}
 	if (PortName != NULL && PortName[0] != '\0' && PortName[0] != ' ') {
 		strncpy(comPath, PortName, PATH_LENGTH);
+		comPath[PATH_LENGTH - 1] = '\0';
+	}
+	else {
+		strncpy(comPath, dataHandling.failSafe->comPath, PATH_LENGTH);
 		comPath[PATH_LENGTH - 1] = '\0';
 	}
 	if (saveFilePath[0] == '\0' && USE_DEFAULT_VALUES) {

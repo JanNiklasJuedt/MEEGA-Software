@@ -85,7 +85,7 @@
 #define FRAME_LENGTH sizeof(DataFrame)
 #define PACKET_LENGTH sizeof(DataPacket)
 
-#define PATH_LENGTH 100 //Chars
+#define PATH_LENGTH 200 //Chars
 #define BUFFER_LENGTH 20 //DataFrames
 
 #define DATA_LENGTH 48 //Bytes

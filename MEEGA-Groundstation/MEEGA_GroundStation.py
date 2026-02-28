@@ -283,7 +283,7 @@ class GSMain(QMainWindow):
             "MEEGA-Files (*.meega)")
         filepath = str(filepath[0])
         self.collection.dataAccumulation.clearData()
-        DataHandling.CreateSave(bytes(filepath, "utf-8"))
+        DataHandling.CreateSave(bytes(filepath + "\0", "utf-8"))
            # print("\n\n******************************************************************\n\n")
 
     def openFile(self):
@@ -297,7 +297,7 @@ class GSMain(QMainWindow):
         self.collection.dataHandlingThread.doUpdate = False
 
         self.collection.dataAccumulation.clearData()
-        DataHandling.ReadSave(bytes(filepath,"utf-8"))
+        DataHandling.ReadSave(bytes(filepath + "\0","utf-8"))
             #print("\n\n******************************************************************\n\n")
 
         self.collection.dataHandlingThread.doUpdate = True
@@ -1435,7 +1435,7 @@ class GSConnection(QDialog):
     
     #apply settings from ui elements to settings and DataHandling, currently only serial connector settings is functional, tcp not planned
     def applySettings(self):
-        self.collection.settings.connector = self.ui.ConnectorBox.currentText().encode("utf-8")
+        self.collection.settings.connector = self.ui.ConnectorBox.currentText().encode("utf-8") + "\0"
         DataHandling.SetPort(self.collection.settings.connector)
 
 class GSCalibration(QWidget):
@@ -2433,9 +2433,9 @@ class DataHandlingThread(QThread):
 
         #initialize DataHandling
         DataHandling.Initialize(
-            bytes(self.collection.settings.filePath, "utf-8"),
-            bytes(self.collection.settings.calibrationPath, "utf-8"),
-            bytes(self.collection.settings.connector, "utf-8"),
+            bytes(self.collection.settings.filePath + "\0", "utf-8"),
+            bytes(self.collection.settings.calibrationPath + "\0", "utf-8"),
+            bytes(self.collection.settings.connector + "\0", "utf-8"),
             0,
             1
         )
