@@ -28,7 +28,7 @@
 #define ONBOARD_OS LINUX
 #define MODE RELEASE
 #define EXPERIMENT RUN
-#define SERVO_VERSION SERVO_v1
+#define SERVO_VERSION SERVO_v2
 #define SENSORS_SPI_VERSION SPIDEV
 
 
@@ -192,7 +192,7 @@ modeSel = 1;
 
 //Parameters
 #define Delay_OnGoingValve 5000
-#define Delay_to_OpenNozzleCover 10000
+#define Delay_to_OpenNozzleCover 15000
 #define Delay_NoseConeSeparation 0
 #define Delay_to_NoseConeSeparation 0
 #define Delay_to_EoE 30000
@@ -201,7 +201,7 @@ modeSel = 1;
 #define Angle_ServoReset 91
 #define Angle_Servo 0
 #define Delay_ServoRetry 3000
-#define Delay_AfterSOE 2000
+#define Delay_AfterSOE 6000
 #if (MODE == DEBUG)
 #define Delay_to_NoseConeSeparation 5000
 #define Delay_to_EoE 3000

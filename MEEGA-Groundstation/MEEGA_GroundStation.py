@@ -104,14 +104,6 @@ class Settings:
     def setEOETime(self, time: QDateTime):
         self.EOETime = time
 
-    @Slot()
-    def resetTimes(self):
-        self.powerOnTime = None
-        self.LOTime = None
-        self.SOETime = None
-        self.nozzleOpenTime = None
-        self.EOETime = None
-
 #class to handle telecommands
 class Telecommand(QObject):
     def __init__(self, collection):
@@ -1126,7 +1118,7 @@ class GSMain(QMainWindow):
 
                             #set the progressBar value to fraction of experiment that has passed
                             if secsSinceNozzleOpen <= settings.nozzleOpenToEOESecs:
-                                self.ui.progressBar_SOE.setValue(100 * secsSinceNozzleOpen / settings.nozzleOpenToEOESecs)
+                                self.ui.progressBar_ER.setValue(100 * secsSinceNozzleOpen / settings.nozzleOpenToEOESecs)
 
                             #set experiment time tracker to time that has passed since SOE
                             timeSinceNozzleOpen = QTime(0, 0).addSecs(secsSinceNozzleOpen)
@@ -1162,7 +1154,6 @@ class GSMain(QMainWindow):
         #set all Progress Bar texts to 00:00
         self.ui.progressBar_PF.setFormat("00:00")
         self.ui.progressBar_LO.setFormat("00:00")
-        self.ui.progressBar_SODS.setFormat("00:00")
         self.ui.progressBar_SOE.setFormat("00:00")
         self.ui.progressBar_ER.setFormat("00:00")
         self.ui.progressBar_SD.setFormat("00:00")
@@ -2119,7 +2110,7 @@ class DataAccumulation(QObject):
     setSOETimeSignal = Signal(QDateTime)
     setNozzleOpenTimeSignal = Signal(QDateTime)
     setEOETimeSignal = Signal(QDateTime)
-    resetTimesSignal = Signal()
+    resetProgressBarSignal = Signal()
 
     #clearing signals
     clearSeriesSignal = Signal(int)
@@ -2348,6 +2339,7 @@ class DataAccumulation(QObject):
                             self.liftOffIndex = self.gatherIndex
                             self.risingEdgeLO = 1
                     if (self.collection.settings.SOETime is None) and self.household[PyID.Start_Experiment] == 1:
+                        #print("\n\n\n\n############################\n\n\n\n")
                         self.setSOETimeSignal.emit(QDateTime.currentDateTime(self.collection.settings.timeZone))
                         if self.risingEdgeSOE == 0:
                             self.startOfExperimentIndex = self.gatherIndex
@@ -2395,7 +2387,7 @@ class DataAccumulation(QObject):
         self.risingEdgeLO = 0
         self.risingEdgeSOE = 0
 
-        self.resetTimesSignal.emit()
+        self.resetProgressBarSignal.emit()
         #print("\n\n***************************************************************************************\n\n")
         #print(self.collection.settings.powerOnTime)
         #print(self.collection.settings.LOTime)
@@ -2456,6 +2448,8 @@ class DataHandlingThread(QThread):
 
                 #accumulate and sort incoming data frames into python local numpy arrays
                 self.collection.dataAccumulation.accumulate()
+
+                #DataHandling.DebugLastFrame()
 
             # clock3 = time.monotonic_ns()
             # print("dataAcc-time: " + str((clock3-clock2)/1000000))
@@ -2534,7 +2528,7 @@ class ClassCollection:
         self.dataAccumulation.setNozzleOpenTimeSignal.connect(self.settings.setNozzleOpenTime)
         self.dataAccumulation.setEOETimeSignal.connect(self.settings.setEOETime)
 
-        self.dataAccumulation.resetTimesSignal.connect(self.settings.resetTimes)
+        self.dataAccumulation.resetProgressBarSignal.connect(self.mainWindow.resetProgressBar)
 
         self.dataAccumulation.clearSeriesSignal.connect(self.mainWindow.clearSeries)
         self.dataAccumulation.updatePlotMetricsSignal.connect(self.mainWindow.updatePlotMetrics)

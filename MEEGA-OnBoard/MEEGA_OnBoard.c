@@ -526,8 +526,8 @@ void ServoRotation(int degree) {
 void ServoRotation(int degree) {
 	if (degree < 0) degree = 0;
 	if (degree > 90) degree = 90;
-	int minR = 1052;
-	int maxR = 2060;
+	int minR = 1030;
+	int maxR = 1930;
 	double pulse_us = minR + degree * (maxR - minR) / 90;
 	double Width = pulse_us / 100;
 	int intWidth = (int)Width;
