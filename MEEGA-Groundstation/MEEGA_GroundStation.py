@@ -1146,7 +1146,6 @@ class GSMain(QMainWindow):
         #set all Progress Bars to 0
         self.ui.progressBar_PF.setValue(0)
         self.ui.progressBar_LO.setValue(0)
-        self.ui.progressBar_SODS.setValue(0)
         self.ui.progressBar_SOE.setValue(0)
         self.ui.progressBar_ER.setValue(0)
         self.ui.progressBar_SD.setValue(0)
@@ -2449,7 +2448,7 @@ class DataHandlingThread(QThread):
                 #accumulate and sort incoming data frames into python local numpy arrays
                 self.collection.dataAccumulation.accumulate()
 
-                #DataHandling.DebugLastFrame()
+                DataHandling.DebugLastFrame()
 
             # clock3 = time.monotonic_ns()
             # print("dataAcc-time: " + str((clock3-clock2)/1000000))

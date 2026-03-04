@@ -38,8 +38,8 @@
 #define ValveSwitch 01	//pin
 #define Servo_Pin 12	//pin
 #define Servo_On 5	//pin
-#define Nozzle_Cover_S1 17	//Nozzle Cover fully closed Feedback
-#define Nozzle_Cover_S2 27	//Nozzle Cover fully opened Feedback
+#define Nozzle_Cover_S1 27	//Nozzle Cover fully closed Feedback
+#define Nozzle_Cover_S2 17	//Nozzle Cover fully opened Feedback
 #define CS_PSB 7
 #define CS_TSB 8
 
